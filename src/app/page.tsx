@@ -1,65 +1,145 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import TripWizard from '@/components/Wizard/TripWizard';
+import ItineraryView from '@/components/Itinerary/ItineraryView';
+import { TripRequest, TripResult } from '@/lib/planner';
+import { MapPin } from 'lucide-react';
+
+// Dynamic import for Leaflet map to avoid SSR issues
+const Map = dynamic(() => import('@/components/Map/Map'), { ssr: false });
 
 export default function Home() {
+  const [config, setConfig] = useState<{ states: any[], cities: any[] }>({ states: [], cities: [] });
+  const [selectedState, setSelectedState] = useState<any>(null);
+  const [selectedCityIds, setSelectedCityIds] = useState<string[]>([]);
+  const [tripResult, setTripResult] = useState<TripResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'map' | 'itinerary'>('map');
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        setConfig(data);
+        if (data.states.length > 0) setSelectedState(data.states[0]); // Default to first state (Rajasthan)
+      });
+  }, []);
+
+  const handleCityToggle = (id: string) => {
+    if (selectedCityIds.includes(id)) {
+      setSelectedCityIds(selectedCityIds.filter(c => c !== id));
+    } else {
+      setSelectedCityIds([...selectedCityIds, id]);
+    }
+  };
+
+  const handleGenerate = async (req: TripRequest) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/generate-trip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req)
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setTripResult(data);
+      setActiveTab('itinerary'); // Switch to itinerary view on mobile automatically
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate trip. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Prepare markers for map
+  const mapMarkers = useMemo(() => {
+    return config.cities.map(c => ({
+      id: c._id,
+      lat: c.coordinates.lat,
+      lng: c.coordinates.lng,
+      title: c.name,
+      description: c.description
+    }));
+  }, [config.cities]);
+
+  // Generate route coordinates for the map if result exists
+  const routeCoordinates: Array<[number, number]> | undefined = useMemo(() => {
+    if (!tripResult) return undefined;
+
+    // Extract sequence of cities from itinerary
+    const route: Array<[number, number]> = [];
+
+    // Add start
+    const startCity = config.cities.find(c => c.name === tripResult.itinerary[0].city);
+    if(startCity) route.push([startCity.coordinates.lat, startCity.coordinates.lng]);
+
+    tripResult.itinerary.forEach(day => {
+        if (day.travel) {
+            const toCity = config.cities.find(c => c.name === day.travel!.to);
+            if (toCity) route.push([toCity.coordinates.lat, toCity.coordinates.lng]);
+        }
+    });
+
+    return route;
+  }, [tripResult, config.cities]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex h-screen w-full bg-gray-100 overflow-hidden relative">
+      {/* Sidebar / Overlay Panel */}
+      <div className={`absolute md:relative z-20 top-0 left-0 h-full w-full md:w-[450px] transition-transform duration-300 ${activeTab === 'map' ? 'translate-x-full md:translate-x-0' : 'translate-x-0'} md:translate-x-0 flex flex-col`}>
+        {!tripResult ? (
+          <TripWizard
+            cities={config.cities}
+            selectedCityIds={selectedCityIds}
+            onCityToggle={handleCityToggle}
+            onGenerate={handleGenerate}
+            isLoading={loading}
+          />
+        ) : (
+          <ItineraryView result={tripResult} onReset={() => setTripResult(null)} />
+        )}
+      </div>
+
+      {/* Map Area */}
+      <div className="flex-1 relative h-full w-full">
+        {selectedState ? (
+          <Map
+            center={[selectedState.center.lat, selectedState.center.lng]}
+            zoom={selectedState.zoom}
+            markers={mapMarkers}
+            selectedMarkers={selectedCityIds}
+            onMarkerClick={handleCityToggle}
+            route={routeCoordinates}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">Loading Map...</div>
+        )}
+
+        {/* Mobile Toggle Button */}
+        <div className="absolute bottom-4 right-4 md:hidden z-[1000]">
+           {tripResult && (
+             <button
+               onClick={() => setActiveTab(activeTab === 'map' ? 'itinerary' : 'map')}
+               className="bg-indigo-600 text-white p-3 rounded-full shadow-lg"
+             >
+               {activeTab === 'map' ? 'View Itinerary' : 'View Map'}
+             </button>
+           )}
+           {!tripResult && (
+             <button
+                onClick={() => setActiveTab(activeTab === 'map' ? 'itinerary' : 'map')} // 'itinerary' essentially means 'sidebar' here
+                className="bg-white text-indigo-600 p-3 rounded-full shadow-lg"
+             >
+                {activeTab === 'map' ? 'Plan Trip' : 'View Map'}
+             </button>
+           )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
