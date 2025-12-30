@@ -1,31 +1,5 @@
 // The Logic Core: Generates the itinerary
-import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES } from './mockData';
-
-interface City {
-  _id: string;
-  name: string;
-  stateCode?: string;
-  coordinates?: { lat: number; lng: number };
-  tier?: string;
-  description?: string;
-  idealDays?: number;
-  imageUrl?: string;
-}
-
-interface Place {
-  _id: string;
-  name: string;
-  cityName: string;
-  type: string;
-  coordinates?: { lat: number; lng: number };
-  timeRequired: number;
-  openingTime?: string;
-  closingTime?: string;
-  bestTimeOfDay?: string;
-  rating?: number;
-  tags?: string[];
-  priceTier?: string;
-}
+import { MOCK_CITIES, MOCK_PLACES } from './mockData';
 
 export type TravelStyle = 'relaxed' | 'fast';
 export type BudgetTier = 'budget' | 'standard' | 'premium';
@@ -110,7 +84,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   const { selectedCityIds, duration, budget, travelStyle, constraints } = req;
 
   // 1. Get Cities Data
-  const cities = (MOCK_CITIES as City[]).filter((c: City) => selectedCityIds.includes(c._id));
+  const cities = MOCK_CITIES.filter(c => selectedCityIds.includes(c._id));
 
   // 2. Sort Cities (Simple TSP - here just nearest neighbor or preserved order if user selected logic)
   // For MVP: Let's assume the user selected them in order, or we just keep them.
@@ -144,7 +118,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     }
 
     // Get places for this city
-    let cityPlaces = (MOCK_PLACES as Place[]).filter((p: Place) => p.cityName === city.name);
+    let cityPlaces = MOCK_PLACES.filter(p => p.cityName === city.name);
 
     // Filter constraints
     if (constraints.seniorFriendly) {
@@ -171,6 +145,12 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       const maxPlaces = travelStyle === 'relaxed' ? 2 : 4;
 
       for (const place of cityPlaces) {
+        // Simple check if place already added in *this* trip?
+        // Need to track global visited places if we want to avoid repeats across days?
+        // For now, just avoid repeats in daily list (already done)
+        // But also check if it was visited in previous days for this city?
+        // The loop `cityPlaces = cityPlaces.filter` handles repeats for the *same city* loop.
+
         if (dailyActivities.includes(place)) continue;
         if (dailyActivities.length >= maxPlaces) break;
         if (timeUsed + place.timeRequired > 8) break; // Max 8 hours sightseeing
@@ -180,7 +160,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       }
 
       // Remove used places so we don't repeat them next day in same city
-      cityPlaces = cityPlaces.filter((p: Place) => !dailyActivities.includes(p));
+      cityPlaces = cityPlaces.filter(p => !dailyActivities.includes(p));
 
       // Calculate Costs
       const dayActivityCost = dailyActivities.length * costConfig.activityAvg;
