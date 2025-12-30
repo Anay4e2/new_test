@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import State from '../models/State';
 import City from '../models/City';
 import Place from '../models/Place';
+import Route from '../models/Route';
 import connectDB from '../config/db';
 
 interface ExcelRow {
@@ -27,8 +28,12 @@ interface ExcelRow {
     Region?: string;
     'Place Name'?: string;
     Category?: string;
-    'Visit Duration'?: number;
+    'Visit Duration'?: number | string;
     'Entry Fee'?: string;
+    'From City'?: string;
+    'To City'?: string;
+    'Distance (km)'?: number;
+    'Road Time (hrs)'?: number;
 }
 
 // Helper function to determine region from filename
@@ -58,6 +63,7 @@ async function parseExcelFiles() {
     const statesMap = new Map<string, any>();
     const citiesMap = new Map<string, any>();
     const places: any[] = [];
+    const routes: any[] = []; // Define routes array
 
     for (const file of files) {
         console.log(`\nProcessing file: ${file}`);
@@ -119,6 +125,17 @@ async function parseExcelFiles() {
                     }
                 }
 
+                // Process Route (Intercity Travel)
+                if (row['From City'] && row['To City']) {
+                    routes.push({
+                        fromCity: row['From City'],
+                        toCity: row['To City'],
+                        distance: row['Distance (km)'] || 0,
+                        roadTime: row['Road Time (hrs)'] || 0,
+                        type: 'road'
+                    });
+                }
+
                 // Process Place - check for "Place" or "Place Name"
                 const placeName = row.Place || row['Place Name'];
                 if (placeName && row.City) {
@@ -130,6 +147,10 @@ async function parseExcelFiles() {
                             lat: row.Latitude || 20.5937,
                             lng: row.Longitude || 78.9629
                         },
+                        description: row.Description,
+                        visitDuration: String(row['Visit Duration'] || row['Time Required (hours)'] || '1 hr'),
+                        entryFee: row['Entry Fee'] || row['Price Tier'] || 'Free',
+                        bestTime: row['Best Time'],
                         timeRequired: parseFloat(String(row['Time Required (hours)'] || row['Visit Duration'] || 2)) || 2,
                         openingTime: row['Opening Time'] || '09:00',
                         closingTime: row['Closing Time'] || '18:00',
@@ -147,7 +168,8 @@ async function parseExcelFiles() {
     return {
         states: Array.from(statesMap.values()),
         cities: Array.from(citiesMap.values()),
-        places
+        places,
+        routes
     };
 }
 
@@ -159,18 +181,20 @@ async function seedDatabase() {
         await connectDB();
 
         // Parse Excel files
-        const { states, cities, places } = await parseExcelFiles();
+        const { states, cities, places, routes } = await parseExcelFiles();
 
         console.log('\n=== Parsed Data Summary ===');
         console.log(`States: ${states.length}`);
         console.log(`Cities: ${cities.length}`);
         console.log(`Places: ${places.length}`);
+        console.log(`Routes: ${routes.length}`);
 
         // Clear existing data
         console.log('\nClearing existing data...');
         await State.deleteMany({});
         await City.deleteMany({});
         await Place.deleteMany({});
+        await Route.deleteMany({});
 
         // Insert new data
         console.log('\nInserting new data...');
@@ -188,6 +212,11 @@ async function seedDatabase() {
         if (places.length > 0) {
             await Place.insertMany(places);
             console.log(`✓ Inserted ${places.length} places`);
+        }
+
+        if (routes.length > 0) {
+            await Route.insertMany(routes);
+            console.log(`✓ Inserted ${routes.length} routes`);
         }
 
         console.log('\n✅ Database seeding completed successfully!');

@@ -5,6 +5,10 @@ export interface IPlace extends Document {
   cityName: string;
   type: string; // Fort, Palace, etc.
   coordinates: { lat: number; lng: number };
+  description?: string;
+  visitDuration?: string;
+  entryFee?: string;
+  bestTime?: string;
   timeRequired: number; // hours
   openingTime: string;
   closingTime: string;
@@ -22,6 +26,10 @@ const PlaceSchema: Schema = new Schema({
     lat: { type: Number, required: true },
     lng: { type: Number, required: true }
   },
+  description: { type: String },
+  visitDuration: { type: String }, // e.g. "1 hr", formatted string
+  entryFee: { type: String },
+  bestTime: { type: String },
   timeRequired: { type: Number, default: 1 },
   openingTime: { type: String, default: '09:00' },
   closingTime: { type: String, default: '17:00' },

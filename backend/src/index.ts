@@ -7,6 +7,7 @@ import State from './models/State';
 import Package from './models/Package';
 import City from './models/City';
 import Place from './models/Place';
+import Route from './models/Route';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -81,6 +82,17 @@ app.get('/api/states', async (req, res) => {
   }
 });
 
+
+// Get all routes (intercity travel)
+app.get('/api/routes', async (req, res) => {
+  try {
+    const routes = await Route.find();
+    res.json(routes);
+  } catch (error) {
+    console.error('Error fetching routes:', error);
+    res.status(500).json({ error: 'Failed to fetch routes' });
+  }
+});
 
 app.post('/api/generate-trip', async (req, res) => {
   try {

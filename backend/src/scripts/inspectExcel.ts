@@ -12,12 +12,23 @@ files.forEach(file => {
     const filePath = path.join(excelsDir, file);
     const workbook = XLSX.readFile(filePath);
 
+    const analysis: any = {};
+
     workbook.SheetNames.forEach(sheetName => {
         const worksheet = workbook.Sheets[sheetName];
         const data = XLSX.utils.sheet_to_json(worksheet);
 
-        // process.exit(0); // commented out
-        const columns = Object.keys(data[0] as object);
-        console.log(`SHEET: ${sheetName} | ROWS: ${data.length} | FIRST_COLS: ${JSON.stringify(columns.slice(0, 5))}`);
+        if (data.length > 0) {
+            const cols = Object.keys(data[0] as object);
+            analysis[sheetName] = {
+                rowCount: data.length,
+                columns: cols,
+                sampleRow: data[0]
+            };
+        }
     });
+
+    fs.writeFileSync('sheet_analysis.json', JSON.stringify(analysis, null, 2));
+    console.log('Analysis written to sheet_analysis.json');
+    process.exit(0);
 });

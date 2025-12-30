@@ -1,0 +1,72 @@
+{
+  "States": {
+    "rowCount": 9,
+    "columns": [
+      "State Code",
+      "State Name",
+      "Region",
+      "Best Season"
+    ],
+    "sampleRow": {
+      "State Code": "DL",
+      "State Name": "Delhi",
+      "Region": "North",
+      "Best Season": "Oct-Mar"
+    }
+  },
+  "Cities": {
+    "rowCount": 13,
+    "columns": [
+      "State",
+      "City",
+      "Latitude",
+      "Longitude",
+      "Ideal Days"
+    ],
+    "sampleRow": {
+      "State": "Delhi",
+      "City": "New Delhi",
+      "Latitude": 28.6139,
+      "Longitude": 77.209,
+      "Ideal Days": 3
+    }
+  },
+  "Places": {
+    "rowCount": 15,
+    "columns": [
+      "State",
+      "City",
+      "Place Name",
+      "Category",
+      "Description",
+      "Visit Duration",
+      "Entry Fee",
+      "Best Time"
+    ],
+    "sampleRow": {
+      "State": "Delhi",
+      "City": "New Delhi",
+      "Place Name": "India Gate",
+      "Category": "Heritage",
+      "Description": "War memorial and public plaza",
+      "Visit Duration": "1 hr",
+      "Entry Fee": "Free",
+      "Best Time": "Oct-Mar"
+    }
+  },
+  "Intercity_Travel": {
+    "rowCount": 11,
+    "columns": [
+      "From City",
+      "To City",
+      "Distance (km)",
+      "Road Time (hrs)"
+    ],
+    "sampleRow": {
+      "From City": "New Delhi",
+      "To City": "Jaipur",
+      "Distance (km)": 281,
+      "Road Time (hrs)": 5
+    }
+  }
+}
