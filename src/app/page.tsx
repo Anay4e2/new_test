@@ -12,6 +12,7 @@ const Map = dynamic(() => import('@/components/Map/Map'), { ssr: false });
 
 export default function Home() {
   const [config, setConfig] = useState<{ states: any[], cities: any[] }>({ states: [], cities: [] });
+  const [places, setPlaces] = useState<any[]>([]);
   const [selectedState, setSelectedState] = useState<any>(null);
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([]);
   const [tripResult, setTripResult] = useState<TripResult | null>(null);
@@ -19,12 +20,21 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'map' | 'itinerary'>('map');
 
   useEffect(() => {
+    // Fetch config (states and cities)
     fetch('/api/config')
       .then(res => res.json())
       .then(data => {
         setConfig(data);
-        if (data.states.length > 0) setSelectedState(data.states[0]); // Default to first state (Rajasthan)
+        if (data.states.length > 0) setSelectedState(data.states[0]); // Default to first state
       });
+
+    // Fetch places for map markers
+    fetch('/api/places')
+      .then(res => res.json())
+      .then(data => {
+        setPlaces(data);
+      })
+      .catch(err => console.error('Error fetching places:', err));
   }, []);
 
   const handleCityToggle = (id: string) => {
@@ -56,16 +66,26 @@ export default function Home() {
     }
   };
 
-  // Prepare markers for map
+  // Prepare markers for map - include both cities and places
   const mapMarkers = useMemo(() => {
-    return config.cities.map(c => ({
+    const cityMarkers = config.cities.map(c => ({
       id: c._id,
       lat: c.coordinates.lat,
       lng: c.coordinates.lng,
       title: c.name,
       description: c.description
     }));
-  }, [config.cities]);
+
+    const placeMarkers = places.map(p => ({
+      id: p._id,
+      lat: p.coordinates.lat,
+      lng: p.coordinates.lng,
+      title: p.name,
+      description: `${p.type} in ${p.cityName} - Rating: ${p.rating}/5`
+    }));
+
+    return [...cityMarkers, ...placeMarkers];
+  }, [config.cities, places]);
 
   // Generate route coordinates for the map if result exists
   const routeCoordinates: Array<[number, number]> | undefined = useMemo(() => {
@@ -76,13 +96,13 @@ export default function Home() {
 
     // Add start
     const startCity = config.cities.find(c => c.name === tripResult.itinerary[0].city);
-    if(startCity) route.push([startCity.coordinates.lat, startCity.coordinates.lng]);
+    if (startCity) route.push([startCity.coordinates.lat, startCity.coordinates.lng]);
 
     tripResult.itinerary.forEach(day => {
-        if (day.travel) {
-            const toCity = config.cities.find(c => c.name === day.travel!.to);
-            if (toCity) route.push([toCity.coordinates.lat, toCity.coordinates.lng]);
-        }
+      if (day.travel) {
+        const toCity = config.cities.find(c => c.name === day.travel!.to);
+        if (toCity) route.push([toCity.coordinates.lat, toCity.coordinates.lng]);
+      }
     });
 
     return route;
@@ -122,22 +142,22 @@ export default function Home() {
 
         {/* Mobile Toggle Button */}
         <div className="absolute bottom-4 right-4 md:hidden z-[1000]">
-           {tripResult && (
-             <button
-               onClick={() => setActiveTab(activeTab === 'map' ? 'itinerary' : 'map')}
-               className="bg-indigo-600 text-white p-3 rounded-full shadow-lg"
-             >
-               {activeTab === 'map' ? 'View Itinerary' : 'View Map'}
-             </button>
-           )}
-           {!tripResult && (
-             <button
-                onClick={() => setActiveTab(activeTab === 'map' ? 'itinerary' : 'map')} // 'itinerary' essentially means 'sidebar' here
-                className="bg-white text-indigo-600 p-3 rounded-full shadow-lg"
-             >
-                {activeTab === 'map' ? 'Plan Trip' : 'View Map'}
-             </button>
-           )}
+          {tripResult && (
+            <button
+              onClick={() => setActiveTab(activeTab === 'map' ? 'itinerary' : 'map')}
+              className="bg-indigo-600 text-white p-3 rounded-full shadow-lg"
+            >
+              {activeTab === 'map' ? 'View Itinerary' : 'View Map'}
+            </button>
+          )}
+          {!tripResult && (
+            <button
+              onClick={() => setActiveTab(activeTab === 'map' ? 'itinerary' : 'map')} // 'itinerary' essentially means 'sidebar' here
+              className="bg-white text-indigo-600 p-3 rounded-full shadow-lg"
+            >
+              {activeTab === 'map' ? 'Plan Trip' : 'View Map'}
+            </button>
+          )}
         </div>
       </div>
     </div>

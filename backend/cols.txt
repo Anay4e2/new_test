@@ -1,0 +1,6 @@
+[
+  "State Code",
+  "State Name",
+  "Region",
+  "Best Season"
+]

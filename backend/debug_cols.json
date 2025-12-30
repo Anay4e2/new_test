@@ -1,0 +1,13 @@
+{
+  "sheet": "Places",
+  "columns": [
+    "State",
+    "City",
+    "Place Name",
+    "Category",
+    "Description",
+    "Visit Duration",
+    "Entry Fee",
+    "Best Time"
+  ]
+}

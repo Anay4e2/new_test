@@ -6,6 +6,7 @@ import { STATES, CITIES, PACKAGES } from './lib/mockData';
 import State from './models/State';
 import Package from './models/Package';
 import City from './models/City';
+import Place from './models/Place';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -46,6 +47,40 @@ app.get('/api/config', async (req, res) => {
     });
   }
 });
+
+// Get all places with coordinates for map display
+app.get('/api/places', async (req, res) => {
+  try {
+    const places = await Place.find();
+    res.json(places);
+  } catch (error) {
+    console.error('Error fetching places:', error);
+    res.status(500).json({ error: 'Failed to fetch places' });
+  }
+});
+
+// Get all cities with coordinates
+app.get('/api/cities', async (req, res) => {
+  try {
+    const cities = await City.find();
+    res.json(cities);
+  } catch (error) {
+    console.error('Error fetching cities:', error);
+    res.status(500).json({ error: 'Failed to fetch cities' });
+  }
+});
+
+// Get all states
+app.get('/api/states', async (req, res) => {
+  try {
+    const states = await State.find();
+    res.json(states);
+  } catch (error) {
+    console.error('Error fetching states:', error);
+    res.status(500).json({ error: 'Failed to fetch states' });
+  }
+});
+
 
 app.post('/api/generate-trip', async (req, res) => {
   try {
