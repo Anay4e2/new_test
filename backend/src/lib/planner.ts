@@ -1,5 +1,7 @@
 // The Logic Core: Generates the itinerary
 import { MOCK_CITIES, MOCK_PLACES } from './mockData';
+import City from '../models/City';
+import Place from '../models/Place';
 
 export type TravelStyle = 'relaxed' | 'fast';
 export type BudgetTier = 'budget' | 'standard' | 'premium';
@@ -84,7 +86,30 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   const { selectedCityIds, duration, budget, travelStyle, constraints } = req;
 
   // 1. Get Cities Data
-  const cities = MOCK_CITIES.filter(c => selectedCityIds.includes(c._id));
+  // Try DB first
+  let cities = [];
+  try {
+      // Assuming selectedCityIds are names or IDs.
+      // If IDs are Mongo IDs, use find({ _id: { $in: ... } })
+      // If IDs are strings like 'jaipur' (from mock), we might need flexible query
+      // The frontend sends what the config provided.
+      // If config came from DB, IDs are _ids. If from mock, they are custom strings.
+      // Let's try to find by ID first, then by custom ID or Name if that fails?
+      // Or just assume _id if we are fully migrated?
+      // For safety, let's query where _id in list OR name in list (if frontend uses names)
+      cities = await City.find({
+          $or: [
+              { _id: { $in: selectedCityIds } },
+              { name: { $in: selectedCityIds } }
+          ]
+      });
+  } catch (e) {
+      console.log("DB City fetch failed or returned empty, using mock");
+  }
+
+  if (cities.length === 0) {
+      cities = MOCK_CITIES.filter(c => selectedCityIds.includes(c._id));
+  }
 
   // 2. Sort Cities (Simple TSP - here just nearest neighbor or preserved order if user selected logic)
   // For MVP: Let's assume the user selected them in order, or we just keep them.
@@ -118,7 +143,14 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     }
 
     // Get places for this city
-    let cityPlaces = MOCK_PLACES.filter(p => p.cityName === city.name);
+    let cityPlaces: any[] = [];
+    try {
+        cityPlaces = await Place.find({ cityName: city.name });
+    } catch(e) {}
+
+    if (cityPlaces.length === 0) {
+        cityPlaces = MOCK_PLACES.filter(p => p.cityName === city.name);
+    }
 
     // Filter constraints
     if (constraints.seniorFriendly) {
@@ -145,6 +177,12 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       const maxPlaces = travelStyle === 'relaxed' ? 2 : 4;
 
       for (const place of cityPlaces) {
+        // Simple check if place already added in *this* trip?
+        // Need to track global visited places if we want to avoid repeats across days?
+        // For now, just avoid repeats in daily list (already done)
+        // But also check if it was visited in previous days for this city?
+        // The loop `cityPlaces = cityPlaces.filter` handles repeats for the *same city* loop.
+
         if (dailyActivities.includes(place)) continue;
         if (dailyActivities.length >= maxPlaces) break;
         if (timeUsed + place.timeRequired > 8) break; // Max 8 hours sightseeing
@@ -154,7 +192,9 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       }
 
       // Remove used places so we don't repeat them next day in same city
-      cityPlaces = cityPlaces.filter(p => !dailyActivities.includes(p));
+      // Note: Comparing objects from DB might fail if references differ, but here we push from array so ref is same.
+      // If fetched fresh, might need ID comparison.
+      cityPlaces = cityPlaces.filter(p => !dailyActivities.some(da => da._id?.toString() === p._id?.toString() || da.name === p.name));
 
       // Calculate Costs
       const dayActivityCost = dailyActivities.length * costConfig.activityAvg;
