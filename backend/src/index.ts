@@ -1,37 +1,63 @@
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
-import { TripRequest, generateTrip } from './lib/planner';
+import connectDB from './config/db';
+import { generateTrip, TripRequest } from './lib/planner';
 import { STATES, CITIES, PACKAGES } from './lib/mockData';
+import State from './models/State';
+import Package from './models/Package';
+import City from './models/City';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Connect to Database
+connectDB();
+
 app.use(cors());
 app.use(express.json());
 
-// Mock DB connection (replace with real one if needed)
-// mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/trip-planner');
+app.get('/api/config', async (req, res) => {
+  try {
+    // Try to fetch from DB
+    const dbStates = await State.find();
+    const dbPackages = await Package.find();
+    const dbCities = await City.find();
 
-app.get('/api/config', (req, res) => {
-  res.json({
-    states: STATES,
-    cities: CITIES,
-    packages: PACKAGES
-  });
+    if (dbStates.length > 0) {
+      res.json({
+        states: dbStates,
+        packages: dbPackages,
+        cities: dbCities
+      });
+    } else {
+      console.log('DB empty, serving mock data');
+      res.json({
+        states: STATES,
+        cities: CITIES,
+        packages: PACKAGES
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching config, falling back to mock:', error);
+    res.json({
+      states: STATES,
+      cities: CITIES,
+      packages: PACKAGES
+    });
+  }
 });
 
 app.post('/api/generate-trip', async (req, res) => {
   try {
     const tripRequest: TripRequest = req.body;
 
-    // Validate request
-    if (!tripRequest.selectedCities || tripRequest.selectedCities.length === 0) {
+    if (!tripRequest.selectedCityIds || tripRequest.selectedCityIds.length === 0) {
         res.status(400).json({ error: 'Please select at least one city' });
         return;
     }
 
-    const result = generateTrip(tripRequest);
+    // Now planner needs to be async or handle fetching data internally
+    const result = await generateTrip(tripRequest);
     res.json(result);
   } catch (error: any) {
     console.error('Error generating trip:', error);
