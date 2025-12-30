@@ -63,18 +63,22 @@ export const Planner: FC = () => {
   // Generate route coordinates for the map if result exists
   const routeCoordinates: Array<[number, number]> | undefined = useMemo(() => {
     if (!tripResult) return undefined;
+    if (!tripResult.itinerary || tripResult.itinerary.length === 0) return undefined;
 
     // Extract sequence of cities from itinerary
     const route: Array<[number, number]> = [];
 
-    // Add start
-    const startCity = config.cities.find(c => c.name === tripResult.itinerary[0].city);
-    if(startCity) route.push([startCity.coordinates.lat, startCity.coordinates.lng]);
+    // Add start (guard against missing config/city data)
+    const firstDay = tripResult.itinerary[0];
+    if (firstDay && firstDay.city) {
+      const startCity = config.cities.find((c: any) => c.name === firstDay.city);
+      if (startCity && startCity.coordinates) route.push([startCity.coordinates.lat, startCity.coordinates.lng]);
+    }
 
     tripResult.itinerary.forEach(day => {
         if (day.travel) {
-            const toCity = config.cities.find(c => c.name === day.travel!.to);
-            if (toCity) route.push([toCity.coordinates.lat, toCity.coordinates.lng]);
+            const toCity = config.cities.find((c: any) => c.name === day.travel!.to);
+            if (toCity && toCity.coordinates) route.push([toCity.coordinates.lat, toCity.coordinates.lng]);
         }
     });
 

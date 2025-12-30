@@ -1,5 +1,31 @@
 // The Logic Core: Generates the itinerary
-import { MOCK_CITIES, MOCK_PLACES } from './mockData';
+import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES } from './mockData';
+
+interface City {
+  _id: string;
+  name: string;
+  stateCode?: string;
+  coordinates?: { lat: number; lng: number };
+  tier?: string;
+  description?: string;
+  idealDays?: number;
+  imageUrl?: string;
+}
+
+interface Place {
+  _id: string;
+  name: string;
+  cityName: string;
+  type: string;
+  coordinates?: { lat: number; lng: number };
+  timeRequired: number;
+  openingTime?: string;
+  closingTime?: string;
+  bestTimeOfDay?: string;
+  rating?: number;
+  tags?: string[];
+  priceTier?: string;
+}
 
 export type TravelStyle = 'relaxed' | 'fast';
 export type BudgetTier = 'budget' | 'standard' | 'premium';
@@ -84,7 +110,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   const { selectedCityIds, duration, budget, travelStyle, constraints } = req;
 
   // 1. Get Cities Data
-  const cities = MOCK_CITIES.filter(c => selectedCityIds.includes(c._id));
+  const cities = (MOCK_CITIES as City[]).filter((c: City) => selectedCityIds.includes(c._id));
 
   // 2. Sort Cities (Simple TSP - here just nearest neighbor or preserved order if user selected logic)
   // For MVP: Let's assume the user selected them in order, or we just keep them.
@@ -118,11 +144,11 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     }
 
     // Get places for this city
-    let cityPlaces = MOCK_PLACES.filter(p => p.cityName === city.name);
+    let cityPlaces = (MOCK_PLACES as Place[]).filter((p: Place) => p.cityName === city.name);
 
     // Filter constraints
     if (constraints.seniorFriendly) {
-      cityPlaces = cityPlaces.filter(p => p.tags.includes('senior-friendly'));
+      cityPlaces = cityPlaces.filter((p: Place) => (p.tags || []).includes('senior-friendly'));
     }
 
     // Schedule days in this city
@@ -134,7 +160,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
 
       // Morning Religious Constraint
       if (constraints.morningReligious) {
-        const temples = cityPlaces.filter(p => p.type === 'Temple' && !dailyActivities.includes(p));
+        const temples = cityPlaces.filter((p: Place) => p.type === 'Temple' && !dailyActivities.includes(p));
         if (temples.length > 0) {
            dailyActivities.push(temples[0]);
            timeUsed += temples[0].timeRequired;
@@ -154,7 +180,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       }
 
       // Remove used places so we don't repeat them next day in same city
-      cityPlaces = cityPlaces.filter(p => !dailyActivities.includes(p));
+      cityPlaces = cityPlaces.filter((p: Place) => !dailyActivities.includes(p));
 
       // Calculate Costs
       const dayActivityCost = dailyActivities.length * costConfig.activityAvg;

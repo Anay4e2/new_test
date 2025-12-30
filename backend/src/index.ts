@@ -26,9 +26,9 @@ app.post('/api/generate-trip', async (req, res) => {
     const tripRequest: TripRequest = req.body;
 
     // Validate request
-    if (!tripRequest.selectedCities || tripRequest.selectedCities.length === 0) {
-        res.status(400).json({ error: 'Please select at least one city' });
-        return;
+    if (!tripRequest.selectedCityIds || tripRequest.selectedCityIds.length === 0) {
+      res.status(400).json({ error: 'Please select at least one city' });
+      return;
     }
 
     const result = generateTrip(tripRequest);
