@@ -1,5 +1,5 @@
 // The Logic Core: Generates the itinerary
-import { MOCK_CITIES, MOCK_PLACES } from './mockData';
+import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES } from './mockData';
 
 export type TravelStyle = 'relaxed' | 'fast';
 export type BudgetTier = 'budget' | 'standard' | 'premium';
@@ -16,6 +16,29 @@ export interface TripRequest {
     morningReligious: boolean;
     noNightTravel: boolean;
   };
+}
+
+export interface City {
+  _id: string;
+  name: string;
+  stateCode?: string;
+  coordinates?: { lat: number; lng: number };
+  idealDays?: number;
+}
+
+export interface Place {
+  _id: string;
+  name: string;
+  cityName: string;
+  type: string;
+  coordinates?: { lat: number; lng: number };
+  timeRequired: number;
+  openingTime?: string;
+  closingTime?: string;
+  bestTimeOfDay?: string;
+  rating?: number;
+  tags?: string[];
+  priceTier?: string;
 }
 
 export interface DayItinerary {
