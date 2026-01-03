@@ -1,5 +1,8 @@
 // The Logic Core: Generates the itinerary
 import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES } from './mockData';
+import CityModel from '../models/City';
+import PlaceModel from '../models/Place';
+import mongoose from 'mongoose';
 
 export type TravelStyle = 'relaxed' | 'fast';
 export type BudgetTier = 'budget' | 'standard' | 'premium';
@@ -106,8 +109,58 @@ const COSTS = {
 export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   const { selectedCityIds, duration, budget, travelStyle, constraints } = req;
 
-  // 1. Get Cities Data
-  const cities = MOCK_CITIES.filter(c => selectedCityIds.includes(c._id));
+  // 1. Get Cities Data - try database first, fall back to mock data
+  let cities: City[] = [];
+
+  try {
+    // Try to fetch from database
+    // We need to handle both ObjectId and string ID cases (backward compatibility)
+    const validObjectIds = selectedCityIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    const otherIds = selectedCityIds.filter(id => !mongoose.Types.ObjectId.isValid(id));
+
+    let dbCities: any[] = [];
+
+    // 1. Fetch by valid ObjectId
+    if (validObjectIds.length > 0) {
+      const byId = await CityModel.find({ _id: { $in: validObjectIds } });
+      dbCities = [...dbCities, ...byId];
+    }
+
+    // 2. Fetch by name or custom string _id for legacy/mock compatibility
+    if (otherIds.length > 0) {
+      // Try to find by name (case insensitive) or if we had a string _id field
+      const byName = await CityModel.find({
+        name: { $in: otherIds.map(id => new RegExp(`^${id}$`, 'i')) }
+      });
+      dbCities = [...dbCities, ...byName];
+    }
+
+    // Remove duplicates
+    const seen = new Set();
+    const uniqueDbCities = dbCities.filter(c => {
+      const id = c._id.toString();
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+
+    if (uniqueDbCities.length > 0) {
+      cities = uniqueDbCities.map(c => ({
+        _id: c._id.toString(),
+        name: c.name,
+        stateCode: c.stateCode,
+        coordinates: c.coordinates,
+        idealDays: c.idealDays
+      }));
+    }
+  } catch (error) {
+    console.log('Database query failed, trying mock data:', error);
+  }
+
+  // Fall back to mock data if database returned nothing
+  if (cities.length === 0) {
+    cities = MOCK_CITIES.filter(c => selectedCityIds.includes(c._id));
+  }
 
   // 2. Sort Cities (Simple TSP - here just nearest neighbor or preserved order if user selected logic)
   // For MVP: Let's assume the user selected them in order, or we just keep them.
@@ -159,8 +212,8 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       if (constraints.morningReligious) {
         const temples = cityPlaces.filter((p: Place) => p.type === 'Temple' && !dailyActivities.includes(p));
         if (temples.length > 0) {
-           dailyActivities.push(temples[0]);
-           timeUsed += temples[0].timeRequired;
+          dailyActivities.push(temples[0]);
+          timeUsed += temples[0].timeRequired;
         }
       }
 
