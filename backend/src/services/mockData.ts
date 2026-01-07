@@ -9,7 +9,8 @@ export const STATES = [
     center: { lat: 26.5, lng: 73.8 },
     zoom: 7,
     description: 'The Land of Kings, featuring forts, deserts, and vibrant culture.',
-    imageUrl: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80',
+    // Hawa Mahal, Jaipur
+    imageUrl: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&h=800&fit=crop',
   },
   {
     _id: 'KL',
@@ -18,7 +19,8 @@ export const STATES = [
     center: { lat: 10.8505, lng: 76.2711 },
     zoom: 7,
     description: "God's Own Country, known for its backwaters, beaches, and tea gardens.",
-    imageUrl: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&q=80',
+    // Kerala Backwaters with houseboat
+    imageUrl: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&h=800&fit=crop',
   },
   {
     _id: 'GA',
@@ -27,7 +29,8 @@ export const STATES = [
     center: { lat: 15.2993, lng: 74.1240 },
     zoom: 9,
     description: 'Famous for its beaches, Portuguese heritage, and vibrant nightlife.',
-    imageUrl: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80',
+    // Goa Beach with palm trees
+    imageUrl: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&h=800&fit=crop',
   },
   {
     _id: 'HP',
@@ -35,8 +38,9 @@ export const STATES = [
     name: 'Himachal Pradesh',
     center: { lat: 31.1048, lng: 77.1734 },
     zoom: 7,
-    description: 'A mountain lover’s paradise with snow-capped peaks and scenic valleys.',
-    imageUrl: 'https://images.unsplash.com/photo-1562939884-257859b31d8e?auto=format&fit=crop&q=80',
+    description: "A mountain lover's paradise with snow-capped peaks and scenic valleys.",
+    // Himalayan Mountains
+    imageUrl: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&h=800&fit=crop',
   }
 ];
 
@@ -47,7 +51,8 @@ export const PACKAGES = [
     state: 'Rajasthan',
     days: 7,
     price: 35000,
-    image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80',
+    // Amber Fort, Jaipur
+    image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop',
     description: 'Experience the grandeur of forts and palaces in Jaipur, Jodhpur, and Udaipur.',
     tags: ['Heritage', 'Luxury', 'Culture']
   },
@@ -57,7 +62,8 @@ export const PACKAGES = [
     state: 'Kerala',
     days: 5,
     price: 25000,
-    image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&q=80',
+    // Munnar Tea Gardens
+    image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=600&h=400&fit=crop',
     description: 'Relax on houseboats in Alleppey and explore the tea gardens of Munnar.',
     tags: ['Nature', 'Relaxation', 'Honeymoon']
   },
@@ -67,11 +73,13 @@ export const PACKAGES = [
     state: 'Goa',
     days: 4,
     price: 15000,
-    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80',
+    // Goa Beach Sunset
+    image: 'https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=600&h=400&fit=crop',
     description: 'Enjoy the best beaches, water sports, and nightlife in North Goa.',
     tags: ['Beaches', 'Nightlife', 'Friends']
   }
 ];
+
 
 export const CITIES = [
   // RAJASTHAN
@@ -83,7 +91,8 @@ export const CITIES = [
     tier: 'tier1',
     description: 'The Pink City, famous for Hawa Mahal, Amer Fort, and City Palace.',
     idealDays: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80',
+    // Hawa Mahal - iconic pink palace
+    imageUrl: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=400&h=400&fit=crop',
   },
   {
     _id: 'udaipur',
@@ -93,7 +102,8 @@ export const CITIES = [
     tier: 'tier1',
     description: 'The City of Lakes, known for its romantic setting and palaces.',
     idealDays: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1615836245337-f5b9b2303f10?auto=format&fit=crop&q=80',
+    // Lake Pichola with City Palace
+    imageUrl: 'https://images.unsplash.com/photo-1568495248636-6432b97bd949?w=400&h=400&fit=crop',
   },
   {
     _id: 'jodhpur',
@@ -103,7 +113,8 @@ export const CITIES = [
     tier: 'tier2',
     description: 'The Blue City, dominated by the massive Mehrangarh Fort.',
     idealDays: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1590449911964-b04b6b64731c?auto=format&fit=crop&q=80',
+    // Blue City with Mehrangarh Fort
+    imageUrl: 'https://images.unsplash.com/photo-1590449911964-b04b6b64731c?w=400&h=400&fit=crop',
   },
   {
     _id: 'jaisalmer',
@@ -113,7 +124,8 @@ export const CITIES = [
     tier: 'tier2',
     description: 'The Golden City, located in the heart of the Thar Desert.',
     idealDays: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&q=80',
+    // Jaisalmer Fort - Golden Fort
+    imageUrl: 'https://images.unsplash.com/photo-1624806992066-5ffcf7ca186b?w=400&h=400&fit=crop',
   },
   // KERALA (Mock)
   {

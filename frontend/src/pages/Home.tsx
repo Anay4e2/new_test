@@ -1,8 +1,6 @@
 import { FC, useEffect, useState } from 'react';
-import { Hero } from '@/components/Hero';
-import { FeaturedPackages } from '@/components/FeaturedPackages';
-import { StateOverview } from '@/components/StateOverview';
-import axios from 'axios';
+import { Hero, FeaturedPackages, StateOverview } from '@/components/home';
+import { getConfig } from '@/services/api';
 
 export const Home: FC = () => {
     const [config, setConfig] = useState<{ states: any[], packages: any[] }>({ states: [], packages: [] });
@@ -11,8 +9,8 @@ export const Home: FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await axios.get('/api/config');
-                setConfig(res.data);
+                const data = await getConfig();
+                setConfig(data);
             } catch (error) {
                 console.error("Failed to fetch home data", error);
             } finally {

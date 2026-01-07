@@ -48,3 +48,43 @@ export interface TripResult {
     };
   };
 }
+
+export interface City {
+  _id: string;
+  name: string;
+  stateCode: string;
+  coordinates: { lat: number; lng: number };
+  tier: 'tier1' | 'tier2' | 'tier3';
+  description: string;
+  idealDays: number;
+  imageUrl?: string;
+}
+
+export interface Place {
+  _id: string;
+  name: string;
+  cityName: string;
+  type: string;
+  coordinates: { lat: number; lng: number };
+  description?: string;
+  visitDuration?: string;
+  entryFee?: string;
+  bestTime?: string;
+  timeRequired: number;
+  openingTime: string;
+  closingTime: string;
+  bestTimeOfDay: string;
+  rating: number;
+  tags: string[];
+  priceTier: 'free' | 'low' | 'medium' | 'high';
+}
+
+export interface State {
+  _id: string;
+  code: string;
+  name: string;
+  center: { lat: number; lng: number };
+  zoom: number;
+  description: string;
+  imageUrl?: string;
+}

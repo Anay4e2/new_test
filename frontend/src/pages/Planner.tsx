@@ -1,11 +1,8 @@
 import { FC, useState, useEffect, useMemo } from 'react';
-import { TripWizard } from '@/components/Wizard/TripWizard';
-import { ItineraryView } from '@/components/Itinerary/ItineraryView';
-import { Map } from '@/components/Map/Map';
-import { TripSidebar } from '@/components/Trip/TripSidebar';
-import { TripRequest, TripResult } from '@/lib/types';
+import { TripWizard, ItineraryView, Map, TripSidebar } from '@/components/planner';
+import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
-import axios from 'axios';
+import { getConfig, generateTrip } from '@/services/api';
 
 export const Planner: FC = () => {
   const [config, setConfig] = useState<{ states: any[], cities: any[] }>({ states: [], cities: [] });
@@ -21,10 +18,10 @@ export const Planner: FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('/api/config');
-        setConfig(res.data);
+        const data = await getConfig();
+        setConfig(data);
         // Default to first state (Rajasthan for now)
-        if (res.data.states.length > 0) setSelectedState(res.data.states[0]);
+        if (data.states.length > 0) setSelectedState(data.states[0]);
       } catch (e) {
         console.error(e);
       }
@@ -43,8 +40,8 @@ export const Planner: FC = () => {
   const handleGenerate = async (req: TripRequest) => {
     setLoading(true);
     try {
-      const res = await axios.post('/api/generate-trip', req);
-      setTripResult(res.data);
+      const result = await generateTrip(req);
+      setTripResult(result);
       setActiveTab('itinerary');
     } catch (e) {
       console.error(e);
@@ -145,7 +142,7 @@ export const Planner: FC = () => {
         </div>
 
         {/* Sidebar Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
           {renderSidebar()}
         </div>
       </div>
