@@ -106,8 +106,8 @@ export const Planner: FC = () => {
     <div className="flex h-screen w-full bg-neutral overflow-hidden">
       {/* Left Sidebar */}
       <div className="hidden md:flex flex-col w-[420px] border-r border-white/10">
-        {/* Tab Switcher */}
-        <div className="flex border-b border-white/10">
+        {/* Tab Switcher - Dark Navigation Bar */}
+        <div className="flex border-b border-white/10 bg-neutral-900">
           <button
             onClick={() => setActiveTab('trip')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'trip' ? 'text-white' : 'text-gray-400 hover:text-white'

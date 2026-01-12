@@ -8,8 +8,9 @@ const RAPIDAPI_KEY = '551491d80amsha4ae220a02402d9p179fd0jsna1a484b21945';
 const RAPIDAPI_HOST = 'irctc1.p.rapidapi.com';
 const BASE_URL = 'https://irctc1.p.rapidapi.com';
 
-// Station codes for major cities
+// Station codes for major cities (mapping city/location to nearest railway station)
 export const STATION_CODES: Record<string, string> = {
+    // Metro Cities
     'Delhi': 'NDLS',      // New Delhi
     'New Delhi': 'NDLS',
     'Mumbai': 'CSTM',      // Mumbai CST
@@ -17,30 +18,64 @@ export const STATION_CODES: Record<string, string> = {
     'Chennai': 'MAS',      // Chennai Central
     'Bangalore': 'SBC',    // Bangalore City
     'Hyderabad': 'SC',     // Secunderabad
+
+    // Rajasthan (Tourist destinations with nearest stations)
     'Jaipur': 'JP',        // Jaipur Junction
-    'Ahmedabad': 'ADI',    // Ahmedabad Junction
-    'Pune': 'PUNE',        // Pune Junction
-    'Varanasi': 'BSB',     // Varanasi Junction
-    'Agra': 'AGC',         // Agra Cantt
-    'Lucknow': 'LKO',      // Lucknow
-    'Chandigarh': 'CDG',   // Chandigarh
-    'Amritsar': 'ASR',     // Amritsar Junction
-    'Guwahati': 'GHY',     // Guwahati
-    'Bhubaneswar': 'BBS',  // Bhubaneswar
-    'Kochi': 'ERS',        // Ernakulam Junction
-    'Madurai': 'MDU',      // Madurai Junction
     'Jodhpur': 'JU',       // Jodhpur Junction
     'Udaipur': 'UDZ',      // Udaipur City
+    'Jaisalmer': 'JSM',    // Jaisalmer
+    'Bikaner': 'BKN',      // Bikaner Junction
+    'Ajmer': 'AII',        // Ajmer Junction
+    'Pushkar': 'AII',      // Nearest: Ajmer Junction (11km away)
+    'Mount Abu': 'ABR',    // Abu Road
+    'Chittorgarh': 'COR',  // Chittorgarh
+    'Sawai Madhopur': 'SWM', // Sawai Madhopur (for Ranthambore)
+    'Ranthambore': 'SWM',  // Nearest: Sawai Madhopur
+    'Bharatpur': 'BTE',    // Bharatpur Junction
+    'Alwar': 'AWR',        // Alwar Junction
+
+    // North India
+    'Agra': 'AGC',         // Agra Cantt
+    'Lucknow': 'LKO',      // Lucknow
+    'Varanasi': 'BSB',     // Varanasi Junction
+    'Ahmedabad': 'ADI',    // Ahmedabad Junction
+    'Pune': 'PUNE',        // Pune Junction
+    'Chandigarh': 'CDG',   // Chandigarh
+    'Amritsar': 'ASR',     // Amritsar Junction
     'Haridwar': 'HW',      // Haridwar Junction
     'Rishikesh': 'RKSH',   // Rishikesh
-    'Shimla': 'SML',       // Shimla
-    'Mysore': 'MYS',       // Mysore Junction
-    'Patna': 'PNBE',       // Patna Junction
+    'Dehradun': 'DDN',     // Dehradun
+    'Shimla': 'SML',       // Shimla (narrow gauge)
+    'Manali': 'CDG',       // Nearest: Chandigarh (310km)
+    'Dharamshala': 'PTKC', // Pathankot Cantt (nearest)
     'Jammu': 'JAT',        // Jammu Tawi
-    'Srinagar': 'SRNR',    // Srinagar (if available)
-    'Goa': 'MAO',          // Madgaon (Goa)
-    'Darjeeling': 'DJ',    // Darjeeling
+
+    // South India
+    'Kochi': 'ERS',        // Ernakulam Junction
+    'Madurai': 'MDU',      // Madurai Junction
+    'Mysore': 'MYS',       // Mysore Junction
+    'Ooty': 'MTP',         // Mettupalayam (nearest, then toy train)
+    'Coimbatore': 'CBE',   // Coimbatore Junction
+    'Trivandrum': 'TVC',   // Trivandrum Central
+    'Mangalore': 'MAQ',    // Mangalore Junction
+
+    // East India
+    'Guwahati': 'GHY',     // Guwahati
+    'Bhubaneswar': 'BBS',  // Bhubaneswar
+    'Patna': 'PNBE',       // Patna Junction
+    'Darjeeling': 'NJP',   // Nearest: New Jalpaiguri
     'Gangtok': 'NJP',      // Nearest: New Jalpaiguri
+    'Puri': 'PURI',        // Puri
+
+    // West India
+    'Goa': 'MAO',          // Madgaon (Goa)
+    'Panaji': 'KRMI',      // Karmali (nearest to Panaji)
+    'Surat': 'ST',         // Surat
+    'Vadodara': 'BRC',     // Vadodara Junction
+    'Indore': 'INDB',      // Indore Junction
+    'Bhopal': 'BPL',       // Bhopal Junction
+    'Ujjain': 'UJN',       // Ujjain Junction
+    'Khajuraho': 'KURJ',   // Khajuraho
 };
 
 // Cached train data for popular routes (fallback when API is unavailable)

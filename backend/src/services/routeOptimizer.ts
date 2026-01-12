@@ -158,16 +158,50 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
     const cityOrder = nearestNeighborTSP(cityCoords, startIdx);
     const orderedCityNames = cityOrder.map(i => cityCoords[i].name);
 
-    // 6. Build ordered places list (places within same city stay grouped)
+    // 6. Build ordered places list with Linked TSP (Chain cities together)
     const orderedPlaces: OptimizedPlace[] = [];
     let order = 1;
 
+    // Track the coordinates of the last visited place to determine entry point for next city
+    let lastPlaceCoords: { lat: number; lng: number } | null = null;
+
     for (const cityName of orderedCityNames) {
         const cityPlacesList = cityPlaces.get(cityName) || [];
-        // Sort places within city by rating (best first)
-        cityPlacesList.sort((a, b) => (b.rating || 4) - (a.rating || 4));
+        if (cityPlacesList.length === 0) continue;
 
-        for (const place of cityPlacesList) {
+        // Find the best starting place for this city
+        let bestStartIdx = 0;
+
+        if (lastPlaceCoords) {
+            // If coming from another city, find the place closest to the previous city's last point
+            let minDistance = Infinity;
+
+            cityPlacesList.forEach((place, index) => {
+                const dist = haversineDistance(
+                    lastPlaceCoords!.lat, lastPlaceCoords!.lng,
+                    place.coordinates.lat, place.coordinates.lng
+                );
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    bestStartIdx = index;
+                }
+            });
+        } else {
+            // For the very first city, start with the highest rated place (Must See)
+            // Sort by rating desc temporarily to find top rated, then find its index in original list
+            const topRated = [...cityPlacesList].sort((a, b) => (b.rating || 4) - (a.rating || 4))[0];
+            bestStartIdx = cityPlacesList.findIndex(p => p._id === topRated._id);
+        }
+
+        // Prepare points for TSP
+        const points = cityPlacesList.map(p => p.coordinates);
+
+        // Run TSP within the city starting from the optimal entry point
+        const placeOrderIndices = nearestNeighborTSP(points, bestStartIdx);
+
+        // Add places to ordered list
+        for (const idx of placeOrderIndices) {
+            const place = cityPlacesList[idx];
             orderedPlaces.push({
                 _id: place._id.toString(),
                 name: place.name,
@@ -176,6 +210,10 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
                 order: order++
             });
         }
+
+        // Update last coords for next iteration
+        const lastIdx = placeOrderIndices[placeOrderIndices.length - 1];
+        lastPlaceCoords = cityPlacesList[lastIdx].coordinates;
     }
 
     // 7. Calculate route segments between cities

@@ -16,6 +16,7 @@ export interface IPlace extends Document {
   rating: number;
   tags: string[];
   priceTier: 'free' | 'low' | 'medium' | 'high';
+  imageUrl?: string;
 }
 
 const PlaceSchema: Schema = new Schema({
@@ -36,7 +37,8 @@ const PlaceSchema: Schema = new Schema({
   bestTimeOfDay: { type: String, default: 'day' },
   rating: { type: Number, default: 4.0 },
   tags: [{ type: String }],
-  priceTier: { type: String, enum: ['free', 'low', 'medium', 'high'], default: 'medium' }
+  priceTier: { type: String, enum: ['free', 'low', 'medium', 'high'], default: 'medium' },
+  imageUrl: { type: String }
 });
 
 export default mongoose.model<IPlace>('Place', PlaceSchema);

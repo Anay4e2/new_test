@@ -11,6 +11,7 @@ import Place from './models/Place';
 import Route from './models/Route';
 import trainService from './lib/trainService';
 import distanceService, { haversineDistance } from './lib/distanceService';
+import { generateItineraryPDF } from './services/pdfService';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -395,6 +396,28 @@ app.post('/api/generate-trip', async (req, res) => {
   } catch (error: any) {
     console.error('Error generating trip:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// Generate PDF itinerary
+app.post('/api/itinerary/pdf', async (req, res) => {
+  try {
+    const tripData = req.body;
+
+    if (!tripData || !tripData.itinerary || !tripData.summary) {
+      res.status(400).json({ error: 'Invalid trip data. Required: itinerary, summary' });
+      return;
+    }
+
+    const pdfBuffer = await generateItineraryPDF(tripData);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=trip-itinerary-${tripData.itinerary.length}days.pdf`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (error: any) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate PDF' });
   }
 });
 

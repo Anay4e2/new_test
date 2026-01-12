@@ -1,5 +1,26 @@
 import { FC, useState, useEffect } from 'react';
 import { useTripStore, RouteSegment } from '../../../stores/tripStore';
+import axios from 'axios';
+
+// Train info interface
+interface TrainInfo {
+    trainNumber: string;
+    trainName: string;
+    departureTime: string;
+    arrivalTime: string;
+    duration: string;
+    classes: string[];
+    fromStation: string;
+    toStation: string;
+}
+
+interface TrainSearchResult {
+    fromStation: string;
+    toStation: string;
+    fromCode: string;
+    toCode: string;
+    trains: TrainInfo[];
+}
 
 // Transport mode icons
 const transportIcons: Record<string, string> = {
@@ -9,10 +30,40 @@ const transportIcons: Record<string, string> = {
     bus: '🚌'
 };
 
-// Transport Card Component
+// Transport Card Component with Train Search
 const TransportCard: FC<{ segment: RouteSegment }> = ({ segment }) => {
     const [expanded, setExpanded] = useState(false);
+    const [showTrains, setShowTrains] = useState(false);
+    const [trains, setTrains] = useState<TrainInfo[]>([]);
+    const [stationInfo, setStationInfo] = useState<{ from: string; to: string } | null>(null);
+    const [loadingTrains, setLoadingTrains] = useState(false);
+    const [trainError, setTrainError] = useState<string | null>(null);
     const suggested = segment.suggestedTransport;
+
+    const fetchTrains = async () => {
+        setLoadingTrains(true);
+        setTrainError(null);
+        try {
+            const res = await axios.get<TrainSearchResult>(`http://localhost:3001/api/trains/${encodeURIComponent(segment.from)}/${encodeURIComponent(segment.to)}`);
+            if (res.data.trains && res.data.trains.length > 0) {
+                setTrains(res.data.trains);
+                setStationInfo({ from: `${res.data.fromStation} (${res.data.fromCode})`, to: `${res.data.toStation} (${res.data.toCode})` });
+            } else {
+                setTrainError(`No direct trains found between ${segment.from} and ${segment.to}`);
+            }
+        } catch (e) {
+            setTrainError('Failed to fetch trains');
+        } finally {
+            setLoadingTrains(false);
+        }
+    };
+
+    const handleShowTrains = () => {
+        if (!showTrains && trains.length === 0) {
+            fetchTrains();
+        }
+        setShowTrains(!showTrains);
+    };
 
     return (
         <div className="bg-white/5 rounded-lg p-3 border border-white/10">
@@ -48,13 +99,64 @@ const TransportCard: FC<{ segment: RouteSegment }> = ({ segment }) => {
                 </div>
             )}
 
-            {/* Expand for more options */}
+            {/* Find Trains Button */}
+            <button
+                onClick={handleShowTrains}
+                className="mt-3 w-full py-2 px-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 text-xs font-medium transition-colors flex items-center justify-center gap-2"
+            >
+                <span>🚂</span>
+                {loadingTrains ? 'Finding trains...' : (showTrains ? 'Hide Trains' : 'Find Trains')}
+            </button>
+
+            {/* Train Results */}
+            {showTrains && (
+                <div className="mt-3 space-y-2">
+                    {stationInfo && (
+                        <div className="text-[10px] text-gray-500 bg-white/5 p-1.5 rounded">
+                            📍 Nearest stations: {stationInfo.from} → {stationInfo.to}
+                        </div>
+                    )}
+                    {trainError && (
+                        <div className="text-xs text-orange-400 bg-orange-500/10 p-2 rounded">{trainError}</div>
+                    )}
+                    {trains.map((train, i) => (
+                        <div key={i} className="bg-white/5 p-2 rounded-lg border border-white/10">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-white">
+                                        {train.trainNumber} - {train.trainName}
+                                    </div>
+                                    <div className="text-xs text-gray-400 flex items-center gap-2 mt-1">
+                                        <span>🕒 {train.departureTime}</span>
+                                        <span>→</span>
+                                        <span>{train.arrivalTime}</span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-xs font-bold text-emerald-400">{train.duration}</div>
+                                </div>
+                            </div>
+                            {train.classes && train.classes.length > 0 && (
+                                <div className="flex gap-1 mt-2 flex-wrap">
+                                    {train.classes.slice(0, 4).map((cls, j) => (
+                                        <span key={j} className="px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] rounded">
+                                            {cls}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Expand for more transport options */}
             {segment.transportOptions.length > 1 && (
                 <button
                     onClick={() => setExpanded(!expanded)}
-                    className="mt-2 text-xs text-blue-400 hover:underline"
+                    className="mt-2 text-xs text-gray-400 hover:text-white"
                 >
-                    {expanded ? 'Hide options' : `+${segment.transportOptions.length - 1} more options`}
+                    {expanded ? 'Hide other options' : `+${segment.transportOptions.length - 1} more transport options`}
                 </button>
             )}
 
@@ -224,6 +326,34 @@ export const TripSidebar: FC = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Google Maps Route Link */}
+                        {(() => {
+                            // Get unique cities from route segments
+                            const routeCities = [routeSegments[0]?.from, ...routeSegments.map(s => s.to)].filter(Boolean);
+                            if (routeCities.length < 2) return null;
+
+                            const origin = encodeURIComponent(routeCities[0] + ', India');
+                            const destination = encodeURIComponent(routeCities[routeCities.length - 1] + ', India');
+                            const waypoints = routeCities.slice(1, -1).map(c => encodeURIComponent(c + ', India')).join('|');
+
+                            const mapsUrl = waypoints
+                                ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`
+                                : `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+
+                            return (
+                                <a
+                                    href={mapsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-3 w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-lg text-white text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+                                >
+                                    <span>🚗</span>
+                                    Open Route in Google Maps
+                                    <span className="text-xs opacity-75">↗</span>
+                                </a>
+                            );
+                        })()}
                     </div>
                 )}
 
