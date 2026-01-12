@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import axios from 'axios';
 
 // Types
 export interface Place {
@@ -177,7 +176,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         });
     },
 
-    // === OPTIMIZE ROUTE ===
+    // === OPTIMIZE ROUTE (using Google Directions API) ===
     optimizeRoute: async () => {
         const places = get().selectedPlaces;
         if (places.length < 2) {
@@ -193,32 +192,97 @@ export const useTripStore = create<TripStore>((set, get) => ({
         set({ isOptimizing: true });
 
         try {
-            const response = await axios.post('http://localhost:3001/api/trips/optimize-route', {
-                placeIds: places.map(p => p._id)
+            // Check if Google Maps is loaded
+            if (typeof google === 'undefined' || !google.maps) {
+                throw new Error('Google Maps not loaded');
+            }
+
+            const directionsService = new google.maps.DirectionsService();
+
+            // Prepare waypoints (all places except first and last)
+            const origin = places[0].coordinates;
+            const destination = places[places.length - 1].coordinates;
+            const waypoints = places.slice(1, -1).map(p => ({
+                location: new google.maps.LatLng(p.coordinates.lat, p.coordinates.lng),
+                stopover: true
+            }));
+
+            const result = await directionsService.route({
+                origin: new google.maps.LatLng(origin.lat, origin.lng),
+                destination: new google.maps.LatLng(destination.lat, destination.lng),
+                waypoints,
+                optimizeWaypoints: true,
+                travelMode: google.maps.TravelMode.DRIVING
             });
 
-            const { orderedPlaces, routeSegments, totalDistance, estimatedTravelTime } = response.data;
+            // DirectionsResult is returned if successful (promise rejects on error)
+            if (result.routes && result.routes.length > 0) {
+                // Get optimized order from waypoint_order
+                const waypointOrder = result.routes[0].waypoint_order;
+                const middlePlaces = places.slice(1, -1);
 
-            // Map back full place data to ordered places
-            const optimized: OptimizedPlace[] = orderedPlaces.map((op: any) => {
-                const fullPlace = places.find(p => p._id === op._id);
-                return {
-                    ...fullPlace,
-                    ...op
-                };
-            });
+                // Build optimized route
+                const optimized: OptimizedPlace[] = [];
 
+                // First place
+                optimized.push({ ...places[0], order: 1 });
+
+                // Reordered waypoints
+                waypointOrder.forEach((index, i) => {
+                    optimized.push({ ...middlePlaces[index], order: i + 2 });
+                });
+
+                // Last place
+                optimized.push({ ...places[places.length - 1], order: optimized.length + 1 });
+
+                // Calculate total distance and time
+                const legs = result.routes[0].legs;
+                let totalDistance = 0;
+                let totalDuration = 0;
+
+                const routeSegments: RouteSegment[] = legs.map((leg, i) => {
+                    totalDistance += leg.distance?.value || 0;
+                    totalDuration += leg.duration?.value || 0;
+
+                    return {
+                        from: i === 0 ? places[0].name : optimized[i].name,
+                        to: optimized[i + 1]?.name || places[places.length - 1].name,
+                        distance: Math.round((leg.distance?.value || 0) / 1000), // Convert to km
+                        transportOptions: [{
+                            mode: 'road' as const,
+                            duration: Math.round((leg.duration?.value || 0) / 3600 * 10) / 10, // Convert to hours
+                            estimatedCost: { min: 0, max: 0 },
+                            comfort: 'standard' as const
+                        }],
+                        suggestedTransport: {
+                            mode: 'road' as const,
+                            duration: Math.round((leg.duration?.value || 0) / 3600 * 10) / 10,
+                            estimatedCost: { min: 0, max: 0 },
+                            comfort: 'standard' as const
+                        }
+                    };
+                });
+
+                set({
+                    optimizedRoute: optimized,
+                    routeSegments,
+                    totalDistance: Math.round(totalDistance / 1000), // km
+                    estimatedTravelTime: Math.round(totalDuration / 3600 * 10) / 10, // hours
+                    showRouteOnMap: true,
+                    isOptimizing: false
+                });
+            } else {
+                throw new Error('No routes found');
+            }
+        } catch (error) {
+            console.error('Failed to optimize route:', error);
+            // Fallback: just use selection order
             set({
-                optimizedRoute: optimized,
-                routeSegments,
-                totalDistance,
-                estimatedTravelTime,
+                optimizedRoute: places.map((p, i) => ({ ...p, order: i + 1 })),
+                routeSegments: [],
                 showRouteOnMap: true,
                 isOptimizing: false
             });
-        } catch (error) {
-            console.error('Failed to optimize route:', error);
-            set({ isOptimizing: false });
         }
     },
 

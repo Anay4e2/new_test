@@ -1,5 +1,5 @@
 import { FC, useState, useMemo } from 'react';
-import { TripRequest } from '@/lib/types';
+import { TripRequest } from '@/types';
 import { Calendar, CheckCircle, Clock, DollarSign, MapPin, Sparkles, Sun, Users, Snowflake, CloudRain, Leaf, Package, Crown, Backpack, Compass, Heart, Zap } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +25,7 @@ interface SuggestedPlan {
   idealFor: string[];
   budget: 'budget' | 'standard' | 'premium';
   style: 'relaxed' | 'fast';
+  recommendedCityNames: string[]; // Cities to auto-select for this package
 }
 
 // Helper function to determine season from date
@@ -60,7 +61,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 5, max: 10 },
         idealFor: ['Couples', 'Photographers', 'Culture Enthusiasts'],
         budget: 'standard',
-        style: 'relaxed'
+        style: 'relaxed',
+        recommendedCityNames: ['Jaisalmer', 'Bikaner', 'Jodhpur', 'Pushkar']
       },
       {
         id: 'royal-heritage',
@@ -71,7 +73,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 7, max: 14 },
         idealFor: ['Families', 'History Buffs', 'Luxury Travelers'],
         budget: 'premium',
-        style: 'relaxed'
+        style: 'relaxed',
+        recommendedCityNames: ['Udaipur', 'Jaipur', 'Jodhpur', 'Jaisalmer']
       }
     ],
     summer: [
@@ -84,7 +87,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 3, max: 7 },
         idealFor: ['Families', 'Nature Lovers', 'Senior Citizens'],
         budget: 'standard',
-        style: 'relaxed'
+        style: 'relaxed',
+        recommendedCityNames: ['Mount Abu', 'Udaipur']
       },
       {
         id: 'early-morning',
@@ -95,7 +99,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 4, max: 8 },
         idealFor: ['Couples', 'Young Travelers', 'Budget Conscious'],
         budget: 'budget',
-        style: 'fast'
+        style: 'fast',
+        recommendedCityNames: ['Jaipur', 'Jodhpur', 'Udaipur']
       }
     ],
     monsoon: [
@@ -108,7 +113,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 4, max: 7 },
         idealFor: ['Couples', 'Photographers', 'Adventure Seekers'],
         budget: 'standard',
-        style: 'relaxed'
+        style: 'relaxed',
+        recommendedCityNames: ['Udaipur', 'Mount Abu', 'Ranthambore']
       },
       {
         id: 'indoor-heritage',
@@ -119,7 +125,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 3, max: 6 },
         idealFor: ['Families', 'Culture Enthusiasts', 'Food Lovers'],
         budget: 'premium',
-        style: 'relaxed'
+        style: 'relaxed',
+        recommendedCityNames: ['Jaipur', 'Udaipur', 'Jodhpur']
       }
     ],
     spring: [
@@ -132,7 +139,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 4, max: 8 },
         idealFor: ['Couples', 'Culture Enthusiasts', 'Young Travelers'],
         budget: 'standard',
-        style: 'fast'
+        style: 'fast',
+        recommendedCityNames: ['Pushkar', 'Jaipur', 'Udaipur', 'Mathura']
       },
       {
         id: 'complete-rajasthan',
@@ -143,7 +151,8 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
         recommendedDuration: { min: 10, max: 15 },
         idealFor: ['First-timers', 'Families', 'Group Tours'],
         budget: 'standard',
-        style: 'relaxed'
+        style: 'relaxed',
+        recommendedCityNames: ['Jaipur', 'Jodhpur', 'Udaipur', 'Jaisalmer', 'Pushkar', 'Bikaner']
       }
     ]
   };
@@ -319,9 +328,24 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
     });
   }, [cities, packageType]);
 
-  // Update form data when plan is selected
+  // Update form data when plan is selected and auto-select recommended cities
   const handlePlanSelect = (plan: SuggestedPlan) => {
     setSelectedPlan(plan.id);
+
+    // Auto-select recommended cities for this package
+    if (plan.recommendedCityNames && plan.recommendedCityNames.length > 0) {
+      const cityIdsToSelect = cities
+        .filter(city => plan.recommendedCityNames.includes(city.name))
+        .map(city => city._id);
+
+      // Toggle on cities that aren't already selected
+      cityIdsToSelect.forEach(id => {
+        if (!selectedCityIds.includes(id)) {
+          onCityToggle(id);
+        }
+      });
+    }
+
     setFormData({
       ...formData,
       duration: calculatedDuration,
@@ -513,6 +537,18 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
             </div>
             <p className="text-gray-600 mt-1">{packageType.cityReason}</p>
           </div>
+
+          {/* Auto-selected notification */}
+          {selectedPlan && selectedCityIds.length > 0 && (
+            <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-emerald-600" />
+                <span className="text-emerald-800 font-medium">
+                  ✨ Destinations auto-selected based on your package! You can still modify below.
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
             {sortedCities.map(city => {

@@ -1,6 +1,5 @@
-import { FC, useState } from 'react';
-import { useTripStore, RouteSegment } from '../../stores/tripStore';
-import { TrainSearch } from '../Transport/TrainSearch';
+import { FC, useState, useEffect } from 'react';
+import { useTripStore, RouteSegment } from '../../../stores/tripStore';
 
 // Transport mode icons
 const transportIcons: Record<string, string> = {
@@ -113,14 +112,6 @@ export const TripSidebar: FC = () => {
                     <p className="text-gray-400 text-sm">
                         Hover over states on the map and click the + button to add places to your trip.
                     </p>
-                </div>
-
-                {/* Train Search - Always Available */}
-                <div className="flex-1 overflow-y-auto p-4">
-                    <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">
-                        🚂 Search Indian Railways
-                    </h3>
-                    <TrainSearch />
                 </div>
             </div>
         );
@@ -236,28 +227,14 @@ export const TripSidebar: FC = () => {
                     </div>
                 )}
 
-                {/* Train Search Section */}
-                {cities.length >= 2 && (
-                    <div>
-                        <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">
-                            🚂 Find Trains
-                        </h3>
-                        <TrainSearch
-                            fromCity={cities[0]}
-                            toCity={cities[1]}
-                            autoSearch={false}
-                        />
-                    </div>
+                {/* Clothing Recommendations */}
+                {selectedPlaces.length > 0 && (
+                    <ClothingRecommendation cities={cities} />
                 )}
 
-                {/* Train Search - Always Available */}
-                {cities.length < 2 && (
-                    <div>
-                        <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">
-                            🚂 Train Search
-                        </h3>
-                        <TrainSearch />
-                    </div>
+                {/* Travel Mode Recommendations */}
+                {totalDistance > 0 && (
+                    <TravelModeRecommendation distance={totalDistance} />
                 )}
             </div>
 
@@ -304,6 +281,278 @@ export const TripSidebar: FC = () => {
                         Add at least 2 places to optimize your route
                     </p>
                 )}
+            </div>
+        </div>
+    );
+};
+
+// Clothing Recommendation Component with Weather API (using Open-Meteo - free, no API key needed)
+const ClothingRecommendation: FC<{ cities: string[] }> = ({ cities }) => {
+    const [weather, setWeather] = useState<{ temp: number; description: string; humidity: number } | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const currentMonth = new Date().getMonth();
+
+    // Weather code to description mapping
+    const getWeatherDescription = (code: number): string => {
+        if (code === 0) return 'Clear sky';
+        if (code <= 3) return 'Partly cloudy';
+        if (code <= 48) return 'Foggy';
+        if (code <= 57) return 'Drizzle';
+        if (code <= 67) return 'Rain';
+        if (code <= 77) return 'Snow';
+        if (code <= 82) return 'Rain showers';
+        if (code <= 86) return 'Snow showers';
+        if (code >= 95) return 'Thunderstorm';
+        return 'Cloudy';
+    };
+
+    // Fetch weather using Open-Meteo (free API, no key required)
+    useEffect(() => {
+        const fetchWeather = async () => {
+            if (cities.length === 0) return;
+
+            setLoading(true);
+            try {
+                // First, get coordinates using Google Geocoding (uses existing Maps API key)
+                const geocoder = new google.maps.Geocoder();
+                const city = cities[0];
+
+                geocoder.geocode({ address: `${city}, India` }, async (results, status) => {
+                    if (status === 'OK' && results && results[0]) {
+                        const lat = results[0].geometry.location.lat();
+                        const lng = results[0].geometry.location.lng();
+
+                        // Fetch weather from Open-Meteo (free, no API key)
+                        const res = await fetch(
+                            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,weather_code`
+                        );
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            setWeather({
+                                temp: Math.round(data.current.temperature_2m),
+                                description: getWeatherDescription(data.current.weather_code),
+                                humidity: data.current.relative_humidity_2m
+                            });
+                        }
+                    }
+                    setLoading(false);
+                });
+            } catch (error) {
+                console.error('Weather fetch failed:', error);
+                setLoading(false);
+            }
+        };
+
+        // Only fetch if Google Maps is loaded
+        if (typeof google !== 'undefined' && google.maps) {
+            fetchWeather();
+        }
+    }, [cities]);
+
+    // Determine season
+    const getSeason = () => {
+        if (currentMonth >= 2 && currentMonth <= 4) return 'summer';
+        if (currentMonth >= 5 && currentMonth <= 8) return 'monsoon';
+        if (currentMonth >= 9 && currentMonth <= 10) return 'autumn';
+        return 'winter';
+    };
+
+    // Get temperature-based or season-based recommendations
+    const getRecommendations = () => {
+        const recommendations: { icon: string; item: string; tip?: string }[] = [];
+        const temp = weather?.temp;
+        const season = getSeason();
+
+        // Temperature-based recommendations (if weather available)
+        if (temp !== undefined) {
+            if (temp <= 10) {
+                recommendations.push({ icon: '🧥', item: 'Heavy Jacket/Coat', tip: `Current temp: ${temp}°C` });
+                recommendations.push({ icon: '🧣', item: 'Scarf & Gloves' });
+                recommendations.push({ icon: '🧶', item: 'Woolen Clothes' });
+            } else if (temp <= 20) {
+                recommendations.push({ icon: '🧥', item: 'Light Jacket', tip: `Current temp: ${temp}°C` });
+                recommendations.push({ icon: '👕', item: 'Full-sleeve Shirts' });
+            } else if (temp <= 30) {
+                recommendations.push({ icon: '👕', item: 'Cotton T-shirts', tip: `Current temp: ${temp}°C` });
+                recommendations.push({ icon: '👖', item: 'Light Trousers' });
+            } else {
+                recommendations.push({ icon: '👕', item: 'Loose Cotton Clothes', tip: `Hot! ${temp}°C` });
+                recommendations.push({ icon: '🧢', item: 'Hat/Cap' });
+                recommendations.push({ icon: '🕶️', item: 'Sunglasses' });
+            }
+        } else {
+            // Fallback to season-based
+            if (season === 'winter') {
+                recommendations.push({ icon: '🧥', item: 'Jacket/Sweater' });
+            } else if (season === 'summer') {
+                recommendations.push({ icon: '👕', item: 'Cotton Clothes' });
+            } else if (season === 'monsoon') {
+                recommendations.push({ icon: '☔', item: 'Rain Jacket/Umbrella' });
+            }
+        }
+
+        // Universal items
+        recommendations.push({ icon: '👟', item: 'Comfortable Walking Shoes' });
+
+        return recommendations;
+    };
+
+    const recommendations = getRecommendations();
+    const weatherIcon = weather ? (weather.temp > 30 ? '🌡️' : weather.temp < 15 ? '❄️' : '🌤️') : '🌡️';
+
+    return (
+        <div>
+            <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">
+                👔 What to Pack
+            </h3>
+            <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-lg p-4 border border-purple-500/20">
+                {loading ? (
+                    <div className="flex items-center gap-2 text-gray-400">
+                        <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full"></div>
+                        <span className="text-sm">Fetching weather...</span>
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-2xl">{weatherIcon}</span>
+                            <div>
+                                {weather ? (
+                                    <>
+                                        <div className="text-sm font-medium text-white">{weather.temp}°C - {weather.description}</div>
+                                        <div className="text-xs text-gray-400">Humidity: {weather.humidity}%</div>
+                                    </>
+                                ) : (
+                                    <div className="text-sm text-gray-400">Weather data unavailable</div>
+                                )}
+                            </div>
+                        </div>
+                        <ul className="space-y-2">
+                            {recommendations.slice(0, 5).map((rec, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                    <span className="text-lg">{rec.icon}</span>
+                                    <div className="flex-1">
+                                        <span className="text-sm text-white">{rec.item}</span>
+                                        {rec.tip && <p className="text-xs text-gray-400">{rec.tip}</p>}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// Travel Mode Recommendation Component
+const TravelModeRecommendation: FC<{ distance: number }> = ({ distance }) => {
+    if (distance === 0) return null;
+
+    // Calculate costs for different modes
+    const getModeRecommendations = () => {
+        const modes: { icon: string; mode: string; cost: string; duration: string; recommended?: boolean }[] = [];
+
+        if (distance < 100) {
+            // Short distance - Road preferred
+            modes.push({
+                icon: '🚗',
+                mode: 'Self Drive',
+                cost: `₹${Math.round(distance * 12)}-₹${Math.round(distance * 15)}`,
+                duration: `${(distance / 50).toFixed(1)} hrs`,
+                recommended: true
+            });
+            modes.push({
+                icon: '🚕',
+                mode: 'Taxi/Cab',
+                cost: `₹${Math.round(distance * 18)}-₹${Math.round(distance * 25)}`,
+                duration: `${(distance / 40).toFixed(1)} hrs`
+            });
+        } else if (distance < 500) {
+            // Medium distance - Train preferred
+            modes.push({
+                icon: '🚂',
+                mode: 'Train (AC)',
+                cost: `₹${Math.round(distance * 2)}-₹${Math.round(distance * 3.5)}`,
+                duration: `${(distance / 60).toFixed(1)} hrs`,
+                recommended: true
+            });
+            modes.push({
+                icon: '🚌',
+                mode: 'Bus (Volvo)',
+                cost: `₹${Math.round(distance * 1.5)}-₹${Math.round(distance * 2.5)}`,
+                duration: `${(distance / 45).toFixed(1)} hrs`
+            });
+            modes.push({
+                icon: '🚗',
+                mode: 'Self Drive',
+                cost: `₹${Math.round(distance * 10)}-₹${Math.round(distance * 14)}`,
+                duration: `${(distance / 50).toFixed(1)} hrs`
+            });
+        } else {
+            // Long distance - Flight an option
+            modes.push({
+                icon: '✈️',
+                mode: 'Flight',
+                cost: `₹${4000 + Math.round(distance * 4)}-₹${8000 + Math.round(distance * 6)}`,
+                duration: `${(distance / 700 + 2).toFixed(1)} hrs`,
+                recommended: distance > 800
+            });
+            modes.push({
+                icon: '🚂',
+                mode: 'Train (AC)',
+                cost: `₹${Math.round(distance * 1.5)}-₹${Math.round(distance * 3)}`,
+                duration: `${(distance / 55).toFixed(1)} hrs`,
+                recommended: distance <= 800
+            });
+            modes.push({
+                icon: '🚌',
+                mode: 'Bus (Sleeper)',
+                cost: `₹${Math.round(distance * 1)}-₹${Math.round(distance * 2)}`,
+                duration: `${(distance / 40).toFixed(1)} hrs`
+            });
+        }
+
+        return modes;
+    };
+
+    const modes = getModeRecommendations();
+
+    return (
+        <div>
+            <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">
+                🚀 Recommended Travel Modes
+            </h3>
+            <div className="bg-gradient-to-br from-green-900/30 to-teal-900/30 rounded-lg p-4 border border-green-500/20">
+                <div className="text-xs text-gray-400 mb-3">Total Distance: {distance} km</div>
+                <div className="space-y-2">
+                    {modes.map((m, i) => (
+                        <div
+                            key={i}
+                            className={`flex items-center justify-between p-2 rounded-lg ${m.recommended ? 'bg-green-500/20 border border-green-500/30' : 'bg-white/5'
+                                }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">{m.icon}</span>
+                                <div>
+                                    <div className="text-sm text-white flex items-center gap-2">
+                                        {m.mode}
+                                        {m.recommended && (
+                                            <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full">
+                                                BEST
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="text-xs text-gray-400">{m.duration}</div>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-sm font-medium text-emerald-400">{m.cost}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
