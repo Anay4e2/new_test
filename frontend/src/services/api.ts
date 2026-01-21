@@ -10,6 +10,51 @@ const api = axios.create({
     },
 });
 
+// Add interceptor to attach token to requests
+api.interceptors.request.use((config) => {
+    // Get token from localStorage (where Zustand persists it)
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+        try {
+            const { state } = JSON.parse(authStorage);
+            if (state?.token) {
+                config.headers.Authorization = `Bearer ${state.token}`;
+            }
+        } catch (e) {
+            // Ignore parsing errors
+        }
+    }
+    return config;
+});
+
+// Auth API
+export interface AuthResponse {
+    success: boolean;
+    token?: string;
+    user?: {
+        id: string;
+        name: string;
+        email: string;
+        createdAt: string;
+    };
+    message?: string;
+}
+
+export const registerUser = async (name: string, email: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/register', { name, email, password });
+    return response.data;
+};
+
+export const loginUser = async (email: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/login', { email, password });
+    return response.data;
+};
+
+export const getCurrentUser = async (): Promise<AuthResponse> => {
+    const response = await api.get('/auth/me');
+    return response.data;
+};
+
 // Config API
 export const getConfig = async () => {
     const response = await api.get('/config');
@@ -59,3 +104,4 @@ export const getDistance = async (fromCity: string, toCity: string) => {
 };
 
 export default api;
+

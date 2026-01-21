@@ -8,10 +8,12 @@ import trainRoutes from './trainRoutes';
 import distanceRoutes from './distanceRoutes';
 import tripRoutes from './tripRoutes';
 import itineraryRoutes from './itineraryRoutes';
+import authRoutes from './authRoutes';
 
 const router = Router();
 
 // Mount all routes
+router.use('/auth', authRoutes);
 router.use('/config', configRoutes);
 router.use('/places', placeRoutes);
 router.use('/cities', cityRoutes);

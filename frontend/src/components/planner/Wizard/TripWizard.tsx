@@ -403,7 +403,6 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                 value={startDate}
                 onChange={e => {
                   setStartDate(e.target.value);
-                  // Reset end date if it's before start date
                   if (endDate && e.target.value > endDate) {
                     setEndDate('');
                   }

@@ -177,7 +177,7 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route }) => {
         // Mouse events
         dataLayer.addListener('mouseover', (event: google.maps.Data.MouseEvent) => {
             const stateName = event.feature.getProperty('NAME_1') || event.feature.getProperty('ST_NM');
-            setHoveredStateName(stateName);
+            setHoveredStateName(stateName as string);
 
             if (activeState !== stateName) {
                 dataLayer.overrideStyle(event.feature, {
