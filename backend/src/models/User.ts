@@ -5,6 +5,7 @@ export interface IUser {
     name: string;
     email: string;
     password: string;
+    role: 'user' | 'admin';
     createdAt: Date;
 }
 
@@ -34,6 +35,11 @@ const UserSchema = new Schema<IUser, mongoose.Model<IUser, {}, IUserMethods>, IU
         required: [true, 'Password is required'],
         minlength: [6, 'Password must be at least 6 characters'],
         select: false
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
     },
     createdAt: {
         type: Date,

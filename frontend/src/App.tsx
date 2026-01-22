@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { Planner } from './pages/Planner';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Admin } from './pages/Admin';
 
 const App: FC = () => {
   return (
@@ -13,6 +14,7 @@ const App: FC = () => {
         <Route path="/plan" element={<Planner />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </Router>
   );
