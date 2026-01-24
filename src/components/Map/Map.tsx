@@ -44,6 +44,7 @@ interface MapProps {
     to: [number, number];
     color?: string;
   }>;
+  onStateSelect?: (stateName: string) => void;
 }
 
 function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
@@ -54,11 +55,7 @@ function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }
   return null;
 }
 
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-ignore
-const [activeState, setActiveState] = useState<string | null>(null);
-
-// Custom Icons
+// Custom Icons (defined outside component as they don't need state)
 const UnselectedIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/markers/marker-icon-2x-teal.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -77,56 +74,6 @@ const SelectedIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-useEffect(() => {
-  fetch('https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson')
-    .then(res => res.json())
-    .then(data => setGeoData(data))
-    .catch(err => console.error('Failed to load GeoJSON', err));
-}, []);
-
-const highlightFeature = (e: any) => {
-  const layer = e.target;
-  // @ts-ignore
-  const stateName = layer.feature.properties.NAME_1 || layer.feature.properties.ST_NM;
-
-  layer.setStyle({
-    weight: 3,
-    color: '#ff7f50', // Coral/Orange
-    dashArray: '',
-    fillOpacity: 0.7
-  });
-
-  layer.bringToFront();
-  setActiveState(stateName);
-};
-
-const resetHighlight = (e: any) => {
-  const layer = e.target;
-  layer.setStyle({
-    fillColor: '#3b82f6',
-    weight: 1,
-    opacity: 1,
-    color: 'white',
-    dashArray: '3',
-    fillOpacity: 0.2
-  });
-  setActiveState(null);
-};
-
-const onEachFeature = (feature: any, layer: any) => {
-  layer.on({
-    mouseover: highlightFeature,
-    mouseout: resetHighlight,
-    click: (e: any) => {
-      if (onStateSelect && feature.properties) {
-        // @ts-ignore
-        const name = feature.properties.NAME_1 || feature.properties.ST_NM;
-        onStateSelect(name);
-      }
-    }
-  });
-};
-
 const defaultStyle = {
   fillColor: '#3b82f6',
   weight: 1,
@@ -136,79 +83,139 @@ const defaultStyle = {
   fillOpacity: 0.2
 };
 
-return (
-  <div className="relative h-full w-full bg-neutral-900">
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
-      scrollWheelZoom={true}
-      className="z-0"
-    >
-      <MapUpdater center={center} zoom={zoom} />
+export default function Map({
+  center,
+  zoom,
+  markers = [],
+  selectedMarkers = [],
+  onMarkerClick,
+  route,
+  intercityRoutes,
+  onStateSelect
+}: MapProps) {
+  const [activeState, setActiveState] = useState<string | null>(null);
+  const [geoData, setGeoData] = useState<any>(null);
 
-      {/* Premium Dark Tiles */}
-      <TileLayer
-        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      />
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson')
+      .then(res => res.json())
+      .then(data => setGeoData(data))
+      .catch(err => console.error('Failed to load GeoJSON', err));
+  }, []);
 
-      {geoData && (
-        // @ts-ignore
-        <GeoJSON
-          data={geoData}
-          style={defaultStyle}
-          // @ts-ignore
-          onEachFeature={onEachFeature}
+  const highlightFeature = (e: any) => {
+    const layer = e.target;
+    const stateName = layer.feature.properties.NAME_1 || layer.feature.properties.ST_NM;
+
+    layer.setStyle({
+      weight: 3,
+      color: '#ff7f50', // Coral/Orange
+      dashArray: '',
+      fillOpacity: 0.7
+    });
+
+    layer.bringToFront();
+    setActiveState(stateName);
+  };
+
+  const resetHighlight = (e: any) => {
+    const layer = e.target;
+    layer.setStyle({
+      fillColor: '#3b82f6',
+      weight: 1,
+      opacity: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.2
+    });
+    setActiveState(null);
+  };
+
+  const onEachFeature = (feature: any, layer: any) => {
+    layer.on({
+      mouseover: highlightFeature,
+      mouseout: resetHighlight,
+      click: () => {
+        if (onStateSelect && feature.properties) {
+          const name = feature.properties.NAME_1 || feature.properties.ST_NM;
+          onStateSelect(name);
+        }
+      }
+    });
+  };
+
+  return (
+    <div className="relative h-full w-full bg-neutral-900">
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%' }}
+        scrollWheelZoom={true}
+        className="z-0"
+      >
+        <MapUpdater center={center} zoom={zoom} />
+
+        {/* Premium Dark Tiles */}
+        <TileLayer
+          attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
-      )}
 
-      {/* Routes */}
-      {intercityRoutes && intercityRoutes.map((route, idx) => (
-        <Polyline
-          key={`intercity-${idx}`}
-          positions={[route.from, route.to]}
-          pathOptions={{ color: route.color || '#10b981', weight: 2, dashArray: '5, 10', opacity: 0.6 }}
-        />
-      ))}
+        {geoData && (
+          <GeoJSON
+            data={geoData}
+            style={defaultStyle}
+            onEachFeature={onEachFeature}
+          />
+        )}
 
-      {route && route.length > 1 && (
-        <Polyline
-          positions={route}
-          pathOptions={{ color: '#ec4899', weight: 4, opacity: 0.8 }}
-        />
-      )}
+        {/* Routes */}
+        {intercityRoutes && intercityRoutes.map((routeItem, idx) => (
+          <Polyline
+            key={`intercity-${idx}`}
+            positions={[routeItem.from, routeItem.to]}
+            pathOptions={{ color: routeItem.color || '#10b981', weight: 2, dashArray: '5, 10', opacity: 0.6 }}
+          />
+        ))}
 
-      {/* Markers */}
-      {markers.map((marker) => (
-        <Marker
-          key={marker.id}
-          position={[marker.lat, marker.lng]}
-          icon={selectedMarkers.includes(marker.id) ? SelectedIcon : UnselectedIcon}
-          eventHandlers={{
-            click: () => onMarkerClick && onMarkerClick(marker.id),
-          }}
-        >
-          <Popup className="min-w-[200px] font-sans">
-            <div className="p-1">
-              <h3 className="font-bold text-lg text-primary">{marker.title}</h3>
-              {marker.description && <p className="text-sm text-gray-600 mb-2">{marker.description}</p>}
+        {route && route.length > 1 && (
+          <Polyline
+            positions={route}
+            pathOptions={{ color: '#ec4899', weight: 4, opacity: 0.8 }}
+          />
+        )}
 
-              <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-2 border-t pt-2">
-                {marker.visitDuration && <span>⏱ {marker.visitDuration}</span>}
-                {marker.bestTime && <span>📅 {marker.bestTime}</span>}
+        {/* Markers */}
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            position={[marker.lat, marker.lng]}
+            icon={selectedMarkers.includes(marker.id) ? SelectedIcon : UnselectedIcon}
+            eventHandlers={{
+              click: () => onMarkerClick && onMarkerClick(marker.id),
+            }}
+          >
+            <Popup className="min-w-[200px] font-sans">
+              <div className="p-1">
+                <h3 className="font-bold text-lg text-primary">{marker.title}</h3>
+                {marker.description && <p className="text-sm text-gray-600 mb-2">{marker.description}</p>}
+
+                <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-2 border-t pt-2">
+                  {marker.visitDuration && <span>⏱ {marker.visitDuration}</span>}
+                  {marker.bestTime && <span>📅 {marker.bestTime}</span>}
+                </div>
               </div>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
 
-    {/* Floating Tooltip for Active State */}
-    {activeState && (
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/20 shadow-2xl z-[1000] pointer-events-none animate-in fade-in slide-in-from-top-4 duration-300">
-        <span className="text-lg font-light tracking-widest">{activeState}</span>
-      </div>
-    )}
-  </div>
-);
+      {/* Floating Tooltip for Active State */}
+      {activeState && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/20 shadow-2xl z-[1000] pointer-events-none animate-in fade-in slide-in-from-top-4 duration-300">
+          <span className="text-lg font-light tracking-widest">{activeState}</span>
+        </div>
+      )}
+    </div>
+  );
+}

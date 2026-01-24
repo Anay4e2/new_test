@@ -57,7 +57,7 @@ export const analyticsMiddleware = async (
             }
         });
 
-        return originalEnd.apply(this, args);
+        return originalEnd.apply(this, args as Parameters<typeof originalEnd>);
     } as any;
 
     next();

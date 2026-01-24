@@ -37,6 +37,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                role: user.role,
                 createdAt: user.createdAt
             }
         });
@@ -91,6 +92,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                role: user.role,
                 createdAt: user.createdAt
             }
         });
@@ -120,11 +122,65 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                role: user.role,
                 createdAt: user.createdAt
             }
         });
     } catch (error) {
         console.error('GetMe error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// @desc    Admin login - only allows users with admin role
+// @route   POST /api/auth/admin-login
+// @access  Public
+export const adminLogin = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { email, password } = req.body;
+
+        // Validate input
+        if (!email || !password) {
+            res.status(400).json({ success: false, message: 'Please provide email and password' });
+            return;
+        }
+
+        // Find user and include password field
+        const user = await User.findOne({ email }).select('+password');
+        if (!user) {
+            res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return;
+        }
+
+        // Check password
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return;
+        }
+
+        // Check if user is admin
+        if (user.role !== 'admin') {
+            res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
+            return;
+        }
+
+        // Generate token
+        const token = generateToken(user._id.toString());
+
+        res.status(200).json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                createdAt: user.createdAt
+            }
+        });
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({ success: false, message: 'Server error during admin login' });
     }
 };

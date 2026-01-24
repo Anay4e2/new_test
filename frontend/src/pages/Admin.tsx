@@ -2,6 +2,8 @@ import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import api from '../services/api';
+import { getPackages, createPackage, deletePackage } from '../services/api';
+import type { Package } from '../types';
 
 interface AnalyticsSummary {
     day: { pageview: number; search: number; trip_generation: number; api_call: number; total: number };
@@ -35,12 +37,34 @@ export const Admin: FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Package management state
+    const [packages, setPackages] = useState<Package[]>([]);
+    const [showPackageForm, setShowPackageForm] = useState(false);
+    const [newPackage, setNewPackage] = useState({
+        id: '',
+        title: '',
+        state: '',
+        days: 3,
+        price: 10000,
+        image: '',
+        description: '',
+        tags: '',
+        cities: '',
+        places: ''
+    });
+
     useEffect(() => {
+        // Redirect to admin login if not authenticated or not admin
         if (!isAuthenticated()) {
-            navigate('/login');
+            navigate('/admin-login');
+            return;
+        }
+        if (user?.role !== 'admin') {
+            navigate('/admin-login');
             return;
         }
         fetchAnalytics();
+        fetchPackages();
     }, [period]);
 
     const fetchAnalytics = async () => {
@@ -64,6 +88,52 @@ export const Admin: FC = () => {
         }
     };
 
+    const fetchPackages = async () => {
+        try {
+            const response = await getPackages();
+            if (response.success) {
+                setPackages(response.data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch packages:', err);
+        }
+    };
+
+    const handleCreatePackage = async () => {
+        try {
+            const response = await createPackage({
+                id: newPackage.id,
+                title: newPackage.title,
+                state: newPackage.state,
+                days: newPackage.days,
+                price: newPackage.price,
+                image: newPackage.image,
+                description: newPackage.description,
+                tags: newPackage.tags.split(',').map(t => t.trim()).filter(Boolean),
+                cities: newPackage.cities.split(',').map(c => c.trim()).filter(Boolean),
+                places: newPackage.places.split(',').map(p => p.trim()).filter(Boolean)
+            });
+            if (response.success) {
+                setPackages([response.data, ...packages]);
+                setShowPackageForm(false);
+                setNewPackage({ id: '', title: '', state: '', days: 3, price: 10000, image: '', description: '', tags: '', cities: '', places: '' });
+            }
+        } catch (err) {
+            console.error('Failed to create package:', err);
+            alert('Failed to create package');
+        }
+    };
+
+    const handleDeletePackage = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this package?')) return;
+        try {
+            await deletePackage(id);
+            setPackages(packages.filter(p => p.id !== id));
+        } catch (err) {
+            console.error('Failed to delete package:', err);
+        }
+    };
+
     const periodLabels = { day: 'Today', week: 'This Week', month: 'This Month' };
 
     const getMaxTraffic = () => {
@@ -80,7 +150,7 @@ export const Admin: FC = () => {
                         <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
                             Admin Dashboard
                         </h1>
-                        <p className="text-sm text-gray-400">Analytics & Traffic Overview</p>
+                        <p className="text-sm text-gray-400">Analytics & Package Management</p>
                     </div>
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-gray-400">Logged in as {user?.name}</span>
@@ -102,8 +172,8 @@ export const Admin: FC = () => {
                             key={p}
                             onClick={() => setPeriod(p)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${period === p
-                                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg'
-                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg'
+                                : 'bg-white/5 text-gray-400 hover:bg-white/10'
                                 }`}
                         >
                             {periodLabels[p]}
@@ -173,7 +243,7 @@ export const Admin: FC = () => {
                         </div>
 
                         {/* Top Searches */}
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
                             <h3 className="text-lg font-semibold mb-4">Top Searches</h3>
                             {searches.length > 0 ? (
                                 <div className="space-y-2">
@@ -188,9 +258,134 @@ export const Admin: FC = () => {
                                 <div className="text-center py-10 text-gray-500">No search data for this period</div>
                             )}
                         </div>
+
+                        {/* Package Management */}
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold">📦 Package Management</h3>
+                                <button
+                                    onClick={() => setShowPackageForm(!showPackageForm)}
+                                    className="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all"
+                                >
+                                    {showPackageForm ? 'Cancel' : '+ Create Package'}
+                                </button>
+                            </div>
+
+                            {/* Create Package Form */}
+                            {showPackageForm && (
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4">
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Package ID (e.g., rajasthan-royal)"
+                                            value={newPackage.id}
+                                            onChange={(e) => setNewPackage({ ...newPackage, id: e.target.value })}
+                                            className="px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Title"
+                                            value={newPackage.title}
+                                            onChange={(e) => setNewPackage({ ...newPackage, title: e.target.value })}
+                                            className="px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="State (e.g., Rajasthan)"
+                                            value={newPackage.state}
+                                            onChange={(e) => setNewPackage({ ...newPackage, state: e.target.value })}
+                                            className="px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Days"
+                                            value={newPackage.days}
+                                            onChange={(e) => setNewPackage({ ...newPackage, days: parseInt(e.target.value) || 0 })}
+                                            className="px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Price (₹)"
+                                            value={newPackage.price}
+                                            onChange={(e) => setNewPackage({ ...newPackage, price: parseInt(e.target.value) || 0 })}
+                                            className="px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Image URL"
+                                            value={newPackage.image}
+                                            onChange={(e) => setNewPackage({ ...newPackage, image: e.target.value })}
+                                            className="px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500"
+                                        />
+                                    </div>
+                                    <textarea
+                                        placeholder="Description"
+                                        value={newPackage.description}
+                                        onChange={(e) => setNewPackage({ ...newPackage, description: e.target.value })}
+                                        className="w-full px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500 mb-4"
+                                        rows={2}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Tags (comma-separated, e.g., Heritage, Culture, Desert)"
+                                        value={newPackage.tags}
+                                        onChange={(e) => setNewPackage({ ...newPackage, tags: e.target.value })}
+                                        className="w-full px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500 mb-4"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Cities (comma-separated, e.g., Jaipur, Udaipur)"
+                                        value={newPackage.cities}
+                                        onChange={(e) => setNewPackage({ ...newPackage, cities: e.target.value })}
+                                        className="w-full px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500 mb-4"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Place IDs (comma-separated)"
+                                        value={newPackage.places}
+                                        onChange={(e) => setNewPackage({ ...newPackage, places: e.target.value })}
+                                        className="w-full px-3 py-2 bg-neutral-800 border border-white/10 rounded-lg text-white placeholder-gray-500 mb-4"
+                                    />
+                                    <button
+                                        onClick={handleCreatePackage}
+                                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+                                    >
+                                        Create Package
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Package List */}
+                            {packages.length > 0 ? (
+                                <div className="space-y-3">
+                                    {packages.map(pkg => (
+                                        <div key={pkg._id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                                            <div className="flex items-center gap-4">
+                                                {pkg.image && (
+                                                    <img src={pkg.image} alt={pkg.title} className="w-16 h-12 object-cover rounded" />
+                                                )}
+                                                <div>
+                                                    <div className="font-medium text-white">{pkg.title}</div>
+                                                    <div className="text-sm text-gray-400">{pkg.state} • {pkg.days} days • ₹{pkg.price.toLocaleString()}</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDeletePackage(pkg.id)}
+                                                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm rounded-lg transition-colors"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-10 text-gray-500">No packages created yet</div>
+                            )}
+                        </div>
                     </>
                 )}
             </main>
         </div>
     );
 };
+

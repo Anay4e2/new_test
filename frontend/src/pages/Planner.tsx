@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useMemo } from 'react';
-import { TripWizard, ItineraryView, Map, TripSidebar } from '@/components/planner';
+import { TripWizard, ItineraryView, Map, TripSidebar, PackagesSection } from '@/components/planner';
 import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
 import { getConfig, generateTrip } from '@/services/api';
@@ -10,7 +10,7 @@ export const Planner: FC = () => {
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([]);
   const [tripResult, setTripResult] = useState<TripResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary'>('trip');
+  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'packages'>('trip');
 
   // Trip store for selected places count
   const { selectedPlaces } = useTripStore();
@@ -91,6 +91,8 @@ export const Planner: FC = () => {
         );
       case 'trip':
         return <TripSidebar />;
+      case 'packages':
+        return <PackagesSection />;
       case 'itinerary':
         return tripResult ? (
           <ItineraryView result={tripResult} onReset={() => setTripResult(null)} />
@@ -120,6 +122,14 @@ export const Planner: FC = () => {
               </span>
             )}
             {activeTab === 'trip' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />}
+          </button>
+          <button
+            onClick={() => setActiveTab('packages')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'packages' ? 'text-white' : 'text-gray-400 hover:text-white'
+              }`}
+          >
+            📦 Packages
+            {activeTab === 'packages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />}
           </button>
           <button
             onClick={() => setActiveTab('wizard')}

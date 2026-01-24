@@ -9,6 +9,7 @@ import distanceRoutes from './distanceRoutes';
 import tripRoutes from './tripRoutes';
 import itineraryRoutes from './itineraryRoutes';
 import authRoutes from './authRoutes';
+import packageRoutes from './packageRoutes';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/routes', routeRoutes);
 router.use('/trains', trainRoutes);
 router.use('/distance', distanceRoutes);
 router.use('/itinerary', itineraryRoutes);
+router.use('/packages', packageRoutes);
 
 // Trip routes are mounted at root level (e.g., /api/generate-trip)
 router.use('/', tripRoutes);

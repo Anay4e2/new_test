@@ -88,3 +88,20 @@ export interface State {
   description: string;
   imageUrl?: string;
 }
+
+export interface Package {
+  _id: string;
+  id: string;
+  title: string;
+  state: string;
+  days: number;
+  price: number;
+  image: string;
+  description: string;
+  tags: string[];
+  places: string[];
+  cities: string[];
+  isActive: boolean;
+  createdAt: string;
+  placesDetails?: Place[];
+}

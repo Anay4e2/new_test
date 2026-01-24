@@ -1,17 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import connectDB from './config/db';
-import { generateTrip, TripRequest } from './lib/planner';
-import { optimizeRoute, getTransportOptions } from './lib/routeOptimizer';
-import { STATES, CITIES, PACKAGES, PLACES } from './lib/mockData';
+import { generateTrip, TripRequest } from './services/planner';
+import { optimizeRoute, getTransportOptions } from './services/routeOptimizer';
+import { STATES, CITIES, PACKAGES, PLACES } from './services/mockData';
 import State from './models/State';
 import Package from './models/Package';
 import City from './models/City';
 import Place from './models/Place';
 import Route from './models/Route';
-import trainService from './lib/trainService';
-import distanceService, { haversineDistance } from './lib/distanceService';
+import trainService from './services/trainService';
+import distanceService, { haversineDistance } from './services/distanceService';
 import { generateItineraryPDF } from './services/pdfService';
+import apiRoutes from './routes/index';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,6 +22,9 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+
+// Mount centralized API routes
+app.use('/api', apiRoutes);
 
 app.get('/api/config', async (req, res) => {
   try {

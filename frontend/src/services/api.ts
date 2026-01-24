@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { TripRequest, TripResult, City, Place } from '../types';
+import type { TripRequest, TripResult, City, Place, Package } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
@@ -35,6 +35,7 @@ export interface AuthResponse {
         id: string;
         name: string;
         email: string;
+        role?: 'user' | 'admin';
         createdAt: string;
     };
     message?: string;
@@ -47,6 +48,11 @@ export const registerUser = async (name: string, email: string, password: string
 
 export const loginUser = async (email: string, password: string): Promise<AuthResponse> => {
     const response = await api.post('/auth/login', { email, password });
+    return response.data;
+};
+
+export const adminLoginUser = async (email: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/admin-login', { email, password });
     return response.data;
 };
 
@@ -103,5 +109,30 @@ export const getDistance = async (fromCity: string, toCity: string) => {
     return response.data;
 };
 
-export default api;
+// Packages API
+export const getPackages = async (): Promise<{ success: boolean; data: Package[] }> => {
+    const response = await api.get('/packages');
+    return response.data;
+};
 
+export const getPackageById = async (id: string): Promise<{ success: boolean; data: Package }> => {
+    const response = await api.get(`/packages/${id}`);
+    return response.data;
+};
+
+export const createPackage = async (data: Partial<Package>): Promise<{ success: boolean; data: Package }> => {
+    const response = await api.post('/packages', data);
+    return response.data;
+};
+
+export const updatePackage = async (id: string, data: Partial<Package>): Promise<{ success: boolean; data: Package }> => {
+    const response = await api.put(`/packages/${id}`, data);
+    return response.data;
+};
+
+export const deletePackage = async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete(`/packages/${id}`);
+    return response.data;
+};
+
+export default api;

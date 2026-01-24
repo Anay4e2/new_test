@@ -196,7 +196,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
         try {
             // Call Backend API
             const response = await axios.post('http://localhost:3001/api/routes/optimize', {
-                placeIds: places.map(p => p._id)
+                placeIds: places.map(p => p._id),
+                places: places
             });
 
             const { orderedPlaces, routeSegments, totalDistance, estimatedTravelTime } = response.data;

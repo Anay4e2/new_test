@@ -2,9 +2,11 @@
 import City from '../models/City';
 import Place from '../models/Place';
 import Route, { IRoute, ITransportOption } from '../models/Route';
+import mongoose from 'mongoose';
 
 export interface OptimizeRouteRequest {
-    placeIds: string[];
+    placeIds?: string[];
+    places?: any[]; // Allow passing places directly (e.g. from frontend state)
     startCityName?: string; // Optional starting point
 }
 
@@ -121,10 +123,29 @@ function suggestBestTransport(
 
 // Main route optimization function
 export async function optimizeRoute(request: OptimizeRouteRequest): Promise<OptimizeRouteResult> {
-    const { placeIds, startCityName } = request;
+    const { placeIds = [], places: providedPlaces = [], startCityName } = request;
 
-    // 1. Fetch all places
-    const places = await Place.find({ _id: { $in: placeIds } });
+    // 1. Fetch places from DB if IDs are provided
+    let dbPlaces: any[] = [];
+
+    // Filter out invalid ObjectIds to prevent CastError
+    const validObjectIds = placeIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+
+    if (validObjectIds.length > 0) {
+        dbPlaces = await Place.find({ _id: { $in: validObjectIds } });
+    }
+
+    // Combine DB places and provided places (remove duplicates by _id)
+    const allPlacesMap = new Map<string, any>();
+
+    // Add DB places first
+    dbPlaces.forEach(p => allPlacesMap.set(p._id.toString(), p));
+
+    // Add/Override with provided places (useful for temporary places from Google Maps)
+    providedPlaces.forEach(p => allPlacesMap.set(p._id.toString(), p));
+
+    const places = Array.from(allPlacesMap.values());
+
     if (places.length === 0) {
         throw new Error('No places found for the given IDs');
     }

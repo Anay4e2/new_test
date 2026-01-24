@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { registerUser, loginUser, getCurrentUser } from '../services/api';
+import { registerUser, loginUser, adminLoginUser, getCurrentUser } from '../services/api';
 
 interface User {
     id: string;
     name: string;
     email: string;
+    role?: 'user' | 'admin';
     createdAt: string;
 }
 
@@ -18,12 +19,14 @@ interface AuthState {
     // Actions
     register: (name: string, email: string, password: string) => Promise<boolean>;
     login: (email: string, password: string) => Promise<boolean>;
+    adminLogin: (email: string, password: string) => Promise<boolean>;
     logout: () => void;
     fetchCurrentUser: () => Promise<void>;
     clearError: () => void;
 
     // Computed
     isAuthenticated: () => boolean;
+    isAdmin: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -80,6 +83,29 @@ export const useAuthStore = create<AuthState>()(
                 }
             },
 
+            adminLogin: async (email: string, password: string): Promise<boolean> => {
+                set({ isLoading: true, error: null });
+                try {
+                    const response = await adminLoginUser(email, password);
+                    if (response.success) {
+                        set({
+                            user: response.user,
+                            token: response.token,
+                            isLoading: false,
+                            error: null
+                        });
+                        return true;
+                    } else {
+                        set({ isLoading: false, error: response.message || 'Admin login failed' });
+                        return false;
+                    }
+                } catch (error: any) {
+                    const message = error.response?.data?.message || 'Admin login failed';
+                    set({ isLoading: false, error: message });
+                    return false;
+                }
+            },
+
             logout: () => {
                 set({ user: null, token: null, error: null });
             },
@@ -105,6 +131,10 @@ export const useAuthStore = create<AuthState>()(
 
             isAuthenticated: () => {
                 return get().token !== null && get().user !== null;
+            },
+
+            isAdmin: () => {
+                return get().user?.role === 'admin';
             }
         }),
         {

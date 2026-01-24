@@ -69,22 +69,21 @@ export const getRouteTrains = async (req: Request, res: Response): Promise<void>
     } catch (error: any) {
         console.error('Error fetching route trains:', error);
         res.status(500).json({ error: error.message || 'Failed to fetch train information' });
-    }
-};
+    };
 
-export const optimizeTripRoute = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { placeIds, startCityName } = req.body;
+    export const optimizeTripRoute = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { placeIds, startCityName } = req.body;
 
-        if (!placeIds || !Array.isArray(placeIds) || placeIds.length === 0) {
-            res.status(400).json({ error: 'Please provide a list of place IDs' });
-            return;
+            if (!placeIds || !Array.isArray(placeIds) || placeIds.length === 0) {
+                res.status(400).json({ error: 'Please provide a list of place IDs' });
+                return;
+            }
+
+            const result = await optimizeRouteService({ placeIds, startCityName });
+            res.json(result);
+        } catch (error: any) {
+            console.error('Error optimizing route:', error);
+            res.status(500).json({ error: error.message || 'Failed to optimize route' });
         }
-
-        const result = await optimizeRouteService({ placeIds, startCityName });
-        res.json(result);
-    } catch (error: any) {
-        console.error('Error optimizing route:', error);
-        res.status(500).json({ error: error.message || 'Failed to optimize route' });
-    }
-};
+    };
