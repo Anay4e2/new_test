@@ -1,26 +1,32 @@
-import { FC } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Home } from './pages/Home';
-import { Planner } from './pages/Planner';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Admin } from './pages/Admin';
-import { AdminLogin } from './pages/AdminLogin';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Diamonds from './pages/Diamonds';
+import AdminLayout from './layouts/AdminLayout';
 
-const App: FC = () => {
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const userInfo = localStorage.getItem('userInfo');
+  return userInfo ? <>{children}</> : <Navigate to="/login" />;
+};
+
+const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/plan" element={<Planner />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
+
+        <Route path="/" element={
+          <PrivateRoute>
+            <AdminLayout />
+          </PrivateRoute>
+        }>
+          <Route index element={<Dashboard />} />
+          <Route path="diamonds" element={<Diamonds />} />
+        </Route>
       </Routes>
     </Router>
   );
 };
 
 export default App;
-

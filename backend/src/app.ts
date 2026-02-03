@@ -3,7 +3,6 @@ import cors from 'cors';
 import connectDB from './config/db';
 import routes from './routes';
 import adminRoutes from './routes/adminRoutes';
-import { analyticsMiddleware } from './middleware/analyticsMiddleware';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,9 +13,6 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Analytics tracking middleware (before routes)
-app.use('/api', analyticsMiddleware);
 
 // Mount all API routes under /api
 app.use('/api', routes);
@@ -35,4 +31,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-
