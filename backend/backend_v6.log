@@ -1,0 +1,5 @@
+
+> backend@1.0.0 dev
+> ts-node src/app.ts
+
+sh: 1: ts-node: not found

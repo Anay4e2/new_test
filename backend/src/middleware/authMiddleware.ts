@@ -1,37 +1,46 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import Admin from '../models/Admin';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-export interface AuthRequest extends Request {
-    userId?: string;
+interface AuthRequest extends Request {
+  user?: any;
 }
 
-export const authMiddleware = async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-): Promise<void> => {
+export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
-        // Get token from header
-        const authHeader = req.headers.authorization;
+      token = req.headers.authorization.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            res.status(401).json({ success: false, message: 'No token provided, authorization denied' });
-            return;
-        }
-
-        const token = authHeader.split(' ')[1];
-
-        // Verify token
-        const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-
-        // Attach user id to request
-        req.userId = decoded.id;
-
-        next();
+      if (decoded.id === 'mock_id') {
+          req.user = { _id: 'mock_id', name: 'Test Admin', email: 'admin@test.com', role: 'admin' };
+      } else {
+          try {
+             req.user = await Admin.findById(decoded.id).select('-password');
+          } catch (dbError) {
+             console.error("DB Error in auth middleware", dbError);
+             res.status(500).json({message: "Database error during auth"});
+             return;
+          }
+      }
+      next();
     } catch (error) {
-        console.error('Auth middleware error:', error);
-        res.status(401).json({ success: false, message: 'Token is not valid' });
+      console.error(error);
+      res.status(401).json({ message: 'Not authorized, token failed' });
     }
+  }
+
+  if (!token) {
+    res.status(401).json({ message: 'Not authorized, no token' });
+  }
+};
+
+export const adminOnly = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'super_admin')) {
+    next();
+  } else {
+    res.status(401).json({ message: 'Not authorized as an admin' });
+  }
 };

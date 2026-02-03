@@ -1,21 +1,11 @@
-import { Router } from 'express';
-import { adminMiddleware } from '../middleware/adminMiddleware';
-import {
-    getSummary,
-    getTraffic,
-    getSearches,
-    getRecentActivity
-} from '../controllers/analyticsController';
+import express from 'express';
+import { registerAdmin, loginAdmin, getMe } from '../controllers/AdminController';
+import { protect } from '../middleware/authMiddleware';
 
-const router = Router();
+const router = express.Router();
 
-// All routes require admin authentication
-router.use(adminMiddleware);
-
-// Analytics endpoints
-router.get('/analytics/summary', getSummary);
-router.get('/analytics/traffic', getTraffic);
-router.get('/analytics/searches', getSearches);
-router.get('/analytics/recent', getRecentActivity);
+router.post('/register', registerAdmin);
+router.post('/login', loginAdmin);
+router.get('/me', protect, getMe);
 
 export default router;
