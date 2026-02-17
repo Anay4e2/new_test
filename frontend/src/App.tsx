@@ -6,6 +6,8 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Admin } from './pages/Admin';
 import { AdminLogin } from './pages/AdminLogin';
+import { Dashboard } from './pages/Dashboard';
+import { SharedTrip } from './pages/SharedTrip';
 
 const App: FC = () => {
   return (
@@ -17,6 +19,8 @@ const App: FC = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/trip/:shareId" element={<SharedTrip />} />
       </Routes>
     </Router>
   );

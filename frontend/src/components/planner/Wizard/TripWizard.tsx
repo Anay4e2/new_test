@@ -1,15 +1,18 @@
 import { FC, useState, useMemo } from 'react';
 import { TripRequest } from '@/types';
-import { Calendar, CheckCircle, Clock, DollarSign, MapPin, Sparkles, Sun, Users, Snowflake, CloudRain, Leaf, Package, Crown, Backpack, Compass, Heart, Zap } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, DollarSign, MapPin, Sparkles, Sun, Users, Snowflake, CloudRain, Leaf, Package, Crown, Backpack, Compass, Heart, Zap, Globe } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TripWizardProps {
   cities: any[];
+  states?: any[];
   onGenerate: (data: TripRequest) => void;
+  onCompare?: (data: TripRequest) => void;
   selectedCityIds: string[];
   onCityToggle: (id: string) => void;
   isLoading: boolean;
+  isComparing?: boolean;
 }
 
 // Season types with relevant metadata
@@ -162,8 +165,30 @@ const getSeasonalPlans = (season: Season, duration: number): SuggestedPlan[] => 
   );
 };
 
-export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCityIds, onCityToggle, isLoading }) => {
+export const TripWizard: FC<TripWizardProps> = ({ cities, states = [], onGenerate, onCompare, selectedCityIds, onCityToggle, isLoading, isComparing }) => {
   const [step, setStep] = useState(1);
+
+  // State selection
+  const [selectedStateCodes, setSelectedStateCodes] = useState<string[]>([]);
+
+  const toggleState = (code: string) => {
+    setSelectedStateCodes(prev =>
+      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+    );
+  };
+
+  // Filter cities by selected states (map state code -> stateCode pattern)
+  const stateCodeToName: Record<string, string> = {
+    RJ: 'RAJASTHAN', KL: 'KERALA', GA: 'GOA', MH: 'MAHARASHTRA',
+    TN: 'TAMIL_NADU', WB: 'WEST_BENGAL', KA: 'KARNATAKA', GJ: 'GUJARAT',
+    HP: 'HIMACHAL_PRADESH', UP: 'UTTAR_PRADESH', MP: 'MADHYA_PRADESH'
+  };
+
+  const filteredCities = useMemo(() => {
+    if (selectedStateCodes.length === 0) return cities;
+    const stateNames = selectedStateCodes.map(c => stateCodeToName[c]).filter(Boolean);
+    return cities.filter((city: any) => stateNames.includes(city.stateCode));
+  }, [cities, selectedStateCodes]);
 
   // Date selection state
   const [startDate, setStartDate] = useState<string>('');
@@ -313,9 +338,9 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
 
   // Sort cities: recommended cities first, then by tier match
   const sortedCities = useMemo(() => {
-    if (!cities || cities.length === 0) return [];
+    if (!filteredCities || filteredCities.length === 0) return [];
 
-    return [...cities].sort((a, b) => {
+    return [...filteredCities].sort((a, b) => {
       const aRecommended = packageType.recommendedCities?.includes(a.name) ? 1 : 0;
       const bRecommended = packageType.recommendedCities?.includes(b.name) ? 1 : 0;
 
@@ -357,16 +382,22 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
 
-  const handleSubmit = () => {
+  const handleSubmit = (compare: boolean = false) => {
     if (formData.duration && formData.budget && formData.travelStyle && formData.constraints) {
-      onGenerate({
-        stateCode: 'RJ',
+      const req: TripRequest = {
+        stateCode: selectedStateCodes[0] || 'RJ',
+        stateCodes: selectedStateCodes.length > 0 ? selectedStateCodes : ['RJ'],
         selectedCityIds,
         duration: formData.duration,
         budget: formData.budget as any,
         travelStyle: formData.travelStyle as any,
         constraints: formData.constraints
-      });
+      };
+      if (compare && onCompare) {
+        onCompare(req);
+      } else {
+        onGenerate(req);
+      }
     }
   };
 
@@ -376,27 +407,79 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
   const isDateStepValid = startDate && endDate && calculatedDuration > 0;
 
   return (
-    <div className="bg-white/95 backdrop-blur-md p-8 shadow-2xl rounded-2xl max-w-md w-full h-full max-h-full overflow-y-auto border border-white/50">
+    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-8 shadow-2xl rounded-2xl max-w-md w-full h-full max-h-full overflow-y-auto border border-white/50 dark:border-slate-700/50">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-text font-serif">Plan Your Journey</h2>
+        <h2 className="text-3xl font-bold text-text dark:text-white font-serif">Plan Your Journey</h2>
         <div className="flex space-x-2 mt-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className={clsx("h-1.5 flex-1 rounded-full transition-all duration-300", i <= step ? "bg-accent" : "bg-gray-200")} />
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className={clsx("h-1.5 flex-1 rounded-full transition-all duration-300", i <= step ? "bg-accent" : "bg-gray-200 dark:bg-slate-600")} />
           ))}
         </div>
       </div>
 
-      {/* Step 1: Date Selection */}
+      {/* Step 1: State Selection */}
       {step === 1 && (
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+          <h3 className="text-xl font-semibold flex items-center gap-2 text-primary">
+            <Globe size={24} /> Choose States
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Select one or more states to plan a multi-state journey. Skip this step to see all destinations.</p>
+
+          <div className="grid grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-1">
+            {states.map((st: any) => (
+              <div
+                key={st.code}
+                className={clsx(
+                  'p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center group',
+                  selectedStateCodes.includes(st.code)
+                    ? 'border-primary bg-primary/10 shadow-md'
+                    : 'border-gray-200 dark:border-slate-600 hover:border-primary/40 hover:shadow-sm'
+                )}
+                onClick={() => toggleState(st.code)}
+              >
+                <div className="w-10 h-10 rounded-lg overflow-hidden mx-auto mb-2 shadow-sm">
+                  <img
+                    src={st.imageUrl || `https://source.unsplash.com/80x80/?${st.name},india`}
+                    alt={st.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
+                <span className={clsx('font-bold text-sm', selectedStateCodes.includes(st.code) ? 'text-primary' : 'text-gray-700 dark:text-gray-300')}>
+                  {st.name}
+                </span>
+                {selectedStateCodes.includes(st.code) && (
+                  <CheckCircle size={16} className="text-accent mx-auto mt-1" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {selectedStateCodes.length > 1 && (
+            <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 p-3 rounded-xl text-sm text-amber-800 dark:text-amber-300">
+              🚆 Multi-state trip! Inter-state travel by train/flight will be included.
+            </div>
+          )}
+
+          <button
+            onClick={handleNext}
+            className="w-full bg-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-primary/90 transition-all transform hover:-translate-y-0.5"
+          >
+            {selectedStateCodes.length === 0 ? 'Skip — Show All Destinations' : `Next: Travel Dates (${selectedStateCodes.length} state${selectedStateCodes.length > 1 ? 's' : ''})`}
+          </button>
+        </motion.div>
+      )}
+
+      {/* Step 2: Date Selection */}
+      {step === 2 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
           <h3 className="text-xl font-semibold flex items-center gap-2 text-primary">
             <Calendar size={24} /> When do you want to travel?
           </h3>
-          <p className="text-sm text-gray-500">Select your travel dates to get personalized recommendations based on season and duration.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Select your travel dates to get personalized recommendations based on season and duration.</p>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Start Date</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
               <input
                 type="date"
                 min={today}
@@ -407,19 +490,19 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                     setEndDate('');
                   }
                 }}
-                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className="w-full p-3 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">End Date</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">End Date</label>
               <input
                 type="date"
                 min={startDate || today}
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
                 disabled={!startDate}
-                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full p-3 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all disabled:bg-gray-100 dark:disabled:bg-slate-700 disabled:cursor-not-allowed bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
               />
             </div>
           </div>
@@ -434,7 +517,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Clock size={18} className="text-primary" />
-                  <span className="font-bold text-gray-700">{calculatedDuration} Days Trip</span>
+                  <span className="font-bold text-gray-700 dark:text-gray-300">{calculatedDuration} Days Trip</span>
                 </div>
                 {seasonInfo && (
                   <div className={clsx("flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm font-medium", seasonInfo.color)}>
@@ -443,7 +526,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {season === 'winter' && '❄️ Perfect weather for desert exploration and outdoor activities!'}
                 {season === 'summer' && '☀️ Consider hill stations and early morning sightseeing.'}
                 {season === 'monsoon' && '🌧️ Lush green landscapes await! Pack rain gear.'}
@@ -459,7 +542,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3"
             >
-              <h4 className="font-bold text-gray-700 flex items-center gap-2">
+              <h4 className="font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 <Sparkles size={18} className="text-accent" />
                 Recommended Plans for You
               </h4>
@@ -473,29 +556,29 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                       "p-4 border rounded-xl cursor-pointer transition-all duration-200",
                       selectedPlan === plan.id
                         ? "border-accent bg-accent/5 shadow-md ring-2 ring-accent/30"
-                        : "border-gray-100 hover:bg-gray-50 hover:border-gray-200"
+                        : "border-gray-100 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-200"
                     )}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-white rounded-lg shadow-sm">
+                      <div className="p-2 bg-white dark:bg-slate-700 rounded-lg shadow-sm">
                         {plan.icon}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h5 className={clsx("font-bold", selectedPlan === plan.id ? "text-accent" : "text-gray-700")}>
+                          <h5 className={clsx("font-bold", selectedPlan === plan.id ? "text-accent" : "text-gray-700 dark:text-gray-300")}>
                             {plan.title}
                           </h5>
                           {selectedPlan === plan.id && <CheckCircle size={18} className="text-accent" />}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{plan.description}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{plan.description}</p>
                         <div className="flex flex-wrap gap-1 mt-2">
                           {plan.highlights.slice(0, 3).map((h, i) => (
-                            <span key={i} className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
+                            <span key={i} className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-slate-600 rounded-full text-gray-600 dark:text-gray-300">
                               {h}
                             </span>
                           ))}
                         </div>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
                           <span className="capitalize">💰 {plan.budget}</span>
                           <span className="capitalize">🚶 {plan.style}</span>
                           <span>📅 {plan.recommendedDuration.min}-{plan.recommendedDuration.max} days</span>
@@ -518,8 +601,8 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
         </motion.div>
       )}
 
-      {/* Step 2: City Selection */}
-      {step === 2 && (
+      {/* Step 3: City Selection */}
+      {step === 3 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
           <h3 className="text-xl font-semibold flex items-center gap-2 text-primary">
             <MapPin size={24} /> Select Destinations
@@ -532,9 +615,9 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
           )}>
             <div className="flex items-center gap-2">
               <Sparkles size={16} className="text-accent" />
-              <span className="font-bold text-gray-800">For {packageType.name}:</span>
+              <span className="font-bold text-gray-800 dark:text-gray-200">For {packageType.name}:</span>
             </div>
-            <p className="text-gray-600 mt-1">{packageType.cityReason}</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{packageType.cityReason}</p>
           </div>
 
           {/* Auto-selected notification */}
@@ -563,7 +646,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                       ? "border-primary bg-primary/5 shadow-md"
                       : isRecommended
                         ? "border-accent/50 bg-accent/5 hover:border-accent hover:shadow-md"
-                        : "border-gray-100 hover:bg-gray-50 hover:border-gray-200"
+                        : "border-gray-100 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-200"
                   )}
                   onClick={() => onCityToggle(city._id)}
                 >
@@ -591,7 +674,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                       <div className="flex items-center gap-2">
                         <span className={clsx(
                           "font-bold text-base truncate",
-                          selectedCityIds.includes(city._id) ? "text-primary" : isRecommended ? "text-accent" : "text-gray-700"
+                          selectedCityIds.includes(city._id) ? "text-primary" : isRecommended ? "text-accent" : "text-gray-700 dark:text-gray-300"
                         )}>
                           {city.name}
                         </span>
@@ -599,7 +682,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                           <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 flex-shrink-0">Good match</span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
                         {city.description?.substring(0, 45) || 'Beautiful destination'}...
                       </div>
                       <div className="flex items-center gap-2 mt-1">
@@ -630,14 +713,14 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
           {/* Selection Summary */}
           {selectedCityIds.length > 0 && (
             <div className="bg-primary/5 p-3 rounded-xl border border-primary/20">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
                 <span className="font-bold text-primary">{selectedCityIds.length}</span> destination{selectedCityIds.length > 1 ? 's' : ''} selected
               </p>
             </div>
           )}
 
           <div className="flex justify-between pt-4">
-            <button onClick={handleBack} className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors">Back</button>
+            <button onClick={handleBack} className="px-6 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors">Back</button>
             <button
               disabled={selectedCityIds.length === 0}
               onClick={handleNext}
@@ -649,8 +732,8 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
         </motion.div>
       )}
 
-      {/* Step 3: Preferences */}
-      {step === 3 && (
+      {/* Step 4: Preferences */}
+      {step === 4 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
           <h3 className="text-xl font-semibold flex items-center gap-2 text-primary">
             <DollarSign size={24} /> Preferences
@@ -675,13 +758,13 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-gray-800 text-lg">Your Package Type</h4>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-200 text-lg">Your Package Type</h4>
                     <span className="text-xs bg-white/80 px-2 py-1 rounded-full font-medium text-gray-600">
                       {packageType.priceRange}
                     </span>
                   </div>
                   <p className="text-xl font-bold text-primary mt-1">{packageType.name}</p>
-                  <p className="text-sm text-gray-600 mt-1">{packageType.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{packageType.description}</p>
                   <div className="flex flex-wrap gap-1.5 mt-3">
                     {packageType.features.map((feature, idx) => (
                       <span
@@ -706,19 +789,19 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
           )}
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Duration (Days)</label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Duration (Days)</label>
             <input
               type="number"
               min={1}
               max={30}
               value={formData.duration}
               onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-              className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+              className="w-full p-3 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Budget Tier</label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Budget Tier</label>
             <div className="grid grid-cols-3 gap-3">
               {['budget', 'standard', 'premium'].map(b => (
                 <button
@@ -726,7 +809,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                   onClick={() => setFormData({ ...formData, budget: b as any })}
                   className={clsx(
                     "p-3 border rounded-xl capitalize text-sm font-medium transition-all",
-                    formData.budget === b ? "bg-primary text-white border-primary shadow-md" : "hover:bg-gray-50 border-gray-200 text-gray-600"
+                    formData.budget === b ? "bg-primary text-white border-primary shadow-md" : "hover:bg-gray-50 dark:hover:bg-slate-700 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-300"
                   )}
                 >
                   {b}
@@ -736,17 +819,17 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Travel Pace</label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Travel Pace</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setFormData({ ...formData, travelStyle: 'relaxed' })}
-                className={clsx("p-3 border rounded-xl flex items-center justify-center gap-2 transition-all", formData.travelStyle === 'relaxed' ? "bg-secondary text-text border-secondary shadow-md" : "hover:bg-gray-50 border-gray-200")}
+                className={clsx("p-3 border rounded-xl flex items-center justify-center gap-2 transition-all", formData.travelStyle === 'relaxed' ? "bg-secondary text-text border-secondary shadow-md" : "hover:bg-gray-50 dark:hover:bg-slate-700 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-300")}
               >
                 <Sun size={18} /> Relaxed
               </button>
               <button
                 onClick={() => setFormData({ ...formData, travelStyle: 'fast' })}
-                className={clsx("p-3 border rounded-xl flex items-center justify-center gap-2 transition-all", formData.travelStyle === 'fast' ? "bg-accent text-white border-accent shadow-md" : "hover:bg-gray-50 border-gray-200")}
+                className={clsx("p-3 border rounded-xl flex items-center justify-center gap-2 transition-all", formData.travelStyle === 'fast' ? "bg-accent text-white border-accent shadow-md" : "hover:bg-gray-50 dark:hover:bg-slate-700 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-300")}
               >
                 <Clock size={18} /> Fast Paced
               </button>
@@ -754,21 +837,21 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
           </div>
 
           <div className="flex justify-between pt-4">
-            <button onClick={handleBack} className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors">Back</button>
+            <button onClick={handleBack} className="px-6 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors">Back</button>
             <button onClick={handleNext} className="px-8 py-2 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primary/90 transition-all transform hover:-translate-y-0.5">Next</button>
           </div>
         </motion.div>
       )}
 
-      {/* Step 4: Fine Tune */}
-      {step === 4 && (
+      {/* Step 5: Fine Tune */}
+      {step === 5 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
           <h3 className="text-xl font-semibold flex items-center gap-2 text-primary">
             <Users size={24} /> Fine Tune
           </h3>
 
           <div className="space-y-4">
-            <label className="flex items-center space-x-4 cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors">
+            <label className="flex items-center space-x-4 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
               <input
                 type="checkbox"
                 checked={formData.constraints?.seniorFriendly}
@@ -778,10 +861,10 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                 })}
                 className="h-5 w-5 text-primary rounded focus:ring-primary"
               />
-              <span className="text-gray-700 font-medium">Senior Friendly (Accessible)</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Senior Friendly (Accessible)</span>
             </label>
 
-            <label className="flex items-center space-x-4 cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors">
+            <label className="flex items-center space-x-4 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
               <input
                 type="checkbox"
                 checked={formData.constraints?.morningReligious}
@@ -791,10 +874,10 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                 })}
                 className="h-5 w-5 text-primary rounded focus:ring-primary"
               />
-              <span className="text-gray-700 font-medium">Morning Temple Visits</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Morning Temple Visits</span>
             </label>
 
-            <label className="flex items-center space-x-4 cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors">
+            <label className="flex items-center space-x-4 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
               <input
                 type="checkbox"
                 checked={formData.constraints?.noNightTravel}
@@ -804,11 +887,11 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                 })}
                 className="h-5 w-5 text-primary rounded focus:ring-primary"
               />
-              <span className="text-gray-700 font-medium">No Night Travel (End by 8PM)</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">No Night Travel (End by 8PM)</span>
             </label>
 
             <div className="pt-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Max Travel Hours / Day</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Max Travel Hours / Day</label>
               <input
                 type="range"
                 min={2}
@@ -818,26 +901,42 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, onGenerate, selectedCi
                   ...formData,
                   constraints: { ...formData.constraints!, maxTravelHoursPerDay: parseInt(e.target.value) }
                 })}
-                className="w-full accent-primary h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-primary h-2 bg-gray-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer"
               />
               <div className="text-right text-sm font-bold text-primary mt-1">{formData.constraints?.maxTravelHoursPerDay} hours</div>
             </div>
           </div>
 
-          <div className="flex justify-between pt-6">
+          <div className="flex justify-between items-center pt-6 gap-3">
             <button onClick={handleBack} className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors">Back</button>
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="px-8 py-3 bg-accent text-white rounded-xl font-bold shadow-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
-                  Generating...
-                </>
-              ) : 'Build My Itinerary'}
-            </button>
+            <div className="flex gap-2">
+              {onCompare && (
+                <button
+                  onClick={() => handleSubmit(true)}
+                  disabled={isLoading || isComparing}
+                  className="px-5 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 flex items-center gap-2 text-sm"
+                >
+                  {isComparing ? (
+                    <>
+                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                      Comparing...
+                    </>
+                  ) : 'Compare Plans'}
+                </button>
+              )}
+              <button
+                onClick={() => handleSubmit(false)}
+                disabled={isLoading || isComparing}
+                className="px-8 py-3 bg-accent text-white rounded-xl font-bold shadow-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                    Generating...
+                  </>
+                ) : 'Build My Itinerary'}
+              </button>
+            </div>
           </div>
         </motion.div>
       )}

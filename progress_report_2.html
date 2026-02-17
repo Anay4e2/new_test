@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Daily Work Report - TRIPIFY</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #333;
+            padding: 20px;
+            background: #fff;
+        }
+
+        .header {
+            background-color: #0d7377;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .header h2 {
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-bottom: 15px;
+        }
+
+        .info-table td {
+            padding: 12px 10px;
+            border: 1px solid #ccc;
+            vertical-align: middle;
+        }
+
+        .label {
+            background-color: #0d7377;
+            color: white;
+            font-weight: bold;
+            width: 90px;
+            font-size: 10px;
+        }
+
+        .value {
+            background-color: #fff;
+        }
+
+        .label-mid {
+            background-color: #0d7377;
+            color: white;
+            font-weight: bold;
+            width: 80px;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .work-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .work-table th {
+            background-color: #0d7377;
+            color: white;
+            padding: 8px 5px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid #0d7377;
+        }
+
+        .work-table td {
+            padding: 8px 5px;
+            border: 1px solid #ccc;
+            font-size: 10px;
+            vertical-align: top;
+        }
+
+        .work-table td:nth-child(1) {
+            width: 25px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(2) {
+            width: 70px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(3) {
+            width: 90px;
+        }
+
+        .work-table td:nth-child(4) {
+            width: 60px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(5) {
+            width: 60px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(6) {}
+
+        .work-table td:nth-child(7) {
+            width: 60px;
+        }
+
+        .phase-header td {
+            background-color: #e8e8e8 !important;
+            font-weight: bold;
+            text-align: center !important;
+            padding: 10px !important;
+            font-size: 11px;
+        }
+
+        @media print {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>DAILY WORK REPORT</h1>
+        <h2>S V PATEL CSBM COLLEGE, SURAT</h2>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td class="label">TITLE</td>
+            <td class="value" colspan="3">TRIPIFY - The trip planner</td>
+        </tr>
+        <tr>
+            <td class="label">SUPERVISOR</td>
+            <td class="value">Selja Unadkat</td>
+            <td class="label-mid">DATE</td>
+            <td class="value">28/01/2026 - 15/02/2026</td>
+        </tr>
+        <tr>
+            <td class="label">MEMBERS</td>
+            <td class="value" colspan="3">KRISH BAVADIYA(11), KRISHNA DHOLIYA(51), DHOLIYA RENCY(52)</td>
+        </tr>
+        <tr>
+            <td class="label">FRONT END</td>
+            <td class="value">React 18, TypeScript, Vite, Tailwind CSS</td>
+            <td class="label-mid">BACK END</td>
+            <td class="value">Node.js, Express.js, MongoDB</td>
+        </tr>
+        <tr>
+            <td class="label">SUBJECT</td>
+            <td class="value">603/01 - Full Stack Web Development</td>
+            <td class="label-mid">GROUP NO.</td>
+            <td class="value">105</td>
+        </tr>
+    </table>
+
+    <table class="work-table">
+        <tr>
+            <th>No</th>
+            <th>Date</th>
+            <th>Module Name</th>
+            <th>Code Design Testing</th>
+            <th>Database</th>
+            <th>Description</th>
+            <th>Signature</th>
+        </tr>
+
+        <tr class="phase-header">
+            <td colspan="7">PHASE 4: FRONTEND DEVELOPMENT</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>28/01/2026</td>
+            <td>Project Setup & Routing</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Set up React frontend with Vite, configured Tailwind CSS, React Router with routes for Home, Planner,
+                Login, Register, Admin, and Admin Login pages</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>29/01/2026</td>
+            <td>API Service Layer</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Created centralized API service with Axios for backend communication, implemented endpoints for config,
+                trips, packages, auth, and analytics</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>30/01/2026</td>
+            <td>Auth Store & Pages</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Implemented Zustand auth store with login, register, logout, JWT token management. Built Login and
+                Register pages with form validation</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>31/01/2026</td>
+            <td>Home Page</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Developed Home page with Hero section, Featured Packages carousel, State Overview grid, and
+                call-to-action section with responsive design</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>02/02/2026</td>
+            <td>Interactive Map</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Integrated Leaflet Maps component for interactive India map with state and city markers, zoom controls,
+                and click-to-select functionality</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>03/02/2026</td>
+            <td>Trip Wizard</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Built multi-step Trip Wizard component for guided trip planning with state selection, city picker, date
+                range, and budget preferences</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>04/02/2026</td>
+            <td>Trip Store & Planner</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Created Zustand trip store for state management. Built Planner page with sidebar tabs for wizard,
+                packages, transport, and itinerary views</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td>05/02/2026</td>
+            <td>Transport & Itinerary</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Implemented Transport component showing route options between cities with distance, duration, and cost.
+                Built Itinerary view with day-wise plan</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>9</td>
+            <td>07/02/2026</td>
+            <td>Packages Section</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Developed Packages section with card layout showing travel packages with price, duration, places
+                included, and booking options</td>
+            <td></td>
+        </tr>
+
+        <tr class="phase-header">
+            <td colspan="7">PHASE 5: ADMIN PANEL & TESTING</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>08/02/2026</td>
+            <td>Admin Login</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Built secure Admin Login page with credential validation, JWT authentication, and admin role
+                verification middleware</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>11</td>
+            <td>09/02/2026</td>
+            <td>Admin Dashboard</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Created Admin Dashboard with analytics summary (daily/weekly/monthly), traffic chart visualization, and
+                popular search queries display</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>12</td>
+            <td>10/02/2026</td>
+            <td>Package Management</td>
+            <td>✓</td>
+            <td>✓</td>
+            <td>Implemented CRUD operations for travel packages in admin panel - create, view, update, and delete
+                packages with form validation</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>13</td>
+            <td>11/02/2026</td>
+            <td>Analytics Integration</td>
+            <td>✓</td>
+            <td>✓</td>
+            <td>Integrated analytics tracking middleware for pageviews, searches, trip generation, and API calls with
+                timestamp-based reporting</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>14</td>
+            <td>12/02/2026</td>
+            <td>API Testing</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Tested all backend API endpoints - authentication, CRUD operations, route optimization, train search,
+                and trip generation APIs</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>15</td>
+            <td>13/02/2026</td>
+            <td>UI Testing & Bug Fixes</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Performed UI testing across all pages, fixed responsive design issues, resolved routing bugs, and
+                optimized component rendering</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>16</td>
+            <td>15/02/2026</td>
+            <td>Integration Testing</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>End-to-end integration testing of complete workflow - user registration, login, trip planning, itinerary
+                generation, and PDF export</td>
+            <td></td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
+        <h3
+            style="color: #0d7377; margin: 0 0 10px 0; font-size: 13px; border-bottom: 2px solid #0d7377; padding-bottom: 5px;">
+            PROJECT DETAILS SUMMARY</h3>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Working Days
+                </td>
+                <td style="padding: 6px; border: 1px solid #ddd;">19 Days</td>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Modules</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">16</td>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Phases</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">2</td>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Pages</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">6</td>
+            </tr>
+        </table>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px;">
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold; width: 15%;">
+                    Pages</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">Home, Login, Register, Admin Login, Admin Dashboard,
+                    Planner
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Components
+                </td>
+                <td style="padding: 6px; border: 1px solid #ddd;">Hero, StateOverview, FeaturedPackages, Map,
+                    TripWizard, TripSidebar, Transport, ItineraryView, PackagesSection
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">State
+                    Management</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">Zustand (authStore, tripStore), React Router DOM</td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Features</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">Interactive Map, Trip Wizard, Itinerary View, Admin
+                    Analytics, Package CRUD, JWT Auth, PDF Export</td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>

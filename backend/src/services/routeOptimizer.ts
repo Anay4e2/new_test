@@ -34,7 +34,7 @@ export interface OptimizeRouteResult {
 }
 
 // Calculate distance between two coordinates (Haversine formula)
-function haversineDistance(
+export function haversineDistance(
     lat1: number, lon1: number,
     lat2: number, lon2: number
 ): number {

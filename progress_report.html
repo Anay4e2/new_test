@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Daily Work Report - TRIPIFY</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #333;
+            padding: 20px;
+            background: #fff;
+        }
+
+        .header {
+            background-color: #0d7377;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .header h2 {
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-bottom: 15px;
+        }
+
+        .info-table td {
+            padding: 12px 10px;
+            border: 1px solid #ccc;
+            vertical-align: middle;
+        }
+
+        .label {
+            background-color: #0d7377;
+            color: white;
+            font-weight: bold;
+            width: 90px;
+            font-size: 10px;
+        }
+
+        .value {
+            background-color: #fff;
+        }
+
+        .label-mid {
+            background-color: #0d7377;
+            color: white;
+            font-weight: bold;
+            width: 80px;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .work-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .work-table th {
+            background-color: #0d7377;
+            color: white;
+            padding: 8px 5px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid #0d7377;
+        }
+
+        .work-table td {
+            padding: 8px 5px;
+            border: 1px solid #ccc;
+            font-size: 10px;
+            vertical-align: top;
+        }
+
+        .work-table td:nth-child(1) {
+            width: 25px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(2) {
+            width: 70px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(3) {
+            width: 90px;
+        }
+
+        .work-table td:nth-child(4) {
+            width: 60px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(5) {
+            width: 60px;
+            text-align: center;
+        }
+
+        .work-table td:nth-child(6) {}
+
+        .work-table td:nth-child(7) {
+            width: 60px;
+        }
+
+        .phase-header td {
+            background-color: #e8e8e8 !important;
+            font-weight: bold;
+            text-align: center !important;
+            padding: 10px !important;
+            font-size: 11px;
+        }
+
+        @media print {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>DAILY WORK REPORT</h1>
+        <h2>S V PATEL CSBM COLLEGE, SURAT</h2>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td class="label">TITLE</td>
+            <td class="value" colspan="3">TRIPIFY - The trip planner</td>
+        </tr>
+        <tr>
+            <td class="label">SUPERVISOR</td>
+            <td class="value">Selja Unadkat</td>
+            <td class="label-mid">DATE</td>
+            <td class="value">15/12/2025 - 27/01/2026</td>
+        </tr>
+        <tr>
+            <td class="label">MEMBERS</td>
+            <td class="value" colspan="3">KRISH BAVADIYA(11), KRISHNA DHOLIYA(51), DHOLIYA RENCY(52)</td>
+        </tr>
+        <tr>
+            <td class="label">FRONT END</td>
+            <td class="value">React 18, TypeScript, Vite, Tailwind CSS</td>
+            <td class="label-mid">BACK END</td>
+            <td class="value">Node.js, Express.js, MongoDB</td>
+        </tr>
+        <tr>
+            <td class="label">SUBJECT</td>
+            <td class="value">603/01 - Full Stack Web Development</td>
+            <td class="label-mid">GROUP NO.</td>
+            <td class="value">105</td>
+        </tr>
+    </table>
+
+    <table class="work-table">
+        <tr>
+            <th>No</th>
+            <th>Date</th>
+            <th>Module Name</th>
+            <th>Code Design Testing</th>
+            <th>Database</th>
+            <th>Description</th>
+            <th>Signature</th>
+        </tr>
+
+        <tr class="phase-header">
+            <td colspan="7">PHASE 1: PROJECT SETUP & PLANNING</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>15/12/2025</td>
+            <td>Project Discussion</td>
+            <td>-</td>
+            <td>-</td>
+            <td>Discussed project requirements, features, and technology stack selection for diamond marketplace</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>17/12/2025</td>
+            <td>Research</td>
+            <td>-</td>
+            <td>-</td>
+            <td>Research about React, Node.js, MongoDB, diamond 4Cs (Cut, Color, Clarity, Carat)</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>19/12/2025</td>
+            <td>Project Structure</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Created folder structure for frontend (React) and backend (Express.js) applications</td>
+            <td></td>
+        </tr>
+
+        <tr class="phase-header">
+            <td colspan="7">PHASE 2: DATABASE DESIGNING</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>21/12/2025</td>
+            <td>User Schema</td>
+            <td>-</td>
+            <td>✓</td>
+            <td>Designed User model with fields: name, email, phone, password, role (buyer/seller/admin), isVerified
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>23/12/2025</td>
+            <td>State Schema</td>
+            <td>-</td>
+            <td>✓</td>
+            <td>Designed State model with fields: code, name, description, imageUrl, region, center coordinates, zoom
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>26/12/2025</td>
+            <td>City Schema</td>
+            <td>-</td>
+            <td>✓</td>
+            <td>Designed City model with fields: name, stateCode, coordinates, tier, description, idealDays, imageUrl
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>28/12/2025</td>
+            <td>Place Schema</td>
+            <td>-</td>
+            <td>✓</td>
+            <td>Designed Place model with name, cityName, coordinates, type, visitDuration, entryFee, rating, tags,
+                priceTier</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td>02/01/2026</td>
+            <td>Route Schema</td>
+            <td>-</td>
+            <td>✓</td>
+            <td>Designed Route model with fromCity, toCity, distance, transportOptions (mode, duration, cost, comfort)
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>9</td>
+            <td>05/01/2026</td>
+            <td>Package Schema</td>
+            <td>-</td>
+            <td>✓</td>
+            <td>Designed Package model with id, title, state, days, price, description, places, cities, isActive</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>07/01/2026</td>
+            <td>Analytics Schema</td>
+            <td>-</td>
+            <td>✓</td>
+            <td>Designed Analytics model for tracking pageviews, searches, trip generation, API calls with timestamps
+            </td>
+            <td></td>
+        </tr>
+
+        <tr class="phase-header">
+            <td colspan="7">PHASE 3: BACKEND DEVELOPMENT</td>
+        </tr>
+        <tr>
+            <td>11</td>
+            <td>10/01/2026</td>
+            <td>Auth Controller</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Implemented user authentication with JWT tokens, login, register, and password hashing with bcrypt</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>12</td>
+            <td>13/01/2026</td>
+            <td>State & City Controller</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Created API endpoints for fetching states and cities with filtering and search functionality</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>13</td>
+            <td>15/01/2026</td>
+            <td>Place Controller</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Developed place management API with CRUD operations and city-based filtering</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>14</td>
+            <td>17/01/2026</td>
+            <td>Route Controller</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Implemented route API for getting transport options between cities</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>15</td>
+            <td>19/01/2026</td>
+            <td>Distance Service</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Integrated RapidAPI distance service for calculating distances between locations</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>16</td>
+            <td>21/01/2026</td>
+            <td>Train Service</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Integrated IRCTC Train API for fetching train schedules with caching and fallback data</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>17</td>
+            <td>24/01/2026</td>
+            <td>Trip Controller</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Created trip generation API with itinerary planning and PDF export functionality</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>18</td>
+            <td>27/01/2026</td>
+            <td>Package Controller</td>
+            <td>✓</td>
+            <td>-</td>
+            <td>Implemented CRUD operations for travel packages with admin-protected routes</td>
+            <td></td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
+        <h3
+            style="color: #0d7377; margin: 0 0 10px 0; font-size: 13px; border-bottom: 2px solid #0d7377; padding-bottom: 5px;">
+            PROJECT DETAILS SUMMARY</h3>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Working Days
+                </td>
+                <td style="padding: 6px; border: 1px solid #ddd;">44 Days</td>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Modules</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">18</td>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Phases</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">3</td>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Schemas</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">7</td>
+            </tr>
+        </table>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px;">
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold; width: 15%;">
+                    Models</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">User, State, City, Place, Route, Package, Analytics
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Frontend</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">React 18, TypeScript, Vite, Tailwind CSS, Leaflet Maps
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Backend</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">Node.js, Express.js, MongoDB, JWT, bcrypt</td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">Features</td>
+                <td style="padding: 6px; border: 1px solid #ddd;">Interactive Map, Route Optimization, Train Search,
+                    Trip Planner, PDF Export, Admin Dashboard</td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>

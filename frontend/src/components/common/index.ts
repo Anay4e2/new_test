@@ -1,3 +1,3 @@
 // Common reusable components
-// Add shared UI components here (buttons, cards, modals, etc.)
-export { };
+export { default as ThemeToggle } from './ThemeToggle';
+

@@ -37,3 +37,40 @@ export const optimizeRoute = async (req: Request, res: Response): Promise<void> 
         res.status(500).json({ error: error.message || 'Failed to optimize route' });
     }
 };
+
+export const compareTrips = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const baseRequest: TripRequest = req.body;
+
+        if (!baseRequest.selectedCityIds || baseRequest.selectedCityIds.length === 0) {
+            res.status(400).json({ error: 'Please select at least one city' });
+            return;
+        }
+
+        // Generate 3 variants in parallel
+        const [relaxed, balanced, fast] = await Promise.all([
+            generateTrip({
+                ...baseRequest,
+                travelStyle: 'relaxed',
+                constraints: { ...baseRequest.constraints, maxTravelHoursPerDay: 4 },
+            }),
+            generateTrip(baseRequest), // original as-is
+            generateTrip({
+                ...baseRequest,
+                travelStyle: 'fast',
+                constraints: { ...baseRequest.constraints, maxTravelHoursPerDay: 8 },
+            }),
+        ]);
+
+        res.json({
+            variants: [
+                { label: 'Relaxed', tripResult: relaxed },
+                { label: 'Balanced', tripResult: balanced },
+                { label: 'Fast-Paced', tripResult: fast },
+            ],
+        });
+    } catch (error: any) {
+        console.error('Error comparing trips:', error);
+        res.status(500).json({ error: error.message || 'Failed to compare trips' });
+    }
+};

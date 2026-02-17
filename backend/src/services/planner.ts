@@ -1,14 +1,17 @@
 // The Logic Core: Generates the itinerary
-import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES } from './mockData';
+import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES, HOTELS as MOCK_HOTELS, RESTAURANTS as MOCK_RESTAURANTS } from './mockData';
 import CityModel from '../models/City';
 import PlaceModel from '../models/Place';
 import mongoose from 'mongoose';
+import { getSeasonalWeather } from './weatherService';
+import { haversineDistance } from './routeOptimizer';
 
 export type TravelStyle = 'relaxed' | 'fast';
 export type BudgetTier = 'budget' | 'standard' | 'premium';
 
 export interface TripRequest {
   stateCode: string;
+  stateCodes?: string[]; // multi-state support
   selectedCityIds: string[];
   duration: number; // in days
   budget: BudgetTier;
@@ -44,6 +47,26 @@ export interface Place {
   priceTier?: string;
 }
 
+export interface NightStayInfo {
+  city: string;
+  hotel: {
+    name: string;
+    tier: string;
+    pricePerNight: number;
+    rating: number;
+    amenities: string[];
+  };
+}
+
+export interface MealRecommendation {
+  restaurant: string;
+  cuisine: string;
+  cost: number;
+  mustTry: string;
+  vegetarian: boolean;
+  type: string;
+}
+
 export interface DayItinerary {
   day: number;
   date?: string;
@@ -55,8 +78,22 @@ export interface DayItinerary {
     distance: number;
     duration: number; // hours
     mode: string;
+    isInterState?: boolean;
+    fromState?: string;
+    toState?: string;
   };
-  nightStay: string;
+  nightStay: string | NightStayInfo;
+  meals?: {
+    breakfast?: MealRecommendation;
+    lunch?: MealRecommendation;
+    dinner?: MealRecommendation;
+  };
+  weather?: {
+    temp: number;
+    condition: string;
+    icon: string;
+    advisory?: string;
+  };
   stats: {
     totalDistance: number;
     totalCost: number;
@@ -74,29 +111,49 @@ export interface TripResult {
       stay: number;
       transport: number;
       activities: number;
+      food: number;
     };
   };
 }
 
-// Helper to estimate travel between cities (Simple mock for MVP)
+// Helper to estimate travel between cities using Haversine distance
 const getTravelInfo = (fromCityName: string, toCityName: string) => {
-  // Mock distances matrix
-  const distances: Record<string, number> = {
-    'Jaipur-Jodhpur': 350,
-    'Jodhpur-Udaipur': 250,
-    'Jodhpur-Jaisalmer': 280,
-    'Udaipur-Jodhpur': 250,
-    'Jaipur-Udaipur': 400,
-    // Add reverse and others as defaults
-  };
+  // Look up coordinates from MOCK_CITIES
+  const fromCity = MOCK_CITIES.find(c => c.name === fromCityName);
+  const toCity = MOCK_CITIES.find(c => c.name === toCityName);
 
-  const key = `${fromCityName}-${toCityName}`;
-  const reverseKey = `${toCityName}-${fromCityName}`;
-  const dist = distances[key] || distances[reverseKey] || 300; // Default 300km
+  let dist = 300; // Default fallback
+  if (fromCity?.coordinates && toCity?.coordinates) {
+    // Haversine gives straight-line distance; multiply by 1.3 for road factor
+    dist = Math.round(haversineDistance(
+      fromCity.coordinates.lat, fromCity.coordinates.lng,
+      toCity.coordinates.lat, toCity.coordinates.lng
+    ) * 1.3);
+  }
+
+  // Detect inter-state travel
+  const isInterState = !!(fromCity && toCity && fromCity.stateCode !== toCity.stateCode);
+
+  // Choose travel mode based on distance
+  let mode = 'Private Taxi';
+  let avgSpeed = 60; // km/h
+  if (isInterState) {
+    if (dist > 500) {
+      mode = 'Flight';
+      avgSpeed = 500; // effective speed including boarding
+    } else {
+      mode = 'Train';
+      avgSpeed = 80;
+    }
+  }
 
   return {
     distance: dist,
-    duration: dist / 60, // Avg 60 km/h
+    duration: Math.round((dist / avgSpeed) * 10) / 10,
+    mode,
+    isInterState,
+    fromState: fromCity?.stateCode,
+    toState: toCity?.stateCode,
   };
 };
 
@@ -105,6 +162,77 @@ const COSTS = {
   standard: { stay: 70, food: 35, transportPerKm: 0.30, activityAvg: 15 },
   premium: { stay: 150, food: 80, transportPerKm: 0.80, activityAvg: 30 },
 };
+
+// Find the best hotel for a city + budget tier
+const findHotel = (cityName: string, tier: BudgetTier): NightStayInfo | null => {
+  // Filter hotels matching city and tier, pick highest rated
+  const matches = MOCK_HOTELS.filter(
+    h => h.cityName.toLowerCase() === cityName.toLowerCase() && h.tier === tier
+  );
+  if (matches.length === 0) return null;
+  const best = matches.sort((a, b) => b.rating - a.rating)[0];
+  return {
+    city: cityName,
+    hotel: {
+      name: best.name,
+      tier: best.tier,
+      pricePerNight: best.pricePerNight,
+      rating: best.rating,
+      amenities: best.amenities,
+    }
+  };
+};
+
+// Budget tier to restaurant price range mapping
+const BUDGET_TO_PRICE_RANGE: Record<BudgetTier, string[]> = {
+  budget: ['budget'],
+  standard: ['budget', 'moderate'],
+  premium: ['moderate', 'expensive'],
+};
+
+// Assign meals for a day in a city, avoiding repeats
+const assignMeals = (
+  cityName: string,
+  budget: BudgetTier,
+  usedRestaurantIds: Set<string>
+): { meals: DayItinerary['meals']; foodCost: number } => {
+  const allowedRanges = BUDGET_TO_PRICE_RANGE[budget];
+  const cityRestaurants = MOCK_RESTAURANTS.filter(
+    r => r.cityName.toLowerCase() === cityName.toLowerCase() && allowedRanges.includes(r.priceRange)
+  );
+
+  // Sort by rating descending
+  const sorted = [...cityRestaurants].sort((a, b) => b.rating - a.rating);
+
+  const pickRestaurant = (preferred?: string[]): MealRecommendation | undefined => {
+    const candidates = preferred
+      ? sorted.filter(r => preferred.includes(r.type) && !usedRestaurantIds.has(r._id))
+      : sorted.filter(r => !usedRestaurantIds.has(r._id));
+    const pick = candidates.length > 0 ? candidates[0] : sorted.filter(r => !usedRestaurantIds.has(r._id))[0];
+    if (!pick) return undefined;
+    usedRestaurantIds.add(pick._id);
+    return {
+      restaurant: pick.name,
+      cuisine: pick.cuisine[0],
+      cost: pick.averageCost,
+      mustTry: pick.mustTry[0] || '',
+      vegetarian: pick.vegetarian,
+      type: pick.type,
+    };
+  };
+
+  const breakfast = pickRestaurant(['cafe', 'street-food', 'dhaba']);
+  const lunch = pickRestaurant(['casual', 'dhaba']);
+  const dinner = pickRestaurant(['casual', 'fine-dining']);
+
+  const foodCost = (breakfast?.cost || 0) + (lunch?.cost || 0) + (dinner?.cost || 0);
+
+  return {
+    meals: { breakfast, lunch, dinner },
+    foodCost,
+  };
+};
+
 
 export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   const { selectedCityIds, duration, budget, travelStyle, constraints } = req;
@@ -178,7 +306,8 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   let currentDay = 1;
   let totalCost = 0;
   let totalDist = 0;
-  let costBreakup = { stay: 0, transport: 0, activities: 0 };
+  const usedRestaurantIds = new Set<string>();
+  let costBreakup = { stay: 0, transport: 0, activities: 0, food: 0 };
 
   const costConfig = COSTS[budget];
 
@@ -193,8 +322,21 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       extraDays--;
     }
 
+    // Get weather for this city (use current month for seasonal data)
+    const currentMonth = new Date().getMonth() + 1;
+    const weatherInfo = getSeasonalWeather(city.name, currentMonth);
+
     // Get places for this city
     let cityPlaces = MOCK_PLACES.filter(p => p.cityName === city.name);
+
+    // If extreme heat, prioritize indoor activities by sorting them first
+    if (weatherInfo.temp >= 40) {
+      const indoorTypes = ['Museum', 'Temple', 'Palace', 'Gallery', 'Shopping'];
+      cityPlaces = [
+        ...cityPlaces.filter((p: Place) => indoorTypes.includes(p.type)),
+        ...cityPlaces.filter((p: Place) => !indoorTypes.includes(p.type)),
+      ];
+    }
 
     // Filter constraints
     if (constraints.seniorFriendly) {
@@ -238,28 +380,36 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       // Remove used places so we don't repeat them next day in same city
       cityPlaces = cityPlaces.filter(p => !dailyActivities.includes(p));
 
-      // Calculate Costs
+      // Find hotel for this night
+      const hotelInfo = findHotel(city.name, budget);
+
+      // Assign meal recommendations
+      const { meals, foodCost } = assignMeals(city.name, budget, usedRestaurantIds);
+
+      // Calculate Costs — use real hotel price when available
       const dayActivityCost = dailyActivities.length * costConfig.activityAvg;
-      const dayStayCost = costConfig.stay; // Per night
-      const dayFoodCost = costConfig.food;
+      const dayStayCost = hotelInfo ? hotelInfo.hotel.pricePerNight : costConfig.stay;
 
       costBreakup.activities += dayActivityCost;
       costBreakup.stay += dayStayCost;
-      // Food is implicitly part of "Stay/Living" in this simple model or separate?
-      // Let's add food to stay for simplicity or split. The prompt asks for Stay, Transport, Activities.
-      // We will add Food to Stay for now or ignore. Let's ignore food or bundle it.
-      // Let's bundle food into Stay/Daily Living.
-      costBreakup.stay += dayFoodCost;
+      costBreakup.food += foodCost;
 
       const dayPlan: DayItinerary = {
         day: currentDay,
         city: city.name,
         activities: dailyActivities,
-        nightStay: city.name,
+        nightStay: hotelInfo || city.name,
+        meals,
+        weather: {
+          temp: weatherInfo.temp,
+          condition: weatherInfo.condition,
+          icon: weatherInfo.icon,
+          advisory: weatherInfo.advisory,
+        },
         stats: {
           totalDistance: 0, // Intra-city ignored for MVP stats
-          totalCost: dayActivityCost + dayStayCost + dayFoodCost,
-          feasibility: 'comfortable'
+          totalCost: dayActivityCost + dayStayCost + foodCost,
+          feasibility: weatherInfo.temp >= 42 ? 'tight' : 'comfortable'
         }
       };
 
@@ -271,9 +421,14 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
           to: nextCity.name,
           distance: travel.distance,
           duration: travel.duration,
-          mode: 'Private Taxi'
+          mode: travel.mode,
+          isInterState: travel.isInterState,
+          fromState: travel.fromState,
+          toState: travel.toState,
         };
-        dayPlan.nightStay = nextCity.name; // Reach next city by night
+        // When traveling to next city, use that city's hotel for night stay
+        const nextHotelInfo = findHotel(nextCity.name, budget);
+        dayPlan.nightStay = nextHotelInfo || nextCity.name;
 
         const travelCost = travel.distance * costConfig.transportPerKm;
         costBreakup.transport += travelCost;
@@ -290,7 +445,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     }
   }
 
-  totalCost = costBreakup.stay + costBreakup.transport + costBreakup.activities;
+  totalCost = costBreakup.stay + costBreakup.transport + costBreakup.activities + costBreakup.food;
 
   // Overall Feasibility
   let feasibility: 'comfortable' | 'tight' | 'not recommended' = 'comfortable';

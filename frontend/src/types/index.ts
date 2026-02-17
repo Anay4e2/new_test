@@ -3,6 +3,7 @@ export type BudgetTier = 'budget' | 'standard' | 'premium';
 
 export interface TripRequest {
   stateCode: string;
+  stateCodes?: string[];
   selectedCityIds: string[];
   duration: number; // in days
   budget: BudgetTier;
@@ -13,6 +14,26 @@ export interface TripRequest {
     morningReligious: boolean;
     noNightTravel: boolean;
   };
+}
+
+export interface NightStayInfo {
+  city: string;
+  hotel: {
+    name: string;
+    tier: string;
+    pricePerNight: number;
+    rating: number;
+    amenities: string[];
+  };
+}
+
+export interface MealRecommendation {
+  restaurant: string;
+  cuisine: string;
+  cost: number;
+  mustTry: string;
+  vegetarian: boolean;
+  type: string;
 }
 
 export interface DayItinerary {
@@ -26,8 +47,22 @@ export interface DayItinerary {
     distance: number;
     duration: number; // hours
     mode: string;
+    isInterState?: boolean;
+    fromState?: string;
+    toState?: string;
   };
-  nightStay: string;
+  nightStay: string | NightStayInfo;
+  meals?: {
+    breakfast?: MealRecommendation;
+    lunch?: MealRecommendation;
+    dinner?: MealRecommendation;
+  };
+  weather?: {
+    temp: number;
+    condition: string;
+    icon: string;
+    advisory?: string;
+  };
   stats: {
     totalDistance: number;
     totalCost: number;
@@ -45,6 +80,7 @@ export interface TripResult {
       stay: number;
       transport: number;
       activities: number;
+      food: number;
     };
   };
 }
@@ -77,6 +113,8 @@ export interface Place {
   rating: number;
   tags: string[];
   priceTier: 'free' | 'low' | 'medium' | 'high';
+  images?: string[];
+  thumbnailUrl?: string;
 }
 
 export interface State {
@@ -104,4 +142,58 @@ export interface Package {
   isActive: boolean;
   createdAt: string;
   placesDetails?: Place[];
+}
+
+export interface Hotel {
+  _id: string;
+  name: string;
+  cityName: string;
+  stateCode: string;
+  coordinates: { lat: number; lng: number };
+  tier: BudgetTier;
+  pricePerNight: number;
+  rating: number;
+  amenities: string[];
+  imageUrl?: string;
+  contactPhone?: string;
+  bookingUrl?: string;
+  description: string;
+}
+
+export interface Restaurant {
+  _id: string;
+  name: string;
+  cityName: string;
+  cuisine: string[];
+  type: 'street-food' | 'casual' | 'fine-dining' | 'dhaba' | 'cafe';
+  priceRange: 'budget' | 'moderate' | 'expensive';
+  averageCost: number;
+  rating: number;
+  mustTry: string[];
+  coordinates: { lat: number; lng: number };
+  openingTime: string;
+  closingTime: string;
+  vegetarian: boolean;
+  description: string;
+}
+
+export interface SavedTrip {
+  _id: string;
+  userId: string;
+  title: string;
+  tripRequest: TripRequest;
+  tripResult: TripResult;
+  isFavorite: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FavoritePlace {
+  _id: string;
+  userId: string;
+  placeId: string;
+  placeName: string;
+  cityName: string;
+  addedAt: string;
 }

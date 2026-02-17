@@ -1,8 +1,10 @@
 import { FC, useState, useEffect, useMemo } from 'react';
-import { TripWizard, ItineraryView, Map, TripSidebar, PackagesSection } from '@/components/planner';
+import { Link } from 'react-router-dom';
+import { TripWizard, ItineraryView, Map, TripSidebar, PackagesSection, TripComparison } from '@/components/planner';
 import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
-import { getConfig, generateTrip } from '@/services/api';
+import { getConfig, generateTrip, generateTripVariants } from '@/services/api';
+import ThemeToggle from '@/components/common/ThemeToggle';
 
 export const Planner: FC = () => {
   const [config, setConfig] = useState<{ states: any[], cities: any[] }>({ states: [], cities: [] });
@@ -10,7 +12,11 @@ export const Planner: FC = () => {
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([]);
   const [tripResult, setTripResult] = useState<TripResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'packages'>('trip');
+  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'packages' | 'compare'>('trip');
+
+  // Comparison state
+  const [comparisonVariants, setComparisonVariants] = useState<{ label: string; tripResult: TripResult }[]>([]);
+  const [isComparing, setIsComparing] = useState(false);
 
   // Trip store for selected places count
   const { selectedPlaces } = useTripStore();
@@ -51,6 +57,28 @@ export const Planner: FC = () => {
     }
   };
 
+  const handleCompare = async (req: TripRequest) => {
+    setIsComparing(true);
+    try {
+      const result = await generateTripVariants(req);
+      setComparisonVariants(result.variants);
+      setActiveTab('compare');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to compare trips. Please try again.');
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
+  const handleSelectVariant = (index: number) => {
+    const selected = comparisonVariants[index];
+    if (selected) {
+      setTripResult(selected.tripResult);
+      setActiveTab('itinerary');
+    }
+  };
+
   // Generate route coordinates for the map if result exists
   const routeCoordinates: Array<[number, number]> | undefined = useMemo(() => {
     if (!tripResult) return undefined;
@@ -83,10 +111,13 @@ export const Planner: FC = () => {
         return (
           <TripWizard
             cities={config.cities}
+            states={config.states}
             selectedCityIds={selectedCityIds}
             onCityToggle={handleCityToggle}
             onGenerate={handleGenerate}
+            onCompare={handleCompare}
             isLoading={loading}
+            isComparing={isComparing}
           />
         );
       case 'trip':
@@ -99,60 +130,89 @@ export const Planner: FC = () => {
         ) : (
           <TripSidebar />
         );
+      case 'compare':
+        return (
+          <TripComparison
+            variants={comparisonVariants}
+            onSelect={handleSelectVariant}
+            isLoading={isComparing}
+          />
+        );
       default:
         return <TripSidebar />;
     }
   };
 
   return (
-    <div className="flex h-screen w-full bg-neutral overflow-hidden">
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-900 overflow-hidden transition-colors duration-200">
       {/* Left Sidebar */}
-      <div className="hidden md:flex flex-col w-[420px] border-r border-white/10">
-        {/* Tab Switcher - Dark Navigation Bar */}
-        <div className="flex border-b border-white/10 bg-neutral-900">
+      <div className="hidden md:flex flex-col w-[420px] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">T</span>
+            </div>
+            <span className="font-semibold text-slate-800 dark:text-white">TripPlanner</span>
+          </Link>
+          <ThemeToggle />
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="flex border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
           <button
             onClick={() => setActiveTab('trip')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'trip' ? 'text-white' : 'text-gray-400 hover:text-white'
+            className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'trip' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             My Trip
             {selectedPlaces.length > 0 && (
-              <span className="absolute top-1 right-4 w-5 h-5 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+              <span className="absolute top-2 right-4 w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
                 {selectedPlaces.length}
               </span>
             )}
-            {activeTab === 'trip' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />}
+            {activeTab === 'trip' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
           </button>
           <button
             onClick={() => setActiveTab('packages')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'packages' ? 'text-white' : 'text-gray-400 hover:text-white'
+            className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'packages' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
               }`}
           >
-            📦 Packages
-            {activeTab === 'packages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />}
+            Packages
+            {activeTab === 'packages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
           </button>
           <button
             onClick={() => setActiveTab('wizard')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'wizard' ? 'text-white' : 'text-gray-400 hover:text-white'
+            className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'wizard' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             Advanced
-            {activeTab === 'wizard' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />}
+            {activeTab === 'wizard' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
           </button>
           {tripResult && (
             <button
               onClick={() => setActiveTab('itinerary')}
-              className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'itinerary' ? 'text-white' : 'text-gray-400 hover:text-white'
+              className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'itinerary' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
                 }`}
             >
               Itinerary
-              {activeTab === 'itinerary' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />}
+              {activeTab === 'itinerary' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
+            </button>
+          )}
+          {comparisonVariants.length > 0 && (
+            <button
+              onClick={() => setActiveTab('compare')}
+              className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'compare' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                }`}
+            >
+              Compare
+              {activeTab === 'compare' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
             </button>
           )}
         </div>
 
         {/* Sidebar Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           {renderSidebar()}
         </div>
       </div>
@@ -170,19 +230,24 @@ export const Planner: FC = () => {
             route={routeCoordinates}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">Loading Map...</div>
+          <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
+              <p>Loading Map...</p>
+            </div>
+          </div>
         )}
 
         {/* Mobile Bottom Sheet Toggle */}
         <div className="absolute bottom-6 right-6 md:hidden z-[1000] flex gap-2">
           <button
             onClick={() => setActiveTab(activeTab === 'trip' ? 'wizard' : 'trip')}
-            className="bg-white/10 backdrop-blur-lg text-white p-4 rounded-full shadow-xl font-bold border border-white/20"
+            className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-4 rounded-full shadow-lg font-bold border border-slate-200 dark:border-slate-600"
           >
             {activeTab === 'trip' ? '⚙️' : '🗺️'}
           </button>
           {selectedPlaces.length > 0 && (
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
               {selectedPlaces.length}
             </div>
           )}

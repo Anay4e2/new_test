@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { TripRequest, TripResult, City, Place, Package } from '../types';
+import type { TripRequest, TripResult, City, Place, Package, Hotel, BudgetTier, Restaurant, SavedTrip, FavoritePlace } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
@@ -132,6 +132,110 @@ export const updatePackage = async (id: string, data: Partial<Package>): Promise
 
 export const deletePackage = async (id: string): Promise<{ success: boolean; message: string }> => {
     const response = await api.delete(`/packages/${id}`);
+    return response.data;
+};
+
+// Hotels API
+export const getHotels = async (): Promise<Hotel[]> => {
+    const response = await api.get('/hotels');
+    return response.data;
+};
+
+export const getHotelsByCity = async (cityName: string): Promise<Hotel[]> => {
+    const response = await api.get(`/hotels/city/${encodeURIComponent(cityName)}`);
+    return response.data;
+};
+
+export const getHotelsByTier = async (cityName: string, tier: BudgetTier): Promise<Hotel[]> => {
+    const response = await api.get(`/hotels/city/${encodeURIComponent(cityName)}/tier/${tier}`);
+    return response.data;
+};
+
+// Restaurants API
+export const getRestaurants = async (): Promise<Restaurant[]> => {
+    const response = await api.get('/restaurants');
+    return response.data;
+};
+
+export const getRestaurantsByCity = async (cityName: string): Promise<Restaurant[]> => {
+    const response = await api.get(`/restaurants/city/${encodeURIComponent(cityName)}`);
+    return response.data;
+};
+
+export const getRestaurantsByType = async (cityName: string, type: string): Promise<Restaurant[]> => {
+    const response = await api.get(`/restaurants/city/${encodeURIComponent(cityName)}/type/${type}`);
+    return response.data;
+};
+
+// Saved Trips API
+export const saveTrip = async (title: string, tripRequest: any, tripResult: any): Promise<{ success: boolean; trip: SavedTrip }> => {
+    const response = await api.post('/my-trips', { title, tripRequest, tripResult });
+    return response.data;
+};
+
+export const getMyTrips = async (): Promise<{ success: boolean; trips: SavedTrip[] }> => {
+    const response = await api.get('/my-trips');
+    return response.data;
+};
+
+export const getTrip = async (id: string): Promise<{ success: boolean; trip: SavedTrip }> => {
+    const response = await api.get(`/my-trips/${id}`);
+    return response.data;
+};
+
+export const updateTrip = async (id: string, data: { title?: string; notes?: string; isFavorite?: boolean }): Promise<{ success: boolean; trip: SavedTrip }> => {
+    const response = await api.put(`/my-trips/${id}`, data);
+    return response.data;
+};
+
+export const deleteTrip = async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete(`/my-trips/${id}`);
+    return response.data;
+};
+
+// Favorites API
+export const toggleFavoritePlace = async (placeId: string, placeName: string, cityName: string): Promise<{ success: boolean; favorited: boolean }> => {
+    const response = await api.post('/favorites/toggle', { placeId, placeName, cityName });
+    return response.data;
+};
+
+export const getMyFavorites = async (): Promise<{ success: boolean; favorites: FavoritePlace[] }> => {
+    const response = await api.get('/favorites');
+    return response.data;
+};
+
+// Share API
+export const createShareLink = async (tripRequest: any, tripResult: any): Promise<{ success: boolean; shareId: string; shareUrl: string }> => {
+    const response = await api.post('/share', { tripRequest, tripResult });
+    return response.data;
+};
+
+export const getSharedTrip = async (shareId: string): Promise<{ success: boolean; tripRequest: any; tripResult: any; viewCount: number }> => {
+    const response = await api.get(`/share/${shareId}`);
+    return response.data;
+};
+
+// Weather API
+export const getWeatherForecast = async (cityName: string, date?: string): Promise<{ success: boolean; data: { temp: number; humidity: number; condition: string; icon: string; advisory?: string } }> => {
+    const params = date ? `?date=${date}` : '';
+    const response = await api.get(`/weather/forecast/${encodeURIComponent(cityName)}${params}`);
+    return response.data;
+};
+
+export const getSeasonalWeather = async (cityName: string, month: number): Promise<{ success: boolean; data: { temp: number; humidity: number; condition: string; icon: string; advisory?: string } }> => {
+    const response = await api.get(`/weather/seasonal/${encodeURIComponent(cityName)}/${month}`);
+    return response.data;
+};
+
+// Itinerary Validation API
+export const validateItinerary = async (itinerary: any[]): Promise<{ itinerary: any[]; summary: { totalCost: number; totalDistance: number; feasibility: string } }> => {
+    const response = await api.post('/itinerary/validate', { itinerary });
+    return response.data;
+};
+
+// Trip Comparison API
+export const generateTripVariants = async (request: TripRequest): Promise<{ variants: { label: string; tripResult: TripResult }[] }> => {
+    const response = await api.post('/generate-trip/compare', request);
     return response.data;
 };
 

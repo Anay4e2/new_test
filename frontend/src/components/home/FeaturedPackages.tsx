@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 interface Package {
   id: string;
@@ -18,54 +18,67 @@ interface Props {
 
 export const FeaturedPackages: FC<Props> = ({ packages }) => {
   return (
-    <section className="py-20 bg-neutral">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-text mb-4 font-serif">Curated Experiences</h2>
-          <div className="w-24 h-1 bg-accent mx-auto rounded-full"></div>
-          <p className="mt-4 text-gray-600 max-w-2xl mx-auto">Handpicked itineraries designed to immerse you in the authentic beauty of India.</p>
+    <section className="py-20 bg-white dark:bg-slate-900 transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-10">
+        {/* Section Header */}
+        <div className="text-center mb-14">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Curated Travel Packages</h2>
+          <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+            Handpicked itineraries designed to immerse you in the authentic beauty of India.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {packages.map((pkg, index) => (
-            <motion.div
+        {/* Packages Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {packages.map((pkg) => (
+            <div
               key={pkg.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group border border-gray-100"
+              className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-lg transition-all duration-300 group"
             >
-              <div className="relative h-64 overflow-hidden">
+              {/* Image */}
+              <div className="relative h-56 overflow-hidden">
                 <img
                   src={pkg.image || `https://picsum.photos/seed/${pkg.id}/600/400`}
                   alt={pkg.title}
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${pkg.title}/600/400`;
                   }}
                 />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-primary shadow-sm">
+                <div className="absolute top-4 right-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium text-blue-600 dark:text-blue-400 shadow-sm">
                   {pkg.days} Days
                 </div>
               </div>
+
+              {/* Content */}
               <div className="p-6">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-accent uppercase text-xs font-bold tracking-wider">{pkg.state}</span>
-                  <span className="text-text font-bold">₹{pkg.price.toLocaleString()}</span>
+                  <span className="text-blue-600 dark:text-blue-400 uppercase text-xs font-semibold tracking-wider">{pkg.state}</span>
+                  <span className="text-slate-900 dark:text-white font-bold">₹{pkg.price.toLocaleString()}</span>
                 </div>
-                <h3 className="text-2xl font-bold text-text mb-3 font-serif group-hover:text-primary transition-colors">{pkg.title}</h3>
-                <p className="text-gray-600 mb-4 line-clamp-2">{pkg.description}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {pkg.tags.map(tag => (
-                    <span key={tag} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">{tag}</span>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {pkg.title}
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">{pkg.description}</p>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {pkg.tags.slice(0, 3).map(tag => (
+                    <span key={tag} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-xs font-medium">
+                      {tag}
+                    </span>
                   ))}
                 </div>
-                <button className="w-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold py-2 rounded-xl transition-colors duration-300">
+
+                {/* CTA Button */}
+                <Link
+                  to="/plan"
+                  className="block w-full text-center border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-semibold py-2.5 rounded-xl transition-colors duration-200"
+                >
                   View Itinerary
-                </button>
+                </Link>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

@@ -10,6 +10,12 @@ import tripRoutes from './tripRoutes';
 import itineraryRoutes from './itineraryRoutes';
 import authRoutes from './authRoutes';
 import packageRoutes from './packageRoutes';
+import hotelRoutes from './hotelRoutes';
+import restaurantRoutes from './restaurantRoutes';
+import savedTripRoutes from './savedTripRoutes';
+import favoritesRoutes from './favoritesRoutes';
+import shareRoutes from './shareRoutes';
+import weatherRoutes from './weatherRoutes';
 
 const router = Router();
 
@@ -24,6 +30,12 @@ router.use('/trains', trainRoutes);
 router.use('/distance', distanceRoutes);
 router.use('/itinerary', itineraryRoutes);
 router.use('/packages', packageRoutes);
+router.use('/hotels', hotelRoutes);
+router.use('/restaurants', restaurantRoutes);
+router.use('/my-trips', savedTripRoutes);
+router.use('/favorites', favoritesRoutes);
+router.use('/share', shareRoutes);
+router.use('/weather', weatherRoutes);
 
 // Trip routes are mounted at root level (e.g., /api/generate-trip)
 router.use('/', tripRoutes);
