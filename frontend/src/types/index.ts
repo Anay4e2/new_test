@@ -63,6 +63,14 @@ export interface DayItinerary {
     icon: string;
     advisory?: string;
   };
+  festival?: {
+    name: string;
+    type: string;
+    description: string;
+    crowdLevel: string;
+    highlights: string[];
+    advisory?: string;
+  };
   stats: {
     totalDistance: number;
     totalCost: number;
@@ -196,4 +204,128 @@ export interface FavoritePlace {
   placeName: string;
   cityName: string;
   addedAt: string;
+}
+
+export interface PackingItem {
+  name: string;
+  icon: string;
+  reason: string;
+  priority: 'must-have' | 'recommended' | 'optional';
+}
+
+export interface PackingList {
+  essentials: PackingItem[];
+  clothing: PackingItem[];
+  accessories: PackingItem[];
+  documents: PackingItem[];
+  healthKit: PackingItem[];
+  extras: PackingItem[];
+}
+
+export interface UpcomingStop {
+  station: string;
+  stationCode: string;
+  scheduledArrival: string;
+  expectedArrival: string;
+  scheduledDeparture: string;
+  platform?: number;
+  haltTime?: string;
+  distanceFromSource?: number;
+  arrived: boolean;
+}
+
+export interface TrainLiveStatus {
+  trainNumber: string;
+  trainName: string;
+  currentStation: string;
+  delay: number;
+  lastUpdated: string;
+  status: 'on-time' | 'delayed' | 'cancelled' | 'not-started' | 'unavailable';
+  upcomingStops: UpcomingStop[];
+  source: 'api' | 'fallback';
+}
+
+export interface Review {
+  _id: string;
+  userId: string;
+  userName: string;
+  placeId: string;
+  placeName: string;
+  cityName: string;
+  rating: number;
+  title: string;
+  comment: string;
+  visitDate?: string;
+  photos?: string[];
+  helpfulCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// AI Trip Suggestion types
+export interface TripSuggestion {
+  title: string;
+  description: string;
+  stateCode: string;
+  cityIds: string[];
+  duration: number;
+  budget: BudgetTier;
+  highlights: string[];
+  imageUrl: string;
+  tags: string[];
+}
+
+export interface ParsedTripQuery {
+  tripRequest: Partial<TripRequest>;
+  confidence: Record<string, number>;
+  suggestions: TripSuggestion[];
+  detectedEntities: {
+    duration?: string;
+    budget?: string;
+    style?: string;
+    locations: string[];
+    constraints: string[];
+    interests: string[];
+  };
+}
+
+export interface Festival {
+  _id: string;
+  name: string;
+  cityName: string;
+  stateCode: string;
+  month: number;
+  approximateDate?: string;
+  duration: number;
+  type: 'religious' | 'cultural' | 'fair' | 'music' | 'food' | 'art';
+  description: string;
+  highlights: string[];
+  impact: 'must-see' | 'worth-attending' | 'background';
+  crowdLevel: 'extreme' | 'high' | 'moderate' | 'low';
+  travelAdvisory?: string;
+  imageUrl?: string;
+}
+
+export interface EmergencyInfo {
+  cityName: string;
+  police: { number: string; station: string; address: string };
+  hospital: { name: string; number: string; address: string; hasEmergency: boolean }[];
+  touristHelpline: string;
+  womenHelpline: string;
+  ambulance: string;
+  fire: string;
+  nearestAirport: { name: string; code: string; distanceKm: number };
+  embassy?: { country: string; phone: string; address: string }[];
+  localTips: string[];
+  scamWarnings: string[];
+  safeAreas: string[];
+  areasToAvoidAtNight: string[];
+}
+
+export interface BookingLink {
+  provider: string;
+  url: string;
+  logo: string;
+  mode: string;
+  estimatedPrice?: { min: number; max: number };
 }

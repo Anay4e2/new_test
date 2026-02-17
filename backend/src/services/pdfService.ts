@@ -1,4 +1,6 @@
 import PDFDocument from 'pdfkit';
+import { generatePackingList } from './packingListService';
+import { EMERGENCY_INFO } from './mockData';
 
 // Types
 interface Activity {
@@ -42,7 +44,7 @@ interface TripResult {
 }
 
 // Clothing recommendations based on temperature/season
-const getClothingRecommendations = (month: number): { icon: string; item: string }[] => {
+export const getClothingRecommendations = (month: number): { icon: string; item: string }[] => {
     const recommendations: { icon: string; item: string }[] = [];
 
     if (month >= 10 || month <= 1) {
@@ -257,18 +259,47 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
             }
 
             // ============================================
-            // WHAT TO PACK
+            // PACKING LIST (full categorized)
             // ============================================
-            if (doc.y > doc.page.height - 180) {
-                doc.addPage();
-            }
+            doc.addPage();
 
-            doc.fontSize(14).fillColor('#2980b9').text('👔 WHAT TO PACK', { underline: true });
+            doc.fontSize(18).fillColor('#2c3e50').text('🎒 PACKING LIST', { underline: true });
             doc.moveDown(0.5);
+            doc.fontSize(9).fillColor('#7f8c8d').text('Auto-generated based on your itinerary, season & preferences');
+            doc.moveDown(1);
 
-            const clothingRecs = getClothingRecommendations(currentMonth);
-            for (const rec of clothingRecs) {
-                doc.fontSize(10).fillColor('#333333').text(`  ${rec.icon} ${rec.item}`);
+            const packingList = generatePackingList(result, currentMonth);
+            const categories: { key: keyof typeof packingList; label: string; icon: string }[] = [
+                { key: 'essentials', label: 'ESSENTIALS', icon: '⚡' },
+                { key: 'clothing', label: 'CLOTHING', icon: '👕' },
+                { key: 'accessories', label: 'ACCESSORIES', icon: '🎒' },
+                { key: 'documents', label: 'DOCUMENTS', icon: '📄' },
+                { key: 'healthKit', label: 'HEALTH KIT', icon: '💊' },
+                { key: 'extras', label: 'EXTRAS', icon: '✨' },
+            ];
+
+            for (const cat of categories) {
+                const items = packingList[cat.key];
+                if (!items || items.length === 0) continue;
+
+                if (doc.y > doc.page.height - 100) {
+                    doc.addPage();
+                }
+
+                doc.fontSize(11).fillColor('#2980b9').text(`${cat.icon} ${cat.label}`, { underline: true });
+                doc.moveDown(0.3);
+
+                for (const item of items) {
+                    if (doc.y > doc.page.height - 40) {
+                        doc.addPage();
+                    }
+                    const priorityLabel = item.priority === 'must-have' ? '★' : item.priority === 'recommended' ? '●' : '○';
+                    doc.fontSize(9).fillColor('#333333')
+                        .text(`  ${priorityLabel} ${item.icon} ${item.name}`, { continued: false });
+                    doc.fontSize(8).fillColor('#7f8c8d')
+                        .text(`      ${item.reason}`);
+                }
+                doc.moveDown(0.5);
             }
             doc.moveDown(1);
 
@@ -303,6 +334,65 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
 
             doc.fontSize(11).fillColor('#2c3e50')
                 .text(`  TOTAL: ₹${summary.totalCost.toLocaleString()}`, { continued: false });
+
+            // ============================================
+            // EMERGENCY CONTACTS
+            // ============================================
+            const tripCities = [...new Set(itinerary.map(d => d.city))];
+            const citiesWithInfo = tripCities.filter(c => {
+                const key = Object.keys(EMERGENCY_INFO).find(k => k.toLowerCase() === c.toLowerCase());
+                return !!key;
+            });
+
+            if (citiesWithInfo.length > 0) {
+                doc.addPage();
+                doc.fontSize(18).fillColor('#c0392b').text('🆘 EMERGENCY CONTACTS', { underline: true });
+                doc.moveDown(0.5);
+                doc.fontSize(9).fillColor('#7f8c8d').text('Keep this page handy during your trip');
+                doc.moveDown(1);
+
+                // Universal numbers
+                doc.fontSize(11).fillColor('#2c3e50').text('📞 Universal Emergency Numbers', { underline: true });
+                doc.moveDown(0.3);
+                doc.fontSize(10).fillColor('#333333');
+                doc.text('  🚔 Police: 100');
+                doc.text('  🚑 Ambulance: 108');
+                doc.text('  🚒 Fire: 101');
+                doc.text('  📞 Tourist Helpline: 1363');
+                doc.text('  👩 Women Helpline: 1091');
+                doc.moveDown(1);
+
+                // Per-city info
+                for (const cityName of citiesWithInfo) {
+                    const key = Object.keys(EMERGENCY_INFO).find(k => k.toLowerCase() === cityName.toLowerCase())!;
+                    const info = EMERGENCY_INFO[key];
+
+                    if (doc.y > doc.page.height - 180) {
+                        doc.addPage();
+                    }
+
+                    doc.fontSize(12).fillColor('#c0392b').text(`📍 ${info.cityName}`, { underline: true });
+                    doc.moveDown(0.3);
+
+                    // Police
+                    doc.fontSize(10).fillColor('#333333');
+                    doc.text(`  🏛️ ${info.police.station}: ${info.police.number}`);
+                    doc.fontSize(9).fillColor('#7f8c8d').text(`      ${info.police.address}`);
+
+                    // Hospitals
+                    for (const h of info.hospital) {
+                        if (doc.y > doc.page.height - 60) doc.addPage();
+                        doc.fontSize(10).fillColor('#333333');
+                        doc.text(`  🏥 ${h.name}${h.hasEmergency ? ' (24/7 ER)' : ''}: ${h.number}`);
+                        doc.fontSize(9).fillColor('#7f8c8d').text(`      ${h.address}`);
+                    }
+
+                    // Nearest Airport
+                    doc.fontSize(10).fillColor('#333333');
+                    doc.text(`  ✈️ Nearest Airport: ${info.nearestAirport.name} (${info.nearestAirport.code}) — ${info.nearestAirport.distanceKm} km`);
+                    doc.moveDown(0.8);
+                }
+            }
 
             // ============================================
             // FOOTER

@@ -1,24 +1,33 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <script>
-      // Prevent flash of wrong theme (FOUC)
-      (function() {
-        try {
-          var stored = JSON.parse(localStorage.getItem('theme-storage') || '{}');
-          var theme = stored.state && stored.state.theme;
-          var dark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (dark) document.documentElement.classList.add('dark');
-        } catch(e) {}
-      })();
-    </script>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e40af" />
+  <meta name="description" content="Plan your perfect trip across India with AI-powered itineraries" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TravelPlan" />
+  <link rel="apple-touch-icon" href="/pwa-192x192.svg" />
+  <title>India Travel Planner</title>
+</head>
+
+<body>
+  <script>
+    // Prevent flash of wrong theme (FOUC)
+    (function () {
+      try {
+        var stored = JSON.parse(localStorage.getItem('theme-storage') || '{}');
+        var theme = stored.state && stored.state.theme;
+        var dark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) { }
+    })();
+  </script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

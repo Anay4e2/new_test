@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { Hero, FeaturedPackages, StateOverview } from '@/components/home';
+import { Hero, FeaturedPackages, StateOverview, TripIdeas, UpcomingFestivals } from '@/components/home';
 import { getConfig } from '@/services/api';
 
 export const Home: FC = () => {
@@ -33,6 +33,8 @@ export const Home: FC = () => {
             <Hero />
             <FeaturedPackages packages={config.packages || []} />
             <StateOverview states={config.states || []} />
+            <TripIdeas />
+            <UpcomingFestivals />
 
             <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center">
                 <div className="max-w-4xl mx-auto px-6">

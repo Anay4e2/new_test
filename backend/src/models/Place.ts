@@ -14,6 +14,8 @@ export interface IPlace extends Document {
   closingTime: string;
   bestTimeOfDay: string;
   rating: number;
+  reviewCount: number;
+  averageRating: number;
   tags: string[];
   priceTier: 'free' | 'low' | 'medium' | 'high';
   imageUrl?: string;
@@ -38,6 +40,8 @@ const PlaceSchema: Schema = new Schema({
   closingTime: { type: String, default: '17:00' },
   bestTimeOfDay: { type: String, default: 'day' },
   rating: { type: Number, default: 4.0 },
+  reviewCount: { type: Number, default: 0 },
+  averageRating: { type: Number, default: 0 },
   tags: [{ type: String }],
   priceTier: { type: String, enum: ['free', 'low', 'medium', 'high'], default: 'medium' },
   imageUrl: { type: String },

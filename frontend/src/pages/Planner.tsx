@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { TripWizard, ItineraryView, Map, TripSidebar, PackagesSection, TripComparison } from '@/components/planner';
+import { TripWizard, ItineraryView, Map, TripSidebar, PackagesSection, TripComparison, SmartSearch } from '@/components/planner';
 import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
 import { getConfig, generateTrip, generateTripVariants } from '@/services/api';
@@ -12,14 +12,15 @@ export const Planner: FC = () => {
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([]);
   const [tripResult, setTripResult] = useState<TripResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'packages' | 'compare'>('trip');
+  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'packages' | 'compare' | 'smart'>('trip');
+  const [activeDay, setActiveDay] = useState<number | null>(null);
 
   // Comparison state
   const [comparisonVariants, setComparisonVariants] = useState<{ label: string; tripResult: TripResult }[]>([]);
   const [isComparing, setIsComparing] = useState(false);
 
   // Trip store for selected places count
-  const { selectedPlaces } = useTripStore();
+  const { selectedPlaces, tripStartDate } = useTripStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,13 +121,21 @@ export const Planner: FC = () => {
             isComparing={isComparing}
           />
         );
+      case 'smart':
+        return (
+          <SmartSearch
+            onGenerate={handleGenerate}
+            cities={config.cities}
+            isLoading={loading}
+          />
+        );
       case 'trip':
         return <TripSidebar />;
       case 'packages':
         return <PackagesSection />;
       case 'itinerary':
         return tripResult ? (
-          <ItineraryView result={tripResult} onReset={() => setTripResult(null)} />
+          <ItineraryView result={tripResult} onReset={() => setTripResult(null)} activeDay={activeDay} onDaySelect={setActiveDay} startDate={tripStartDate} />
         ) : (
           <TripSidebar />
         );
@@ -189,6 +198,14 @@ export const Planner: FC = () => {
             Advanced
             {activeTab === 'wizard' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
           </button>
+          <button
+            onClick={() => setActiveTab('smart')}
+            className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'smart' ? 'text-violet-600' : 'text-slate-500 hover:text-slate-700'
+              }`}
+          >
+            ✨ Smart
+            {activeTab === 'smart' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600" />}
+          </button>
           {tripResult && (
             <button
               onClick={() => setActiveTab('itinerary')}
@@ -228,6 +245,10 @@ export const Planner: FC = () => {
               if (state) setSelectedState(state);
             }}
             route={routeCoordinates}
+            itinerary={tripResult?.itinerary}
+            cities={config.cities}
+            activeDay={activeDay}
+            onDaySelect={setActiveDay}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">

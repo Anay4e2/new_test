@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useCallback } from 'react';
 import { TripResult, TripRequest, NightStayInfo, Hotel, MealRecommendation, Restaurant } from '@/types';
-import { Car, Moon, Download, ArrowLeft, Loader2, Star, Building2, ChevronDown, X, Coffee, UtensilsCrossed, RefreshCw, Save, Heart, Thermometer, CloudRain, Sun, AlertTriangle, Train, Plane, Pencil, Check } from 'lucide-react';
+import { Car, Moon, ArrowLeft, Loader2, Star, Building2, ChevronDown, X, Coffee, UtensilsCrossed, RefreshCw, Save, Heart, Thermometer, CloudRain, Sun, AlertTriangle, Train, Plane, Pencil, Check, Download } from 'lucide-react';
+import { ExportButtons } from './ExportButtons';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getHotelsByCity, getRestaurantsByCity, saveTrip, toggleFavoritePlace, getMyFavorites } from '@/services/api';
@@ -12,14 +13,23 @@ import { DraggableDayCard } from './DraggableDayCard';
 import { DraggableActivity } from './DraggableActivity';
 import { useItineraryEditStore } from '@/stores/itineraryEditStore';
 import { PlaceDetailModal } from '../Map/PlaceDetailModal';
+import { saveItineraryOffline } from '@/services/offlineService';
+import { PackingList } from './PackingList';
+import { SafetyInfo } from './SafetyInfo';
+import TrainStatusComponent from '../Transport/TrainStatus';
+import { SOSButton } from '../../common/SOSButton';
+import { BookingLinks } from '../Transport/BookingLinks';
 
 interface ItineraryViewProps {
   result: TripResult;
   request?: TripRequest;
   onReset: () => void;
+  activeDay?: number | null;
+  onDaySelect?: (day: number | null) => void;
+  startDate?: string | null;
 }
 
-export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset }) => {
+export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset, activeDay, onDaySelect, startDate }) => {
   const { itinerary, summary } = result;
   const { isAuthenticated } = useAuthStore();
   const editStore = useItineraryEditStore();
@@ -28,8 +38,14 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
   // Data source: editable copy when in edit mode, original otherwise
   const displayItinerary = isEditMode ? editStore.editableItinerary : itinerary;
 
+  // Extract unique city names for safety info
+  const tripCities = [...new Set(displayItinerary.map(d => d.city))];
+
   // Place detail modal state
   const [selectedPlace, setSelectedPlace] = useState<any>(null);
+
+  // Train tracking state
+  const [trackingTrainDay, setTrackingTrainDay] = useState<number | null>(null);
 
   // DnD sensors (pointer + touch for mobile)
   const sensors = useSensors(
@@ -59,7 +75,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
       editStore.reorderActivities(dayIdx, oldIndex, newIndex);
     }
   }, [displayItinerary, editStore]);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
   const [alternativesFor, setAlternativesFor] = useState<string | null>(null);
   const [alternativeHotels, setAlternativeHotels] = useState<Hotel[]>([]);
   const [loadingAlternatives, setLoadingAlternatives] = useState(false);
@@ -75,6 +91,10 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
 
   // Favorites state
   const [favoritePlaceIds, setFavoritePlaceIds] = useState<Set<string>>(new Set());
+
+  // Offline save state
+  const [savedOffline, setSavedOffline] = useState(false);
+  const [savingOffline, setSavingOffline] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -242,37 +262,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
     }
   };
 
-  const handleDownloadPDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      // Call backend API to generate PDF
-      const response = await fetch('http://localhost:3001/api/itinerary/pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(result)
-      });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF');
-      }
-
-      // Get PDF blob and trigger download
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `trip-itinerary-${itinerary.length}days.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to generate PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
 
   return (
     <>
@@ -317,18 +307,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
                 <X size={22} />
               </button>
             )}
-            <button
-              onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF}
-              className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors disabled:opacity-50"
-              title="Download PDF"
-            >
-              {isGeneratingPDF ? (
-                <Loader2 size={22} className="animate-spin" />
-              ) : (
-                <Download size={22} />
-              )}
-            </button>
+            <ExportButtons result={result} />
             <button
               onClick={() => {
                 if (!isAuthenticated()) {
@@ -343,6 +322,31 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
               <Save size={22} />
             </button>
             <ShareButton tripRequest={request} tripResult={result} />
+            <button
+              onClick={async () => {
+                setSavingOffline(true);
+                try {
+                  await saveItineraryOffline(result);
+                  setSavedOffline(true);
+                  setTimeout(() => setSavedOffline(false), 3000);
+                } catch {
+                  alert('Failed to save for offline.');
+                } finally {
+                  setSavingOffline(false);
+                }
+              }}
+              disabled={savingOffline}
+              className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors disabled:opacity-50"
+              title={savedOffline ? 'Saved for Offline!' : 'Save for Offline'}
+            >
+              {savingOffline ? (
+                <Loader2 size={22} className="animate-spin" />
+              ) : savedOffline ? (
+                <Check size={22} className="text-green-300" />
+              ) : (
+                <Download size={22} />
+              )}
+            </button>
           </div>
         </div>
 
@@ -387,7 +391,10 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
             <SortableContext items={displayItinerary.map((d: any) => `day-${d.day}`)} strategy={verticalListSortingStrategy}>
               {displayItinerary.map((day: any, idx: number) => (
                 <DraggableDayCard key={`day-${day.day}`} id={`day-${day.day}`} dayNumber={day.day} isEditMode={isEditMode}>
-                  <div className="mb-4">
+                  <div
+                    className={`mb-4 cursor-pointer transition-all rounded-lg px-2 py-1 -mx-2 ${activeDay === day.day ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400/50 rounded-xl' : 'hover:bg-gray-50 dark:hover:bg-slate-700/30'}`}
+                    onClick={() => onDaySelect?.(activeDay === day.day ? null : day.day)}
+                  >
                     <span className="text-xs font-bold text-primary uppercase tracking-wider bg-primary/10 px-2 py-0.5 rounded">Day {day.day}</span>
                     <h3 className="text-xl font-bold text-text dark:text-white mt-1 font-serif">{day.city}</h3>
                   </div>
@@ -430,6 +437,72 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
                         </div>
                       )}
                     </div>
+                  )}
+
+                  {/* Festival Banner */}
+                  {day.festival && (() => {
+                    const festivalColors: Record<string, { bg: string; border: string; text: string; badge: string; icon: string }> = {
+                      religious: { bg: 'from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20', border: 'border-orange-200 dark:border-orange-800/40', text: 'text-orange-800 dark:text-orange-300', badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400', icon: '🟠' },
+                      cultural: { bg: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20', border: 'border-blue-200 dark:border-blue-800/40', text: 'text-blue-800 dark:text-blue-300', badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400', icon: '🔵' },
+                      fair: { bg: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20', border: 'border-green-200 dark:border-green-800/40', text: 'text-green-800 dark:text-green-300', badge: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400', icon: '🟢' },
+                      music: { bg: 'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20', border: 'border-purple-200 dark:border-purple-800/40', text: 'text-purple-800 dark:text-purple-300', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400', icon: '🟣' },
+                      food: { bg: 'from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20', border: 'border-red-200 dark:border-red-800/40', text: 'text-red-800 dark:text-red-300', badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400', icon: '🔴' },
+                      art: { bg: 'from-pink-50 to-fuchsia-50 dark:from-pink-900/20 dark:to-fuchsia-900/20', border: 'border-pink-200 dark:border-pink-800/40', text: 'text-pink-800 dark:text-pink-300', badge: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-400', icon: '🎨' },
+                    };
+                    const colors = festivalColors[day.festival!.type] || festivalColors.cultural;
+                    const crowdDots: Record<string, number> = { extreme: 4, high: 3, moderate: 2, low: 1 };
+                    const dots = crowdDots[day.festival!.crowdLevel] || 2;
+                    return (
+                      <div className={clsx('mb-4 rounded-xl border overflow-hidden', colors.border)}>
+                        <div className={clsx('bg-gradient-to-r px-4 py-3', colors.bg)}>
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{colors.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={clsx('font-bold text-sm', colors.text)}>{day.festival!.name}</span>
+                                <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium capitalize', colors.badge)}>{day.festival!.type}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Crowd:</span>
+                                <span className="inline-flex gap-0.5">
+                                  {Array.from({ length: 4 }, (_, i) => (
+                                    <span key={i} className={clsx('w-2 h-2 rounded-full', i < dots ? 'bg-orange-400' : 'bg-gray-200 dark:bg-gray-600')} />
+                                  ))}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{day.festival!.crowdLevel}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">{day.festival!.description}</p>
+                          {day.festival!.highlights && day.festival!.highlights.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {day.festival!.highlights.slice(0, 3).map((h: string, i: number) => (
+                                <span key={i} className="text-xs bg-white/60 dark:bg-slate-700/50 px-2 py-0.5 rounded-full text-gray-700 dark:text-gray-300">✦ {h}</span>
+                              ))}
+                            </div>
+                          )}
+                          {day.festival!.advisory && (
+                            <div className="flex items-start gap-1.5 mt-2 text-xs text-amber-700 dark:text-amber-400">
+                              <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                              <span>{day.festival!.advisory}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+
+                  {/* Booking Links for travel days */}
+                  {day.travel && (
+                    <BookingLinks
+                      from={day.travel.from}
+                      to={day.travel.to}
+                      dayNumber={day.day}
+                      mode={day.travel.mode}
+                      distance={day.travel.distance}
+                      startDate={startDate}
+                    />
                   )}
 
                   {/* Activities */}
@@ -500,33 +573,61 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
 
                   {/* Travel to Next City */}
                   {day.travel && (
-                    <div className={clsx(
-                      'mt-6 flex items-center gap-4 p-4 rounded-xl border',
-                      day.travel.isInterState
-                        ? 'bg-gradient-to-r from-amber-50 to-purple-50 dark:from-amber-900/30 dark:to-purple-900/30 border-amber-200 dark:border-amber-700'
-                        : 'bg-secondary/20 dark:bg-slate-700/50 border-secondary/30 dark:border-slate-600'
-                    )}>
+                    <div className="mt-6">
                       <div className={clsx(
-                        'p-2 rounded-full shadow-sm',
+                        'flex items-center gap-4 p-4 rounded-xl border',
                         day.travel.isInterState
-                          ? 'bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-300'
-                          : 'bg-white dark:bg-slate-600 text-primary'
+                          ? 'bg-gradient-to-r from-amber-50 to-purple-50 dark:from-amber-900/30 dark:to-purple-900/30 border-amber-200 dark:border-amber-700'
+                          : 'bg-secondary/20 dark:bg-slate-700/50 border-secondary/30 dark:border-slate-600'
                       )}>
-                        {day.travel.mode === 'Flight' ? <Plane size={20} /> : day.travel.mode === 'Train' ? <Train size={20} /> : <Car size={20} />}
-                      </div>
-                      <div className="text-sm flex-1">
-                        <div className="font-bold text-text dark:text-white">
-                          {day.travel.isInterState ? '🌐 Inter-State: ' : ''}Travel to {day.travel.to}
+                        <div className={clsx(
+                          'p-2 rounded-full shadow-sm',
+                          day.travel.isInterState
+                            ? 'bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-300'
+                            : 'bg-white dark:bg-slate-600 text-primary'
+                        )}>
+                          {day.travel.mode === 'Flight' ? <Plane size={20} /> : day.travel.mode === 'Train' ? <Train size={20} /> : <Car size={20} />}
                         </div>
-                        <div className="text-xs opacity-80">
-                          {Math.round(day.travel.distance)}km • approx {Math.round(day.travel.duration)}h • {day.travel.mode}
-                        </div>
-                        {day.travel.isInterState && day.travel.fromState && day.travel.toState && (
-                          <div className="text-xs mt-1 font-medium text-amber-700 dark:text-amber-400">
-                            {day.travel.fromState.replace('_', ' ')} → {day.travel.toState.replace('_', ' ')}
+                        <div className="text-sm flex-1">
+                          <div className="font-bold text-text dark:text-white">
+                            {day.travel.isInterState ? '🌐 Inter-State: ' : ''}Travel to {day.travel.to}
                           </div>
+                          <div className="text-xs opacity-80">
+                            {Math.round(day.travel.distance)}km • approx {Math.round(day.travel.duration)}h • {day.travel.mode}
+                          </div>
+                          {day.travel.isInterState && day.travel.fromState && day.travel.toState && (
+                            <div className="text-xs mt-1 font-medium text-amber-700 dark:text-amber-400">
+                              {day.travel.fromState.replace('_', ' ')} → {day.travel.toState.replace('_', ' ')}
+                            </div>
+                          )}
+                        </div>
+                        {day.travel.mode === 'Train' && (
+                          <button
+                            onClick={() => setTrackingTrainDay(trackingTrainDay === day.day ? null : day.day)}
+                            className={clsx(
+                              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                              trackingTrainDay === day.day
+                                ? 'bg-indigo-600 text-white shadow-md'
+                                : 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/50'
+                            )}
+                          >
+                            <Train size={14} />
+                            {trackingTrainDay === day.day ? 'Hide Status' : 'Track Train'}
+                          </button>
                         )}
                       </div>
+
+                      {/* Train Status Panel */}
+                      <AnimatePresence>
+                        {trackingTrainDay === day.day && day.travel.mode === 'Train' && (
+                          <TrainStatusComponent
+                            fromCity={day.travel.from}
+                            toCity={day.travel.to}
+                            date={day.date}
+                            onClose={() => setTrackingTrainDay(null)}
+                          />
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
 
@@ -631,6 +732,12 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
               ))}
             </SortableContext>
           </DndContext>
+
+          {/* Packing List */}
+          <PackingList result={result} request={request} />
+
+          {/* Safety & Emergency Info */}
+          <SafetyInfo cities={tripCities} />
         </div>
       </motion.div>
 
@@ -701,6 +808,9 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
         isOpen={!!selectedPlace}
         onClose={() => setSelectedPlace(null)}
       />
+
+      {/* Floating SOS Button */}
+      <SOSButton visible={true} />
     </>
   );
 }

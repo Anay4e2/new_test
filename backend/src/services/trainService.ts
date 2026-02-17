@@ -165,6 +165,29 @@ export interface LiveStationTrain {
     status: string;
 }
 
+export interface UpcomingStop {
+    station: string;
+    stationCode: string;
+    scheduledArrival: string;
+    expectedArrival: string;
+    scheduledDeparture: string;
+    platform?: number;
+    haltTime?: string;
+    distanceFromSource?: number;
+    arrived: boolean;
+}
+
+export interface TrainStatus {
+    trainNumber: string;
+    trainName: string;
+    currentStation: string;
+    delay: number; // minutes
+    lastUpdated: string;
+    status: 'on-time' | 'delayed' | 'cancelled' | 'not-started' | 'unavailable';
+    upcomingStops: UpcomingStop[];
+    source: 'api' | 'fallback';
+}
+
 // Create axios instance with RapidAPI headers
 const rapidApiClient = axios.create({
     baseURL: BASE_URL,
@@ -174,6 +197,10 @@ const rapidApiClient = axios.create({
     },
     timeout: 10000,
 });
+
+// In-memory cache for live train status (5-minute TTL)
+const STATUS_CACHE_TTL_MS = 5 * 60 * 1000;
+const statusCache = new Map<string, { data: TrainStatus; timestamp: number }>();
 
 // Train API Service Class
 class TrainAPIService {
@@ -298,27 +325,96 @@ class TrainAPIService {
         }
     }
 
-    // Get train live status
-    async getTrainLiveStatus(trainNumber: string, date?: string): Promise<any> {
+    // Get train live status with caching
+    async getTrainLiveStatus(trainNumber: string, date?: string): Promise<TrainStatus> {
+        const journeyDate = date || this.getTodayDate();
+        const cacheKey = `${trainNumber}-${journeyDate}`;
+
+        // Check cache
+        const cached = statusCache.get(cacheKey);
+        if (cached && Date.now() - cached.timestamp < STATUS_CACHE_TTL_MS) {
+            return cached.data;
+        }
+
         try {
-            const journeyDate = date || this.getTodayDate();
+            // Calculate startDay: 0 = today, 1 = yesterday started, etc.
+            const today = new Date();
+            const target = new Date(journeyDate);
+            const diffDays = Math.floor((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
+            const startDay = Math.max(0, Math.min(diffDays, 4)).toString();
 
             const response = await rapidApiClient.get('/api/v1/liveTrainStatus', {
                 params: {
                     trainNo: trainNumber,
-                    startDay: '0', // 0 = today
+                    startDay,
                 },
             });
 
-            if (response.data && response.data.status) {
-                return response.data.data;
+            if (response.data && response.data.status && response.data.data) {
+                const raw = response.data.data;
+                const result = this.mapToTrainStatus(raw, trainNumber);
+                statusCache.set(cacheKey, { data: result, timestamp: Date.now() });
+                return result;
             }
 
-            return null;
+            return this.getUnavailableStatus(trainNumber);
         } catch (error: any) {
             console.error('Train Live Status Error:', error.response?.data || error.message);
-            return null;
+            return this.getUnavailableStatus(trainNumber);
         }
+    }
+
+    // Map raw API response to structured TrainStatus
+    private mapToTrainStatus(raw: any, trainNumber: string): TrainStatus {
+        const currentStation = raw.current_station_name || raw.current_station || 'Unknown';
+        const delayMinutes = parseInt(raw.delay || raw.late_min || '0', 10) || 0;
+        const trainName = raw.train_name || `Train ${trainNumber}`;
+
+        let status: TrainStatus['status'] = 'on-time';
+        if (raw.status === 'cancelled' || raw.train_status === 'Cancelled') {
+            status = 'cancelled';
+        } else if (raw.not_started || raw.train_status === 'Not Started') {
+            status = 'not-started';
+        } else if (delayMinutes > 0) {
+            status = 'delayed';
+        }
+
+        const upcomingStops: UpcomingStop[] = (raw.upcoming_stations || raw.route || []).map((stop: any) => ({
+            station: stop.station_name || stop.stationName || '',
+            stationCode: stop.station_code || stop.stationCode || '',
+            scheduledArrival: stop.sta || stop.scheduled_arrival || '',
+            expectedArrival: stop.eta || stop.expected_arrival || stop.sta || '',
+            scheduledDeparture: stop.std || stop.scheduled_departure || '',
+            platform: stop.platform ? parseInt(stop.platform, 10) : undefined,
+            haltTime: stop.halt || stop.halt_time || undefined,
+            distanceFromSource: stop.distance ? parseInt(stop.distance, 10) : undefined,
+            arrived: stop.has_arrived === true || stop.arrived === true,
+        }));
+
+        return {
+            trainNumber,
+            trainName,
+            currentStation,
+            delay: delayMinutes,
+            lastUpdated: new Date().toISOString(),
+            status,
+            upcomingStops,
+            source: 'api',
+        };
+    }
+
+    // Fallback when API is unavailable
+    private getUnavailableStatus(trainNumber: string): TrainStatus {
+        return {
+            trainNumber,
+            trainName: `Train ${trainNumber}`,
+            currentStation: 'Unknown',
+            delay: 0,
+            lastUpdated: new Date().toISOString(),
+            status: 'unavailable',
+            upcomingStops: [],
+            source: 'fallback',
+        };
     }
 
     // Search for station codes

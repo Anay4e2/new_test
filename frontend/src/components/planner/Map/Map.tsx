@@ -1,6 +1,12 @@
 import { FC, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline, DirectionsRenderer } from '@react-google-maps/api';
 import { useTripStore } from '../../../stores/tripStore';
+import { RouteLayer, TravelSegment } from './RouteLayer';
+import { AnimatedMarker } from './AnimatedMarker';
+import { TripPlaybackControls } from './TripPlaybackControls';
+import { DayMapView } from './DayMapView';
+import { MapLegend } from './MapLegend';
+import { CityClusterMarkers } from './CityClusterMarkers';
 
 // --- Dark Map Style ---
 const darkMapStyle: google.maps.MapTypeStyle[] = [
@@ -88,6 +94,10 @@ interface MapProps {
     onMarkerClick?: (id: string) => void;
     onStateClick?: (stateName: string) => void;
     route?: Array<[number, number]>;
+    itinerary?: any[];
+    cities?: any[];
+    activeDay?: number | null;
+    onDaySelect?: (day: number | null) => void;
 }
 
 // Map container style
@@ -96,7 +106,7 @@ const containerStyle = {
     height: '100%'
 };
 
-export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route }) => {
+export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary, cities: propCities, activeDay: propActiveDay, onDaySelect }) => {
     // --- Google Maps Loader ---
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
@@ -123,6 +133,18 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route }) => {
     const [selectedInfoWindow, setSelectedInfoWindow] = useState<Place | null>(null);
     const [googlePlaces, setGooglePlaces] = useState<Place[]>([]);
     const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
+
+    // Route visualization state
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
+    const [playbackProgress, setPlaybackProgress] = useState(0);
+    const [visibleModes, setVisibleModes] = useState<Set<string>>(new Set(['train', 'road', 'flight', 'bus']));
+    const [showActivities, setShowActivities] = useState(true);
+    const [showHotels, setShowHotels] = useState(true);
+    const [internalActiveDay, setInternalActiveDay] = useState<number | null>(null);
+
+    const activeDay = propActiveDay ?? internalActiveDay;
+    const setActiveDay = onDaySelect ?? setInternalActiveDay;
 
     // Refs
     const dataLayerRef = useRef<google.maps.Data | null>(null);
@@ -313,6 +335,88 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route }) => {
         return [];
     }, [route]);
 
+    // --- Build travel segments from itinerary ---
+    const travelSegments: TravelSegment[] = useMemo(() => {
+        if (!itinerary || !propCities) return [];
+        const segments: TravelSegment[] = [];
+        itinerary.forEach((day: any) => {
+            if (day.travel) {
+                const fromCity = propCities.find((c: any) => c.name?.toLowerCase() === day.travel.from?.toLowerCase());
+                const toCity = propCities.find((c: any) => c.name?.toLowerCase() === day.travel.to?.toLowerCase());
+                if (fromCity?.coordinates && toCity?.coordinates) {
+                    segments.push({
+                        from: day.travel.from,
+                        to: day.travel.to,
+                        fromCoords: { lat: fromCity.coordinates.lat, lng: fromCity.coordinates.lng },
+                        toCoords: { lat: toCity.coordinates.lat, lng: toCity.coordinates.lng },
+                        mode: day.travel.mode || 'road',
+                        distance: day.travel.distance,
+                        dayIndex: day.day,
+                    });
+                }
+            }
+        });
+        return segments;
+    }, [itinerary, propCities]);
+
+    // --- Build animated marker path & city waypoints ---
+    const animatedPath = useMemo((): google.maps.LatLngLiteral[] => {
+        if (travelSegments.length === 0) return [];
+        const pts: google.maps.LatLngLiteral[] = [travelSegments[0].fromCoords];
+        travelSegments.forEach(seg => pts.push(seg.toCoords));
+        return pts;
+    }, [travelSegments]);
+
+    const cityWaypoints = useMemo(() => {
+        if (travelSegments.length === 0) return [];
+        const wps: { index: number; name: string }[] = [{ index: 0, name: travelSegments[0].from }];
+        travelSegments.forEach((seg, i) => wps.push({ index: i + 1, name: seg.to }));
+        return wps;
+    }, [travelSegments]);
+
+    const currentDayLabel = useMemo(() => {
+        if (!itinerary || activeDay === null) return '';
+        const day = itinerary.find((d: any) => d.day === activeDay);
+        if (!day) return '';
+        const travel = day.travel;
+        return travel
+            ? `Day ${day.day} — ${travel.from} → ${travel.to}`
+            : `Day ${day.day} — ${day.city}`;
+    }, [itinerary, activeDay]);
+
+    const activeDayData = useMemo(() => {
+        if (!itinerary || activeDay === null) return null;
+        return itinerary.find((d: any) => d.day === activeDay) || null;
+    }, [itinerary, activeDay]);
+
+    // --- Playback handlers ---
+    const handlePlayPause = useCallback(() => {
+        if (playbackProgress >= 1) {
+            setPlaybackProgress(0);
+        }
+        setIsPlaying(prev => !prev);
+    }, [playbackProgress]);
+
+    const handleFitAll = useCallback(() => {
+        if (!map || travelSegments.length === 0) return;
+        const bounds = new google.maps.LatLngBounds();
+        travelSegments.forEach(seg => {
+            bounds.extend(seg.fromCoords);
+            bounds.extend(seg.toCoords);
+        });
+        map.fitBounds(bounds, 60);
+        setActiveDay(null);
+    }, [map, travelSegments, setActiveDay]);
+
+    const handleToggleMode = useCallback((mode: string) => {
+        setVisibleModes(prev => {
+            const next = new Set(prev);
+            if (next.has(mode)) next.delete(mode);
+            else next.add(mode);
+            return next;
+        });
+    }, []);
+
     // --- Directions for Trip Route ---
     const [directionsResult, setDirectionsResult] = useState<google.maps.DirectionsResult | null>(null);
 
@@ -489,6 +593,50 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route }) => {
                         }}
                     />
                 )}
+
+                {/* === Route Visualization Components === */}
+
+                {/* Transport-mode colored route lines */}
+                {travelSegments.length > 0 && (
+                    <RouteLayer
+                        segments={travelSegments}
+                        activeDay={activeDay}
+                        visibleModes={visibleModes}
+                    />
+                )}
+
+                {/* Animated traveling marker */}
+                {animatedPath.length >= 2 && (
+                    <AnimatedMarker
+                        map={map}
+                        path={animatedPath}
+                        cityWaypoints={cityWaypoints}
+                        isPlaying={isPlaying}
+                        speed={playbackSpeed}
+                        onProgress={setPlaybackProgress}
+                        onCityReached={() => { }}
+                        onComplete={() => setIsPlaying(false)}
+                    />
+                )}
+
+                {/* Day-by-day map view */}
+                {activeDayData && (
+                    <DayMapView
+                        map={map}
+                        dayData={activeDayData}
+                        cities={propCities || []}
+                        totalDays={itinerary?.length || 0}
+                        onDayChange={(d) => setActiveDay(d)}
+                    />
+                )}
+
+                {/* City cluster markers */}
+                <CityClusterMarkers
+                    places={selectedPlaces}
+                    map={map}
+                    visible={showActivities}
+                    onPlaceClick={(p) => setSelectedInfoWindow(p as Place)}
+                />
             </GoogleMap>
 
             {/* Custom Tooltip / Overlay for Hovered State */}
@@ -590,11 +738,40 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route }) => {
             )}
 
             {/* Guide overlay when nothing is selected */}
-            {!activeState && (
+            {!activeState && !itinerary && (
                 <div className="absolute bottom-8 left-8 bg-black/60 backdrop-blur-sm text-white p-4 rounded-xl border border-white/10 z-[1000] max-w-xs transition-opacity duration-500">
                     <h4 className="font-bold text-accent mb-1">Explore India</h4>
                     <p className="text-sm text-gray-300">Click on a state to zoom in and discover popular destinations.</p>
                 </div>
+            )}
+
+            {/* Map Legend (only when itinerary route exists) */}
+            {travelSegments.length > 0 && (
+                <MapLegend
+                    visibleModes={visibleModes}
+                    onToggleMode={handleToggleMode}
+                    showActivities={showActivities}
+                    onToggleActivities={() => setShowActivities(prev => !prev)}
+                    showHotels={showHotels}
+                    onToggleHotels={() => setShowHotels(prev => !prev)}
+                />
+            )}
+
+            {/* Trip Playback Controls */}
+            {travelSegments.length > 0 && (
+                <TripPlaybackControls
+                    isPlaying={isPlaying}
+                    onPlayPause={handlePlayPause}
+                    speed={playbackSpeed}
+                    onSpeedChange={setPlaybackSpeed}
+                    progress={playbackProgress}
+                    currentDayLabel={currentDayLabel}
+                    totalDays={itinerary?.length || 0}
+                    activeDay={activeDay}
+                    onDayChange={(d) => setActiveDay(d)}
+                    onFitAll={handleFitAll}
+                    hasRoute={travelSegments.length > 0}
+                />
             )}
         </div>
     );

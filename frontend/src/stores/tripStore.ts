@@ -52,6 +52,9 @@ interface TripStore {
     isGenerating: boolean;
     showRouteOnMap: boolean;
 
+    // === TRIP DATE ===
+    tripStartDate: string | null;
+
     // === ACTIONS ===
     addPlace: (place: Place) => void;
     removePlace: (placeId: string) => void;
@@ -66,6 +69,7 @@ interface TripStore {
     optimizeRoute: () => Promise<void>;
 
     setShowRouteOnMap: (show: boolean) => void;
+    setTripStartDate: (date: string | null) => void;
 
     // Get unique cities from selected places
     getSelectedCities: () => string[];
@@ -85,6 +89,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     isOptimizing: false,
     isGenerating: false,
     showRouteOnMap: false,
+    tripStartDate: null,
 
     // === PLACE ACTIONS ===
     addPlace: (place) => {
@@ -230,6 +235,10 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
     setShowRouteOnMap: (show) => {
         set({ showRouteOnMap: show });
+    },
+
+    setTripStartDate: (date) => {
+        set({ tripStartDate: date });
     },
 
     // === GETTERS ===

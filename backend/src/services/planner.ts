@@ -1,5 +1,5 @@
 // The Logic Core: Generates the itinerary
-import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES, HOTELS as MOCK_HOTELS, RESTAURANTS as MOCK_RESTAURANTS } from './mockData';
+import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES, HOTELS as MOCK_HOTELS, RESTAURANTS as MOCK_RESTAURANTS, FESTIVALS } from './mockData';
 import CityModel from '../models/City';
 import PlaceModel from '../models/Place';
 import mongoose from 'mongoose';
@@ -92,6 +92,14 @@ export interface DayItinerary {
     temp: number;
     condition: string;
     icon: string;
+    advisory?: string;
+  };
+  festival?: {
+    name: string;
+    type: string;
+    description: string;
+    crowdLevel: string;
+    highlights: string[];
     advisory?: string;
   };
   stats: {
@@ -412,6 +420,26 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
           feasibility: weatherInfo.temp >= 42 ? 'tight' : 'comfortable'
         }
       };
+
+      // Check for festivals happening in this city during the trip month
+      const tripMonth = new Date().getMonth() + 1; // default to current month
+      const cityState = MOCK_CITIES.find(c => c.name === city.name)?.stateCode;
+      const matchingFestival = FESTIVALS.find(f =>
+        (f.cityName.toLowerCase() === city.name.toLowerCase() || f.cityName === 'all') &&
+        (cityState ? f.stateCode.toUpperCase() === cityState.toUpperCase() || f.stateCode === 'ALL' : true) &&
+        f.month === tripMonth &&
+        (f.impact === 'must-see' || f.impact === 'worth-attending')
+      );
+      if (matchingFestival) {
+        dayPlan.festival = {
+          name: matchingFestival.name,
+          type: matchingFestival.type,
+          description: matchingFestival.description,
+          crowdLevel: matchingFestival.crowdLevel,
+          highlights: matchingFestival.highlights,
+          advisory: matchingFestival.travelAdvisory,
+        };
+      }
 
       // Check if we need inter-city travel on this day (Last day in city)
       if (d === stayDuration - 1 && nextCity) {

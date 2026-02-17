@@ -50,8 +50,9 @@ export const getTrainSchedule = async (req: Request, res: Response): Promise<voi
 export const getTrainStatus = async (req: Request, res: Response): Promise<void> => {
     try {
         const { trainNumber } = req.params;
-        const status = await trainService.getTrainLiveStatus(trainNumber);
-        res.json({ trainNumber, status });
+        const date = req.query.date as string | undefined;
+        const status = await trainService.getTrainLiveStatus(trainNumber, date);
+        res.json(status);
     } catch (error) {
         console.error('Error fetching train status:', error);
         res.status(500).json({ error: 'Failed to fetch train status' });

@@ -1,0 +1,178 @@
+// WhatsApp Text Formatter for Itineraries
+
+interface Activity {
+    name: string;
+    type: string;
+    timeRequired: number;
+    bestTimeOfDay: string;
+}
+
+interface DayItinerary {
+    day: number;
+    city: string;
+    activities: Activity[];
+    travel?: {
+        from: string;
+        to: string;
+        distance: number;
+        duration: number;
+        mode?: string;
+    };
+    nightStay: string | { hotel: { name: string }; city: string };
+}
+
+interface TripSummary {
+    totalCost: number;
+    totalDistance: number;
+    feasibility: string;
+    costBreakup: {
+        stay: number;
+        transport?: number;
+        travel?: number;
+        activities: number;
+        food?: number;
+    };
+}
+
+interface TripResult {
+    itinerary: DayItinerary[];
+    summary: TripSummary;
+}
+
+const WHATSAPP_MAX_LENGTH = 65000;
+
+// Emoji map for activity types
+const typeEmoji: Record<string, string> = {
+    'Fort': '🏰',
+    'Palace': '🏛️',
+    'Temple': '🕌',
+    'Lake': '🏞️',
+    'Garden': '🌿',
+    'Museum': '🏛️',
+    'Market': '🛍️',
+    'Beach': '🏖️',
+    'Mountain': '🏔️',
+    'Park': '🌳',
+    'Monument': '🗿',
+    'Mosque': '🕌',
+    'Church': '⛪',
+    'Wildlife': '🦁',
+    'Desert': '🏜️',
+    'Waterfall': '💧',
+    'Hill Station': '⛰️',
+    'Heritage': '🏛️',
+};
+
+// Emoji for travel modes
+const modeEmoji: Record<string, string> = {
+    'Train': '🚂',
+    'Flight': '✈️',
+    'Bus': '🚌',
+    'Private Taxi': '🚗',
+    'road': '🚗',
+    'train': '🚂',
+    'flight': '✈️',
+    'bus': '🚌',
+};
+
+function getActivityEmoji(type: string): string {
+    return typeEmoji[type] || '📍';
+}
+
+function getTravelEmoji(mode?: string): string {
+    if (!mode) return '🚗';
+    return modeEmoji[mode] || '🚗';
+}
+
+function getNightStayName(nightStay: string | { hotel: { name: string }; city: string }): string {
+    if (typeof nightStay === 'object' && nightStay !== null && 'hotel' in nightStay) {
+        return nightStay.hotel.name;
+    }
+    return nightStay as string;
+}
+
+export function formatItineraryForWhatsApp(tripResult: TripResult): string {
+    const { itinerary, summary } = tripResult;
+
+    const cities = [...new Set(itinerary.map(d => d.city))];
+    const regionName = cities.length <= 3 ? cities.join(', ') : `${cities.slice(0, 2).join(', ')} & more`;
+
+    const lines: string[] = [];
+
+    // Header
+    lines.push(`🇮🇳 *My India Trip Itinerary*`);
+    lines.push(`📅 ${itinerary.length} Days | 💰 ₹${summary.totalCost.toLocaleString('en-IN')} | 📍 ${regionName}`);
+    lines.push('');
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push('');
+
+    // Day-by-day
+    for (const day of itinerary) {
+        // Day header with travel indicator
+        const prevDay = itinerary.find(d => d.day === day.day - 1);
+        const hasTravelIn = prevDay?.travel && prevDay.travel.to === day.city;
+        const dayHeader = hasTravelIn
+            ? `*Day ${day.day} - ${day.city}* (arriving from ${prevDay!.travel!.from})`
+            : `*Day ${day.day} - ${day.city}*`;
+
+        lines.push(dayHeader);
+
+        // Activities
+        if (day.activities && day.activities.length > 0) {
+            for (const act of day.activities) {
+                const emoji = getActivityEmoji(act.type);
+                lines.push(`${emoji} ${act.name} (${act.timeRequired}h)`);
+            }
+        } else {
+            lines.push('🆓 Free day for leisure');
+        }
+
+        // Night stay
+        const stayName = getNightStayName(day.nightStay);
+        lines.push(`🏨 Night: ${stayName}`);
+
+        // Travel to next city
+        if (day.travel) {
+            const emoji = getTravelEmoji(day.travel.mode);
+            lines.push(`${emoji} → ${day.travel.to}: ${Math.round(day.travel.distance)}km (~${Math.round(day.travel.duration)}h)`);
+        }
+
+        lines.push('');
+    }
+
+    // Summary
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push('');
+    lines.push('💰 *Cost Breakdown*');
+    if (summary.costBreakup.stay > 0) {
+        lines.push(`  🏨 Stay: ₹${summary.costBreakup.stay.toLocaleString('en-IN')}`);
+    }
+    const transport = summary.costBreakup.transport || summary.costBreakup.travel || 0;
+    if (transport > 0) {
+        lines.push(`  🚗 Transport: ₹${transport.toLocaleString('en-IN')}`);
+    }
+    if (summary.costBreakup.activities > 0) {
+        lines.push(`  🎟️ Activities: ₹${summary.costBreakup.activities.toLocaleString('en-IN')}`);
+    }
+    if (summary.costBreakup.food && summary.costBreakup.food > 0) {
+        lines.push(`  🍽️ Food: ₹${summary.costBreakup.food.toLocaleString('en-IN')}`);
+    }
+    lines.push(`  ─────────────`);
+    lines.push(`  *Total: ₹${summary.totalCost.toLocaleString('en-IN')}*`);
+    lines.push('');
+
+    // Route
+    lines.push(`🗺️ Route: ${cities.join(' → ')}`);
+    lines.push(`📏 Total: ${Math.round(summary.totalDistance)}km | ⚡ Pace: ${summary.feasibility}`);
+    lines.push('');
+    lines.push('_Generated by Trip Planner ✨_');
+
+    let text = lines.join('\n');
+
+    // Truncate if exceeding WhatsApp limit
+    if (text.length > WHATSAPP_MAX_LENGTH) {
+        text = text.substring(0, WHATSAPP_MAX_LENGTH - 50) + '\n\n... (truncated for WhatsApp)';
+    }
+
+    return text;
+}

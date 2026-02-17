@@ -2,6 +2,10 @@ import { Router } from 'express';
 import { generateItineraryPDF } from '../services/pdfService';
 import { CITIES as MOCK_CITIES } from '../services/mockData';
 import { haversineDistance } from '../services/routeOptimizer';
+import { formatItineraryForWhatsApp } from '../services/whatsappService';
+import { sendItineraryEmail } from '../services/emailService';
+import { generatePackingList } from '../services/packingListService';
+import { generateBookingLinks } from '../services/bookingLinksService';
 
 const router = Router();
 
@@ -124,6 +128,89 @@ router.post('/pdf', async (req, res) => {
     } catch (error: any) {
         console.error('Error generating PDF:', error);
         res.status(500).json({ error: error.message || 'Failed to generate PDF' });
+    }
+});
+
+// Generate Packing List
+// POST /api/itinerary/packing-list
+router.post('/packing-list', async (req, res) => {
+    try {
+        const { tripResult, month, constraints, budget } = req.body;
+
+        if (!tripResult || !tripResult.itinerary || !tripResult.summary) {
+            res.status(400).json({ error: 'Invalid trip data. Required: tripResult (with itinerary and summary)' });
+            return;
+        }
+
+        const currentMonth = typeof month === 'number' ? month : new Date().getMonth();
+        const packingList = generatePackingList(tripResult, currentMonth, constraints, budget);
+        res.json(packingList);
+    } catch (error: any) {
+        console.error('Error generating packing list:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate packing list' });
+    }
+});
+
+// Generate WhatsApp-friendly text
+// POST /api/itinerary/whatsapp-text
+router.post('/whatsapp-text', async (req, res) => {
+    try {
+        const tripResult = req.body;
+
+        if (!tripResult || !tripResult.itinerary || !tripResult.summary) {
+            res.status(400).json({ error: 'Invalid trip data. Required: itinerary, summary' });
+            return;
+        }
+
+        const text = formatItineraryForWhatsApp(tripResult);
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+        res.json({ text, whatsappUrl });
+    } catch (error: any) {
+        console.error('Error generating WhatsApp text:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate WhatsApp text' });
+    }
+});
+
+// Send itinerary via email
+// POST /api/itinerary/send-email
+router.post('/send-email', async (req, res) => {
+    try {
+        const { email, tripResult, attachPdf = false } = req.body;
+
+        if (!email || !tripResult || !tripResult.itinerary || !tripResult.summary) {
+            res.status(400).json({ error: 'Required: email, tripResult (with itinerary and summary)' });
+            return;
+        }
+
+        const result = await sendItineraryEmail(email, tripResult, attachPdf);
+        res.json(result);
+    } catch (error: any) {
+        console.error('Error sending email:', error);
+        res.status(500).json({ error: error.message || 'Failed to send email' });
+    }
+});
+
+// Get booking deep links for a travel segment
+// GET /api/itinerary/booking-links?from=Jaipur&to=Jodhpur&date=2026-03-15&mode=train&distance=300
+router.get('/booking-links', (req, res) => {
+    try {
+        const { from, to, date, mode, distance } = req.query;
+
+        if (!from || !to) {
+            res.status(400).json({ error: 'Required query params: from, to' });
+            return;
+        }
+
+        const travelDate = (date as string) || new Date().toISOString().split('T')[0];
+        const travelMode = (mode as string) || 'all';
+        const dist = distance ? parseInt(distance as string, 10) : undefined;
+
+        const links = generateBookingLinks(from as string, to as string, travelDate, travelMode, dist);
+        res.json({ links, disclaimer: 'Prices are estimates. Check booking site for current fares.' });
+    } catch (error: any) {
+        console.error('Error generating booking links:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate booking links' });
     }
 });
 

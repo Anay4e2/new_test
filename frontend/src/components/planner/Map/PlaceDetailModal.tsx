@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, Clock, IndianRupee, MapPin, Tag, Sun, Plus } from 'lucide-react';
 import { PhotoGallery } from '../../common/PhotoGallery';
+import { ReviewsSection } from './ReviewsSection';
 import clsx from 'clsx';
 
 interface PlaceDetailModalProps {
@@ -149,6 +150,15 @@ export const PlaceDetailModal: FC<PlaceDetailModalProps> = ({
                                             </span>
                                         ))}
                                     </div>
+                                )}
+
+                                {/* Reviews Section */}
+                                {place._id && (
+                                    <ReviewsSection
+                                        placeId={place._id}
+                                        placeName={place.name}
+                                        cityName={place.cityName || place.city}
+                                    />
                                 )}
 
                                 {/* Add to Trip button */}
