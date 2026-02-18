@@ -1,9 +1,10 @@
 import { FC, useState } from 'react';
 import { TripResult } from '@/types';
-import { FileText, MessageCircle, Mail, Loader2, Check, X, AlertCircle } from 'lucide-react';
-import { getWhatsAppText, sendItineraryEmail } from '@/services/api';
+import { FileText, MessageCircle, Mail, Loader2, Check, X, AlertCircle, Calendar, Download, ExternalLink, Palette } from 'lucide-react';
+import { getWhatsAppText, sendItineraryEmail, downloadICalFile, getGoogleCalendarUrls } from '@/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import { PostcardEditor } from '../Trip/PostcardEditor';
 
 interface ExportButtonsProps {
     result: TripResult;
@@ -25,6 +26,18 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [emailMessage, setEmailMessage] = useState('');
+
+    // Calendar state
+    const [showCalendarModal, setShowCalendarModal] = useState(false);
+    const [calendarDate, setCalendarDate] = useState(() => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+    });
+    const [isGeneratingICal, setIsGeneratingICal] = useState(false);
+    const [isLoadingGoogleUrls, setIsLoadingGoogleUrls] = useState(false);
+    const [googleUrls, setGoogleUrls] = useState<string[]>([]);
+    const [showPostcardEditor, setShowPostcardEditor] = useState(false);
 
     // PDF Download
     const handleDownloadPDF = async () => {
@@ -98,6 +111,39 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
         }
     };
 
+    // Calendar — iCal Download
+    const handleDownloadICal = async () => {
+        if (!calendarDate) return;
+        setIsGeneratingICal(true);
+        try {
+            await downloadICalFile(result, calendarDate);
+        } catch (error) {
+            console.error('Failed to generate iCal:', error);
+            alert('Failed to generate calendar file. Please try again.');
+        } finally {
+            setIsGeneratingICal(false);
+        }
+    };
+
+    // Calendar — Google Calendar
+    const handleGoogleCalendar = async () => {
+        if (!calendarDate) return;
+        setIsLoadingGoogleUrls(true);
+        try {
+            const urls = await getGoogleCalendarUrls(result, calendarDate);
+            setGoogleUrls(urls);
+            // Open first URL; user can add more from the list
+            if (urls.length > 0) {
+                window.open(urls[0], '_blank', 'noopener,noreferrer');
+            }
+        } catch (error) {
+            console.error('Failed to get Google Calendar URLs:', error);
+            alert('Failed to generate Google Calendar links.');
+        } finally {
+            setIsLoadingGoogleUrls(false);
+        }
+    };
+
     return (
         <>
             {/* Button Group */}
@@ -137,6 +183,22 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                     title="Send via Email"
                 >
                     <Mail size={20} />
+                </button>
+                <button
+                    onClick={() => setShowCalendarModal(true)}
+                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors"
+                    title="Add to Calendar"
+                >
+                    <Calendar size={20} />
+                </button>
+
+                {/* Postcard Button */}
+                <button
+                    onClick={() => setShowPostcardEditor(true)}
+                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors"
+                    title="Create Postcard"
+                >
+                    <Palette size={20} />
                 </button>
             </div>
 
@@ -238,6 +300,122 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Calendar Modal */}
+            <AnimatePresence>
+                {showCalendarModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                        onClick={() => setShowCalendarModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                    <Calendar size={20} className="text-blue-600" />
+                                    Add to Calendar
+                                </h3>
+                                <button
+                                    onClick={() => setShowCalendarModal(false)}
+                                    className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-400"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Date Picker */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Trip Start Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={calendarDate}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    onChange={(e) => { setCalendarDate(e.target.value); setGoogleUrls([]); }}
+                                    className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                />
+                            </div>
+
+                            {/* Export Options */}
+                            <div className="space-y-2">
+                                {/* iCal Download */}
+                                <button
+                                    onClick={handleDownloadICal}
+                                    disabled={isGeneratingICal || !calendarDate}
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 hover:bg-blue-50 dark:hover:bg-slate-600/50 hover:border-blue-200 dark:hover:border-blue-500/40 transition-all disabled:opacity-50"
+                                >
+                                    {isGeneratingICal ? (
+                                        <Loader2 size={20} className="animate-spin text-blue-600" />
+                                    ) : (
+                                        <Download size={20} className="text-blue-600" />
+                                    )}
+                                    <div className="text-left">
+                                        <div className="text-sm font-semibold text-slate-800 dark:text-white">Download .ics file</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Apple Calendar, Outlook, any iCal app</div>
+                                    </div>
+                                </button>
+
+                                {/* Google Calendar */}
+                                <button
+                                    onClick={handleGoogleCalendar}
+                                    disabled={isLoadingGoogleUrls || !calendarDate}
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 hover:bg-blue-50 dark:hover:bg-slate-600/50 hover:border-blue-200 dark:hover:border-blue-500/40 transition-all disabled:opacity-50"
+                                >
+                                    {isLoadingGoogleUrls ? (
+                                        <Loader2 size={20} className="animate-spin text-red-500" />
+                                    ) : (
+                                        <ExternalLink size={20} className="text-red-500" />
+                                    )}
+                                    <div className="text-left">
+                                        <div className="text-sm font-semibold text-slate-800 dark:text-white">Add to Google Calendar</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Opens Google Calendar for each day</div>
+                                    </div>
+                                </button>
+                            </div>
+
+                            {/* Google Calendar URLs list (after fetching) */}
+                            {googleUrls.length > 1 && (
+                                <div className="mt-3 max-h-40 overflow-y-auto space-y-1">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Day-by-day links (click to add):</p>
+                                    {googleUrls.map((url, i) => (
+                                        <a
+                                            key={i}
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg bg-gray-100 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors"
+                                        >
+                                            <Calendar size={12} />
+                                            Day {i + 1}
+                                            <ExternalLink size={10} className="ml-auto" />
+                                        </a>
+                                    ))}
+                                </div>
+                            )}
+
+                            <p className="mt-3 text-[10px] text-gray-400 dark:text-gray-500">
+                                Events will be created in IST (Asia/Kolkata) timezone.
+                            </p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Postcard Editor Modal */}
+            <PostcardEditor
+                result={result}
+                isOpen={showPostcardEditor}
+                onClose={() => setShowPostcardEditor(false)}
+            />
         </>
     );
 };

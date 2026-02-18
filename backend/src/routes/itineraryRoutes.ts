@@ -6,6 +6,7 @@ import { formatItineraryForWhatsApp } from '../services/whatsappService';
 import { sendItineraryEmail } from '../services/emailService';
 import { generatePackingList } from '../services/packingListService';
 import { generateBookingLinks } from '../services/bookingLinksService';
+import { generateICalFile, generateGoogleCalendarUrls } from '../services/calendarService';
 
 const router = Router();
 
@@ -211,6 +212,49 @@ router.get('/booking-links', (req, res) => {
     } catch (error: any) {
         console.error('Error generating booking links:', error);
         res.status(500).json({ error: error.message || 'Failed to generate booking links' });
+    }
+});
+
+// Download iCal file for trip
+// POST /api/itinerary/calendar/ical
+router.post('/calendar/ical', (req, res) => {
+    try {
+        const { tripResult, startDate } = req.body;
+
+        if (!tripResult || !tripResult.itinerary || !startDate) {
+            res.status(400).json({ error: 'Required: tripResult (with itinerary), startDate' });
+            return;
+        }
+
+        const icsContent = generateICalFile(tripResult, startDate);
+        const buffer = Buffer.from(icsContent, 'utf-8');
+
+        res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename=trip-itinerary-${tripResult.itinerary.length}days.ics`);
+        res.setHeader('Content-Length', buffer.length);
+        res.send(buffer);
+    } catch (error: any) {
+        console.error('Error generating iCal:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate iCal file' });
+    }
+});
+
+// Get Google Calendar URLs for trip
+// POST /api/itinerary/calendar/google-urls
+router.post('/calendar/google-urls', (req, res) => {
+    try {
+        const { tripResult, startDate } = req.body;
+
+        if (!tripResult || !tripResult.itinerary || !startDate) {
+            res.status(400).json({ error: 'Required: tripResult (with itinerary), startDate' });
+            return;
+        }
+
+        const urls = generateGoogleCalendarUrls(tripResult, startDate);
+        res.json({ urls });
+    } catch (error: any) {
+        console.error('Error generating Google Calendar URLs:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate Calendar URLs' });
     }
 });
 

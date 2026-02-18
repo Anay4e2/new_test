@@ -51,6 +51,15 @@ export const getShare = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        // Build OG meta tags for social sharing
+        const tripResult = shared.tripResult as any;
+        const itinerary = tripResult?.itinerary || [];
+        const cities = [...new Set(itinerary.map((d: any) => d.city))] as string[];
+        const totalDays = itinerary.length;
+        const totalCost = Math.round(tripResult?.summary?.totalCost || 0);
+        const ogTitle = `${totalDays}-Day ${cities.slice(0, 3).join(', ')} Adventure`;
+        const ogDescription = `${totalDays}-day trip through ${cities.join(', ')} — ₹${totalCost.toLocaleString('en-IN')} budget`;
+
         res.json({
             success: true,
             tripRequest: shared.tripRequest,
@@ -58,6 +67,11 @@ export const getShare = async (req: Request, res: Response): Promise<void> => {
             viewCount: shared.viewCount,
             createdAt: shared.createdAt,
             expiresAt: shared.expiresAt,
+            og: {
+                title: ogTitle,
+                description: ogDescription,
+                image: null, // Can be populated with postcard image URL in future
+            },
         });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message || 'Failed to get shared trip' });

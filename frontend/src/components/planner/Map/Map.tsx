@@ -106,6 +106,10 @@ const containerStyle = {
     height: '100%'
 };
 
+// Initial India-wide view
+const INDIA_CENTER = { lat: 22.5, lng: 78.9 };
+const INDIA_ZOOM = 5;
+
 export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary, cities: propCities, activeDay: propActiveDay, onDaySelect }) => {
     // --- Google Maps Loader ---
     const { isLoaded, loadError } = useJsApiLoader({
@@ -150,6 +154,35 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
     const dataLayerRef = useRef<google.maps.Data | null>(null);
     const activeFeatureRef = useRef<google.maps.Data.Feature | null>(null);
     const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+    const prevCenterRef = useRef<{ lat: number; lng: number } | null>(null);
+    const prevZoomRef = useRef<number | null>(null);
+    const geoSetupDoneRef = useRef(false);
+    const onStateClickRef = useRef(onStateClick);
+    onStateClickRef.current = onStateClick;
+    const fetchPlacesRef = useRef<((s: string) => void) | null>(null);
+
+    // --- Smooth pan/zoom when props change ---
+    useEffect(() => {
+        if (!map) return;
+        const newCenter = { lat: center[0], lng: center[1] };
+        const prev = prevCenterRef.current;
+        const prevZoom = prevZoomRef.current;
+
+        // Only animate if values actually changed
+        const centerChanged = !prev || Math.abs(prev.lat - newCenter.lat) > 0.01 || Math.abs(prev.lng - newCenter.lng) > 0.01;
+        const zoomChanged = prevZoom !== null && prevZoom !== zoom;
+
+        if (centerChanged) {
+            map.panTo(newCenter);
+        }
+        if (zoomChanged || (centerChanged && prevZoom === null)) {
+            // Slight delay so panTo animation starts first
+            setTimeout(() => map.setZoom(zoom), centerChanged ? 300 : 0);
+        }
+
+        prevCenterRef.current = newCenter;
+        prevZoomRef.current = zoom;
+    }, [map, center, zoom]);
 
     // --- Data Fetching (GeoJSON only) ---
     useEffect(() => {
@@ -166,105 +199,111 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
         fetchGeoData();
     }, []);
 
-    // --- GeoJSON Data Layer Setup ---
+    // --- GeoJSON Data Layer Setup (runs once when map + geoData are ready) ---
     useEffect(() => {
-        if (!map || !geoData) return;
+        if (!map || !geoData || geoSetupDoneRef.current) return;
+        geoSetupDoneRef.current = true;
 
-        // Clear existing data layer
-        if (dataLayerRef.current) {
-            dataLayerRef.current.setMap(null);
-        }
-
-        // Create new data layer
+        // Create data layer
         const dataLayer = new google.maps.Data();
         dataLayerRef.current = dataLayer;
 
         // Add GeoJSON
         dataLayer.addGeoJson(geoData);
 
-        // Set initial style
-        dataLayer.setStyle((feature) => {
-            const stateName = feature.getProperty('NAME_1') || feature.getProperty('ST_NM');
-            const isSelf = stateName === activeState;
-            const hasActive = activeState !== null;
-
-            return {
-                fillColor: isSelf ? '#ffedd5' : '#3b82f6',
-                fillOpacity: hasActive ? (isSelf ? 0.7 : 0.2) : 0.4,
-                strokeColor: 'white',
-                strokeWeight: isSelf ? 2 : 1,
-            };
-        });
+        // Set initial default style
+        dataLayer.setStyle(() => ({
+            fillColor: '#3b82f6',
+            fillOpacity: 0.4,
+            strokeColor: 'white',
+            strokeWeight: 1,
+        }));
 
         // Mouse events
         dataLayer.addListener('mouseover', (event: google.maps.Data.MouseEvent) => {
             const stateName = event.feature.getProperty('NAME_1') || event.feature.getProperty('ST_NM');
             setHoveredStateName(stateName as string);
-
-            if (activeState !== stateName) {
-                dataLayer.overrideStyle(event.feature, {
-                    strokeColor: '#ffa500',
-                    strokeWeight: 2,
-                    fillOpacity: 0.5
-                });
-            }
+            dataLayer.overrideStyle(event.feature, {
+                strokeColor: '#ffa500',
+                strokeWeight: 2,
+                fillOpacity: 0.55
+            });
         });
 
         dataLayer.addListener('mouseout', (event: google.maps.Data.MouseEvent) => {
             setHoveredStateName(null);
-            const stateName = event.feature.getProperty('NAME_1') || event.feature.getProperty('ST_NM');
-
-            if (activeState !== stateName) {
-                dataLayer.revertStyle(event.feature);
-            }
+            dataLayer.revertStyle(event.feature);
         });
 
         dataLayer.addListener('click', (event: google.maps.Data.MouseEvent) => {
             const stateName = event.feature.getProperty('NAME_1') || event.feature.getProperty('ST_NM');
 
-            // Toggle off if clicking same state
-            if (activeState === stateName) {
-                setActiveState(null);
-                activeFeatureRef.current = null;
-                dataLayer.revertStyle();
-                return;
-            }
+            setActiveState(prev => {
+                if (prev === stateName) {
+                    // Toggle OFF – revert everything and zoom back to India
+                    activeFeatureRef.current = null;
+                    dataLayer.revertStyle();
+                    map.panTo(INDIA_CENTER);
+                    setTimeout(() => map.setZoom(INDIA_ZOOM), 300);
+                    return null;
+                }
 
-            // Revert previous active state style
-            if (activeFeatureRef.current) {
-                dataLayer.revertStyle(activeFeatureRef.current);
-            }
+                // Revert previous active state style
+                if (activeFeatureRef.current) {
+                    dataLayer.revertStyle(activeFeatureRef.current);
+                }
 
-            // Set new active state
-            setActiveState(stateName as string);
-            activeFeatureRef.current = event.feature;
+                activeFeatureRef.current = event.feature;
 
-            // Highlight selected state
-            dataLayer.overrideStyle(event.feature, {
-                strokeColor: '#ff7f50',
-                strokeWeight: 3,
-                fillOpacity: 0.7
+                // Highlight selected state
+                dataLayer.overrideStyle(event.feature, {
+                    fillColor: '#ffedd5',
+                    strokeColor: '#ff7f50',
+                    strokeWeight: 3,
+                    fillOpacity: 0.7
+                });
+
+                // Smooth zoom to state bounds
+                const bounds = new google.maps.LatLngBounds();
+                event.feature.getGeometry()?.forEachLatLng((latLng) => {
+                    bounds.extend(latLng);
+                });
+                map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+
+                // Fetch places from Google Places API
+                if (fetchPlacesRef.current) fetchPlacesRef.current(stateName as string);
+
+                if (onStateClickRef.current) onStateClickRef.current(stateName as string);
+
+                return stateName as string;
             });
-
-            // Zoom to state bounds
-            const bounds = new google.maps.LatLngBounds();
-            event.feature.getGeometry()?.forEachLatLng((latLng) => {
-                bounds.extend(latLng);
-            });
-            map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
-
-            // Fetch places from Google Places API
-            fetchPlacesForState(stateName as string);
-
-            if (onStateClick) onStateClick(stateName as string);
         });
 
         dataLayer.setMap(map);
 
         return () => {
             dataLayer.setMap(null);
+            geoSetupDoneRef.current = false;
         };
-    }, [map, geoData, activeState, onStateClick]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [map, geoData]);
+
+    // --- Update GeoJSON styles when activeState changes (without re-creating the layer) ---
+    useEffect(() => {
+        if (!dataLayerRef.current) return;
+        const dl = dataLayerRef.current;
+        dl.setStyle((feature) => {
+            const stateName = feature.getProperty('NAME_1') || feature.getProperty('ST_NM');
+            const isSelf = stateName === activeState;
+            const hasActive = activeState !== null;
+            return {
+                fillColor: isSelf ? '#ffedd5' : '#3b82f6',
+                fillOpacity: hasActive ? (isSelf ? 0.7 : 0.2) : 0.4,
+                strokeColor: isSelf ? '#ff7f50' : 'white',
+                strokeWeight: isSelf ? 3 : 1,
+            };
+        });
+    }, [activeState]);
 
     // --- Google Places Type Mapping ---
     const mapGoogleTypeToOurType = useCallback((types: string[]): string => {
@@ -320,6 +359,7 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
             }
         });
     }, [map, mapGoogleTypeToOurType]);
+    fetchPlacesRef.current = fetchPlacesForState;
 
     // --- Active Markers (Google Places only) ---
     const activeMarkers = useMemo(() => {
@@ -489,8 +529,8 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
         <div className="relative h-full w-full">
             <GoogleMap
                 mapContainerStyle={containerStyle}
-                center={{ lat: center[0], lng: center[1] }}
-                zoom={zoom}
+                center={INDIA_CENTER}
+                zoom={INDIA_ZOOM}
                 onLoad={onLoad}
                 onUnmount={onUnmount}
                 options={{
@@ -500,7 +540,18 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                     mapTypeControl: false,
                     streetViewControl: false,
                     fullscreenControl: true,
-                    gestureHandling: 'greedy'
+                    gestureHandling: 'greedy',
+                    minZoom: 4,
+                    maxZoom: 18,
+                    restriction: {
+                        latLngBounds: {
+                            north: 40,
+                            south: 5,
+                            east: 100,
+                            west: 65,
+                        },
+                        strictBounds: false,
+                    },
                 }}
             >
                 {/* Place Markers */}

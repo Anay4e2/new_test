@@ -193,6 +193,10 @@ export interface SavedTrip {
   tripResult: TripResult;
   isFavorite: boolean;
   notes?: string;
+  isPublic?: boolean;
+  likes?: number;
+  tags?: string[];
+  coverImage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -328,4 +332,163 @@ export interface BookingLink {
   logo: string;
   mode: string;
   estimatedPrice?: { min: number; max: number };
+}
+
+export interface Expense {
+  _id: string;
+  userId: string;
+  tripId: string;
+  category: 'stay' | 'transport' | 'food' | 'activities' | 'shopping' | 'tips' | 'other';
+  amount: number;
+  description: string;
+  day: number;
+  city?: string;
+  paymentMethod: 'cash' | 'upi' | 'card' | 'other';
+  receipt?: string;
+  createdAt: string;
+}
+
+export interface ExpenseSummary {
+  estimated: { stay: number; transport: number; activities: number; food: number };
+  actual: Record<string, number>;
+  difference: Record<string, number>;
+  totalEstimated: number;
+  totalActual: number;
+  percentUsed: number;
+  dailySpending: Record<number, number>;
+  expenseCount: number;
+}
+
+export interface GroupMember {
+  _id: string;
+  userId?: string;
+  email: string;
+  name: string;
+  role: 'owner' | 'editor' | 'viewer';
+  status: 'invited' | 'accepted' | 'declined';
+  invitedAt: string;
+  respondedAt?: string;
+}
+
+export interface GroupChat {
+  _id: string;
+  userId: string;
+  userName: string;
+  message: string;
+  timestamp: string;
+}
+
+export interface GroupPollOption {
+  _id: string;
+  text: string;
+  votes: string[];
+}
+
+export interface GroupPoll {
+  _id: string;
+  question: string;
+  options: GroupPollOption[];
+  createdBy: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface TripGroup {
+  _id: string;
+  tripId: string | SavedTrip;
+  ownerId: string;
+  name: string;
+  members: GroupMember[];
+  chat: GroupChat[];
+  polls: GroupPoll[];
+  maxMembers: number;
+  createdAt: string;
+}
+
+export interface PublicTripCreator {
+  _id: string;
+  name: string;
+  memberSince: string;
+}
+
+export interface PublicTrip {
+  _id: string;
+  title: string;
+  tripRequest: {
+    stateCode?: string;
+    stateCodes?: string[];
+    duration?: number;
+    budget?: BudgetTier;
+    travelStyle?: TravelStyle;
+  };
+  tripResult: {
+    itinerary: { day: number; city: string; activities: { name: string; type: string }[] }[];
+    summary: TripResult['summary'];
+  };
+  likes: number;
+  tags: string[];
+  coverImage?: string;
+  isPublic: boolean;
+  creator: PublicTripCreator | null;
+  createdAt: string;
+}
+
+export interface TrendingDestination {
+  city: string;
+  tripCount: number;
+  totalLikes: number;
+}
+
+export interface UserPublicProfile {
+  _id: string;
+  name: string;
+  memberSince: string;
+  tripCount: number;
+  reviewCount: number;
+  totalLikes: number;
+}
+
+export type NotificationType = 'trip_reminder' | 'weather_alert' | 'price_change' | 'review_prompt' | 'festival_alert' | 'system';
+
+export interface AppNotification {
+  _id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  actionUrl?: string;
+  isRead: boolean;
+  priority: 'low' | 'medium' | 'high';
+  metadata?: Record<string, any>;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+export type JournalMood = 'amazing' | 'happy' | 'neutral' | 'tired' | 'challenging';
+
+export interface JournalEntry {
+  _id: string;
+  userId: string;
+  tripId: string;
+  day: number;
+  city: string;
+  title: string;
+  content: string;
+  mood: JournalMood;
+  photos: string[];
+  placeName?: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnalyticsActivity {
+  _id: string;
+  type: string;
+  endpoint: string;
+  method: string;
+  statusCode: number;
+  responseTime: number;
+  timestamp: string;
+  searchQuery?: string;
 }

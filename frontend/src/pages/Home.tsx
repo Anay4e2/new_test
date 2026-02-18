@@ -36,6 +36,22 @@ export const Home: FC = () => {
             <TripIdeas />
             <UpcomingFestivals />
 
+            {/* Community Section */}
+            <section className="py-16 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-slate-800 dark:to-slate-900">
+                <div className="max-w-4xl mx-auto px-6 text-center">
+                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-3">See What Others Are Planning</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-xl mx-auto">
+                        Get inspired by itineraries from fellow travelers and share your own adventures with the community.
+                    </p>
+                    <a
+                        href="/explore"
+                        className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:shadow-xl"
+                    >
+                        Explore Community Trips
+                    </a>
+                </div>
+            </section>
+
             <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center">
                 <div className="max-w-4xl mx-auto px-6">
                     <h2 className="text-3xl font-bold mb-4">Ready to start your journey?</h2>

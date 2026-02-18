@@ -19,6 +19,11 @@ import weatherRoutes from './weatherRoutes';
 import reviewRoutes from './reviewRoutes';
 import festivalRoutes from './festivalRoutes';
 import safetyRoutes from './safetyRoutes';
+import expenseRoutes from './expenseRoutes';
+import groupRoutes from './groupRoutes';
+import feedRoutes from './feedRoutes';
+import notificationRoutes from './notificationRoutes';
+import journalRoutes from './journalRoutes';
 
 const router = Router();
 
@@ -42,6 +47,11 @@ router.use('/weather', weatherRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/festivals', festivalRoutes);
 router.use('/safety', safetyRoutes);
+router.use('/expenses', expenseRoutes);
+router.use('/groups', groupRoutes);
+router.use('/feed', feedRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/journal', journalRoutes);
 
 
 // Trip routes are mounted at root level (e.g., /api/generate-trip)

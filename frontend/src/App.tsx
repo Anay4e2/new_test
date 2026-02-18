@@ -9,7 +9,13 @@ import { AdminLogin } from './pages/AdminLogin';
 import { Dashboard } from './pages/Dashboard';
 import { SharedTrip } from './pages/SharedTrip';
 import { Festivals } from './pages/Festivals';
+import { GroupTrip } from './pages/GroupTrip';
+import { Explore } from './pages/Explore';
+import { Notifications } from './pages/Notifications';
+import { Journal } from './pages/Journal';
+import { Packages } from './pages/Packages';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
 
 const App: FC = () => {
   return (
@@ -17,15 +23,25 @@ const App: FC = () => {
       <OfflineIndicator />
       <Router>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/plan" element={<Planner />} />
+          <Route path="/explore" element={<Explore />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<Admin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/trip/:shareId" element={<SharedTrip />} />
           <Route path="/festivals" element={<Festivals />} />
+          <Route path="/packages" element={<Packages />} />
+
+          {/* Protected routes — require authentication */}
+          <Route path="/plan" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+          <Route path="/journal/:tripId" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
+          <Route path="/group/:groupId" element={<ProtectedRoute><GroupTrip /></ProtectedRoute>} />
+
+          {/* Admin route — requires admin role */}
+          <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
         </Routes>
       </Router>
     </>
@@ -33,4 +49,3 @@ const App: FC = () => {
 };
 
 export default App;
-

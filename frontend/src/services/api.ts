@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { TripRequest, TripResult, City, Place, Package, Hotel, BudgetTier, Restaurant, SavedTrip, FavoritePlace, PackingList, TrainLiveStatus, Review, ParsedTripQuery, TripSuggestion, Festival, EmergencyInfo, BookingLink } from '../types';
+import type { TripRequest, TripResult, City, Place, Package, Hotel, BudgetTier, Restaurant, SavedTrip, FavoritePlace, PackingList, TrainLiveStatus, Review, ParsedTripQuery, TripSuggestion, Festival, EmergencyInfo, BookingLink, Expense, ExpenseSummary, TripGroup, GroupChat, GroupPoll, PublicTrip, TrendingDestination, UserPublicProfile, AppNotification, JournalEntry } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
@@ -376,5 +376,204 @@ export const getBookingLinks = async (from: string, to: string, date: string, mo
     const params: Record<string, string> = { from, to, date, mode };
     if (distance) params.distance = String(distance);
     const response = await api.get('/itinerary/booking-links', { params });
+    return response.data;
+};
+
+// ========== Calendar Sync API ==========
+
+export const downloadICalFile = async (tripResult: TripResult, startDate: string): Promise<void> => {
+    const response = await fetch('http://localhost:3001/api/itinerary/calendar/ical', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripResult, startDate }),
+    });
+    if (!response.ok) throw new Error('Failed to generate iCal file');
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trip-itinerary-${tripResult.itinerary.length}days.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+export const getGoogleCalendarUrls = async (tripResult: TripResult, startDate: string): Promise<string[]> => {
+    const response = await api.post('/itinerary/calendar/google-urls', { tripResult, startDate });
+    return response.data.urls;
+};
+
+// ========== Expense Tracker API ==========
+
+export const addExpense = async (data: { tripId: string; category: string; amount: number; description?: string; day: number; city?: string; paymentMethod?: string }): Promise<{ success: boolean; expense: Expense }> => {
+    const response = await api.post('/expenses', data);
+    return response.data;
+};
+
+export const getExpensesByTrip = async (tripId: string): Promise<{ success: boolean; expenses: Expense[]; categoryTotals: Record<string, number>; total: number; count: number }> => {
+    const response = await api.get(`/expenses/trip/${tripId}`);
+    return response.data;
+};
+
+export const getExpenseSummary = async (tripId: string): Promise<{ success: boolean } & ExpenseSummary> => {
+    const response = await api.get(`/expenses/trip/${tripId}/summary`);
+    return response.data;
+};
+
+export const updateExpense = async (id: string, data: Partial<Expense>): Promise<{ success: boolean; expense: Expense }> => {
+    const response = await api.put(`/expenses/${id}`, data);
+    return response.data;
+};
+
+export const deleteExpense = async (id: string): Promise<{ success: boolean }> => {
+    const response = await api.delete(`/expenses/${id}`);
+    return response.data;
+};
+
+// ========== Group Trip API ==========
+
+export const createGroup = async (data: { tripId: string; name: string }): Promise<{ success: boolean; group: TripGroup }> => {
+    const response = await api.post('/groups', data);
+    return response.data;
+};
+
+export const getMyGroups = async (): Promise<{ success: boolean; groups: TripGroup[] }> => {
+    const response = await api.get('/groups');
+    return response.data;
+};
+
+export const getGroup = async (id: string): Promise<{ success: boolean; group: TripGroup }> => {
+    const response = await api.get(`/groups/${id}`);
+    return response.data;
+};
+
+export const inviteMembers = async (groupId: string, data: { emails: string[]; role: string; message?: string }): Promise<{ success: boolean; added: string[]; group: TripGroup }> => {
+    const response = await api.post(`/groups/${groupId}/invite`, data);
+    return response.data;
+};
+
+export const respondToInvite = async (groupId: string, inviteResponse: 'accepted' | 'declined'): Promise<{ success: boolean; group: TripGroup }> => {
+    const response = await api.post(`/groups/${groupId}/respond`, { response: inviteResponse });
+    return response.data;
+};
+
+export const addChatMessage = async (groupId: string, message: string): Promise<{ success: boolean; message: GroupChat }> => {
+    const response = await api.post(`/groups/${groupId}/chat`, { message });
+    return response.data;
+};
+
+export const getChatHistory = async (groupId: string): Promise<{ success: boolean; messages: GroupChat[] }> => {
+    const response = await api.get(`/groups/${groupId}/chat`);
+    return response.data;
+};
+
+export const createPoll = async (groupId: string, data: { question: string; options: string[] }): Promise<{ success: boolean; poll: GroupPoll }> => {
+    const response = await api.post(`/groups/${groupId}/polls`, data);
+    return response.data;
+};
+
+export const votePoll = async (groupId: string, pollId: string, optionIndex: number): Promise<{ success: boolean; poll: GroupPoll }> => {
+    const response = await api.post(`/groups/${groupId}/polls/${pollId}/vote`, { optionIndex });
+    return response.data;
+};
+
+export const closePoll = async (groupId: string, pollId: string): Promise<{ success: boolean; poll: GroupPoll }> => {
+    const response = await api.post(`/groups/${groupId}/polls/${pollId}/close`);
+    return response.data;
+};
+
+export const removeMember = async (groupId: string, memberId: string): Promise<{ success: boolean; group: TripGroup }> => {
+    const response = await api.delete(`/groups/${groupId}/members/${memberId}`);
+    return response.data;
+};
+
+// Feed API
+export const getPublicTrips = async (params: { sort?: string; state?: string; duration?: string; budget?: string; tag?: string; page?: number; limit?: number } = {}): Promise<{ success: boolean; trips: PublicTrip[]; pagination: { page: number; limit: number; total: number; totalPages: number; hasMore: boolean } }> => {
+    const response = await api.get('/feed', { params });
+    return response.data;
+};
+
+export const likeTripApi = async (tripId: string): Promise<{ success: boolean; liked: boolean; likes: number }> => {
+    const response = await api.post(`/feed/${tripId}/like`);
+    return response.data;
+};
+
+export const getTrendingDestinations = async (): Promise<{ success: boolean; destinations: TrendingDestination[] }> => {
+    const response = await api.get('/feed/trending');
+    return response.data;
+};
+
+export const getUserPublicProfile = async (userId: string): Promise<{ success: boolean; profile: UserPublicProfile; trips: any[] }> => {
+    const response = await api.get(`/feed/user/${userId}`);
+    return response.data;
+};
+
+export const publishTripApi = async (tripId: string, data: { isPublic: boolean; tags?: string[]; coverImage?: string }): Promise<{ success: boolean; message: string; trip: any }> => {
+    const response = await api.put(`/feed/${tripId}/publish`, data);
+    return response.data;
+};
+
+// === Notifications ===
+
+export const getNotificationsApi = async (params: { type?: string; isRead?: string; page?: number; limit?: number } = {}): Promise<{ success: boolean; notifications: AppNotification[]; pagination: { page: number; limit: number; total: number; totalPages: number; hasMore: boolean } }> => {
+    const response = await api.get('/notifications', { params });
+    return response.data;
+};
+
+export const getUnreadCountApi = async (): Promise<{ success: boolean; count: number }> => {
+    const response = await api.get('/notifications/unread-count');
+    return response.data;
+};
+
+export const markNotificationReadApi = async (id: string): Promise<{ success: boolean }> => {
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
+};
+
+export const markAllNotificationsReadApi = async (): Promise<{ success: boolean; markedCount: number }> => {
+    const response = await api.put('/notifications/read-all');
+    return response.data;
+};
+
+export const deleteNotificationApi = async (id: string): Promise<{ success: boolean }> => {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+};
+
+// ── Journal API ──
+
+export const createJournalEntry = async (data: { tripId: string; day: number; city: string; title: string; content?: string; mood?: string; photos?: string[]; placeName?: string; isPublic?: boolean }): Promise<{ success: boolean; entry: JournalEntry }> => {
+    const response = await api.post('/journal', data);
+    return response.data;
+};
+
+export const getJournalEntries = async (tripId: string): Promise<{ success: boolean; entries: JournalEntry[]; count: number }> => {
+    const response = await api.get(`/journal/trip/${tripId}`);
+    return response.data;
+};
+
+export const updateJournalEntry = async (id: string, data: Partial<JournalEntry>): Promise<{ success: boolean; entry: JournalEntry }> => {
+    const response = await api.put(`/journal/${id}`, data);
+    return response.data;
+};
+
+export const deleteJournalEntry = async (id: string): Promise<{ success: boolean }> => {
+    const response = await api.delete(`/journal/${id}`);
+    return response.data;
+};
+
+export const getPublicJournal = async (tripId: string): Promise<{ success: boolean; entries: JournalEntry[]; count: number; tripTitle: string }> => {
+    const response = await api.get(`/journal/trip/${tripId}/public`);
+    return response.data;
+};
+
+export const uploadJournalPhoto = async (photo: string): Promise<{ success: boolean; url: string }> => {
+    const response = await api.post('/journal/upload-photo', { photo });
+    return response.data;
+};
+
+export const getJournalEntryCount = async (tripId: string): Promise<{ success: boolean; count: number }> => {
+    const response = await api.get(`/journal/trip/${tripId}/count`);
     return response.data;
 };

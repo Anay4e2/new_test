@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { TripWizard, ItineraryView, Map, TripSidebar, PackagesSection, TripComparison, SmartSearch } from '@/components/planner';
+import { TripWizard, ItineraryView, Map, TripSidebar, TripComparison, SmartSearch } from '@/components/planner';
 import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
 import { getConfig, generateTrip, generateTripVariants } from '@/services/api';
@@ -12,7 +12,7 @@ export const Planner: FC = () => {
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([]);
   const [tripResult, setTripResult] = useState<TripResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'packages' | 'compare' | 'smart'>('trip');
+  const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'compare' | 'smart'>('trip');
   const [activeDay, setActiveDay] = useState<number | null>(null);
 
   // Comparison state
@@ -27,8 +27,7 @@ export const Planner: FC = () => {
       try {
         const data = await getConfig();
         setConfig(data);
-        // Default to first state (Rajasthan for now)
-        if (data.states.length > 0) setSelectedState(data.states[0]);
+        // Don't auto-select a state — let the map start with all-India view
       } catch (e) {
         console.error(e);
       }
@@ -131,8 +130,7 @@ export const Planner: FC = () => {
         );
       case 'trip':
         return <TripSidebar />;
-      case 'packages':
-        return <PackagesSection />;
+
       case 'itinerary':
         return tripResult ? (
           <ItineraryView result={tripResult} onReset={() => setTripResult(null)} activeDay={activeDay} onDaySelect={setActiveDay} startDate={tripStartDate} />
@@ -182,14 +180,7 @@ export const Planner: FC = () => {
             )}
             {activeTab === 'trip' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
           </button>
-          <button
-            onClick={() => setActiveTab('packages')}
-            className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'packages' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
-              }`}
-          >
-            Packages
-            {activeTab === 'packages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
-          </button>
+
           <button
             onClick={() => setActiveTab('wizard')}
             className={`flex-1 py-3.5 text-sm font-medium transition-colors relative ${activeTab === 'wizard' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
@@ -236,28 +227,19 @@ export const Planner: FC = () => {
 
       {/* Map Area */}
       <div className="flex-1 relative h-full w-full">
-        {selectedState ? (
-          <Map
-            center={[selectedState.center.lat, selectedState.center.lng]}
-            zoom={selectedState.zoom}
-            onStateClick={(stateName) => {
-              const state = config.states.find((s: any) => s.name === stateName);
-              if (state) setSelectedState(state);
-            }}
-            route={routeCoordinates}
-            itinerary={tripResult?.itinerary}
-            cities={config.cities}
-            activeDay={activeDay}
-            onDaySelect={setActiveDay}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
-              <p>Loading Map...</p>
-            </div>
-          </div>
-        )}
+        <Map
+          center={selectedState ? [selectedState.center.lat, selectedState.center.lng] : [22.5, 78.9]}
+          zoom={selectedState ? selectedState.zoom : 5}
+          onStateClick={(stateName) => {
+            const state = config.states.find((s: any) => s.name === stateName);
+            if (state) setSelectedState(state);
+          }}
+          route={routeCoordinates}
+          itinerary={tripResult?.itinerary}
+          cities={config.cities}
+          activeDay={activeDay}
+          onDaySelect={setActiveDay}
+        />
 
         {/* Mobile Bottom Sheet Toggle */}
         <div className="absolute bottom-6 right-6 md:hidden z-[1000] flex gap-2">

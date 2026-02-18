@@ -139,10 +139,16 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
     const allPlacesMap = new Map<string, any>();
 
     // Add DB places first
-    dbPlaces.forEach(p => allPlacesMap.set(p._id.toString(), p));
+    dbPlaces.forEach(p => {
+        const id = p._id?.toString?.() || p._id;
+        if (id) allPlacesMap.set(id, p);
+    });
 
     // Add/Override with provided places (useful for temporary places from Google Maps)
-    providedPlaces.forEach(p => allPlacesMap.set(p._id.toString(), p));
+    providedPlaces.forEach(p => {
+        const id = p._id?.toString?.() || p._id;
+        if (id) allPlacesMap.set(id, p);
+    });
 
     const places = Array.from(allPlacesMap.values());
 
@@ -162,11 +168,23 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
     const cityNames = Array.from(cityPlaces.keys());
     const cities = await City.find({ name: { $in: cityNames } });
 
-    const cityCoords = cities.map(c => ({
+    const cityCoords: { name: string; lat: number; lng: number }[] = cities.map(c => ({
         name: c.name,
         lat: c.coordinates.lat,
         lng: c.coordinates.lng
     }));
+
+    // Fallback: compute centroids from place coordinates for cities not in DB
+    for (const cityName of cityNames) {
+        if (!cityCoords.find(c => c.name === cityName)) {
+            const cp = cityPlaces.get(cityName) || [];
+            if (cp.length > 0) {
+                const avgLat = cp.reduce((s, p) => s + (p.coordinates?.lat || 0), 0) / cp.length;
+                const avgLng = cp.reduce((s, p) => s + (p.coordinates?.lng || 0), 0) / cp.length;
+                cityCoords.push({ name: cityName, lat: avgLat, lng: avgLng });
+            }
+        }
+    }
 
     // 4. Find starting city index
     let startIdx = 0;
@@ -224,7 +242,7 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
         for (const idx of placeOrderIndices) {
             const place = cityPlacesList[idx];
             orderedPlaces.push({
-                _id: place._id.toString(),
+                _id: (place._id?.toString?.() || place._id || `place-${order}`),
                 name: place.name,
                 cityName: place.cityName,
                 coordinates: place.coordinates,
@@ -237,86 +255,111 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
         lastPlaceCoords = cityPlacesList[lastIdx].coordinates;
     }
 
-    // 7. Calculate route segments between cities
+    // 7. Calculate route segments
     const routeSegments: RouteSegment[] = [];
     let totalDistance = 0;
     let estimatedTravelTime = 0;
 
-    for (let i = 0; i < orderedCityNames.length - 1; i++) {
-        const fromCity = orderedCityNames[i];
-        const toCity = orderedCityNames[i + 1];
-
-        // Try to find route in database
-        let route = await Route.findOne({ fromCity, toCity });
-        if (!route) {
-            // Try reverse
-            route = await Route.findOne({ fromCity: toCity, toCity: fromCity });
-        }
-
-        // Calculate distance from coordinates if no route found
-        const fromCoords = cityCoords.find(c => c.name === fromCity)!;
-        const toCoords = cityCoords.find(c => c.name === toCity)!;
-        const distance = route?.distance ||
-            haversineDistance(fromCoords.lat, fromCoords.lng, toCoords.lat, toCoords.lng);
-
-        // Default transport options if none in DB
-        const defaultOptions: ITransportOption[] = [
+    // Helper: build transport options for a given distance
+    const buildTransportOptions = (distance: number): ITransportOption[] => {
+        const options: ITransportOption[] = [
             {
                 mode: 'road',
-                duration: distance / 60, // ~60 km/h avg
-                estimatedCost: { min: distance * 8, max: distance * 15 },
+                duration: distance / 60,
+                estimatedCost: { min: Math.round(distance * 8), max: Math.round(distance * 15) },
                 comfort: 'standard',
                 bestDepartureTime: '06:00'
             },
             {
                 mode: 'bus',
                 duration: distance / 50,
-                estimatedCost: { min: distance * 2, max: distance * 4 },
+                estimatedCost: { min: Math.round(distance * 2), max: Math.round(distance * 4) },
                 comfort: 'budget',
-                bestDepartureTime: '21:00' // Night bus
+                bestDepartureTime: '21:00'
             }
         ];
-
-        // Add train option for longer distances
         if (distance > 200) {
-            defaultOptions.push({
+            options.push({
                 mode: 'train',
                 duration: distance / 80,
-                estimatedCost: { min: distance * 1.5, max: distance * 6 },
+                estimatedCost: { min: Math.round(distance * 1.5), max: Math.round(distance * 6) },
                 comfort: 'standard',
                 frequency: '2-3 daily',
                 bestDepartureTime: '06:00'
             });
         }
-
-        // Add flight option for very long distances
         if (distance > 500) {
-            defaultOptions.push({
+            options.push({
                 mode: 'flight',
-                duration: 1.5 + (distance / 800), // ~800 km/h + 1.5hr airport time
+                duration: 1.5 + (distance / 800),
                 estimatedCost: { min: 3000, max: 8000 },
                 comfort: 'premium',
                 frequency: '1-2 daily',
                 bestDepartureTime: '08:00'
             });
         }
+        return options;
+    };
 
-        const transportOptions = route?.transportOptions?.length
-            ? route.transportOptions
-            : defaultOptions;
+    if (orderedCityNames.length > 1) {
+        // Inter-city segments
+        for (let i = 0; i < orderedCityNames.length - 1; i++) {
+            const fromCity = orderedCityNames[i];
+            const toCity = orderedCityNames[i + 1];
 
-        const suggested = suggestBestTransport(transportOptions);
+            let route = await Route.findOne({ fromCity, toCity });
+            if (!route) {
+                route = await Route.findOne({ fromCity: toCity, toCity: fromCity });
+            }
 
-        routeSegments.push({
-            from: fromCity,
-            to: toCity,
-            distance: Math.round(distance),
-            transportOptions,
-            suggestedTransport: suggested
-        });
+            const fromCoords = cityCoords.find(c => c.name === fromCity);
+            const toCoords = cityCoords.find(c => c.name === toCity);
+            if (!fromCoords || !toCoords) continue;
+            const distance = route?.distance ||
+                haversineDistance(fromCoords.lat, fromCoords.lng, toCoords.lat, toCoords.lng);
 
-        totalDistance += distance;
-        estimatedTravelTime += suggested?.duration || (distance / 60);
+            const transportOptions = route?.transportOptions?.length
+                ? route.transportOptions
+                : buildTransportOptions(distance);
+
+            const suggested = suggestBestTransport(transportOptions);
+
+            routeSegments.push({
+                from: fromCity,
+                to: toCity,
+                distance: Math.round(distance),
+                transportOptions,
+                suggestedTransport: suggested
+            });
+
+            totalDistance += distance;
+            estimatedTravelTime += suggested?.duration || (distance / 60);
+        }
+    } else if (orderedPlaces.length > 1) {
+        // Single city/state — generate place-to-place segments
+        for (let i = 0; i < orderedPlaces.length - 1; i++) {
+            const fromPlace = orderedPlaces[i];
+            const toPlace = orderedPlaces[i + 1];
+
+            const distance = haversineDistance(
+                fromPlace.coordinates.lat, fromPlace.coordinates.lng,
+                toPlace.coordinates.lat, toPlace.coordinates.lng
+            );
+
+            const transportOptions = buildTransportOptions(distance);
+            const suggested = suggestBestTransport(transportOptions);
+
+            routeSegments.push({
+                from: fromPlace.name,
+                to: toPlace.name,
+                distance: Math.round(distance),
+                transportOptions,
+                suggestedTransport: suggested
+            });
+
+            totalDistance += distance;
+            estimatedTravelTime += suggested?.duration || (distance / 60);
+        }
     }
 
     return {

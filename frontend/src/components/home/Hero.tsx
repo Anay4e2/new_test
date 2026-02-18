@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../common/ThemeToggle';
+import { NotificationBell } from '../common/NotificationBell';
 import { useAuthStore } from '@/stores/authStore';
 
 // Accurate Rajasthan state map SVG based on geographic outline
@@ -139,12 +140,14 @@ export const Hero: FC = () => {
         </div>
         <div className="flex items-center gap-8">
           <Link to="/" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium">Home</Link>
-          <Link to="/plan" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm">Features</Link>
+          <Link to="/explore" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium">Explore</Link>
+          <Link to="/plan" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm">Plan Trip</Link>
           <Link to="/plan" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm">Packages</Link>
           <Link to="/plan" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm">About</Link>
           {isAuthenticated() && (
             <Link to="/dashboard" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium">My Trips</Link>
           )}
+          <NotificationBell />
           <ThemeToggle />
           {isAuthenticated() ? (
             <div className="flex items-center gap-3">

@@ -7,6 +7,11 @@ export interface ISavedTrip extends Document {
     tripResult: any;
     isFavorite: boolean;
     notes?: string;
+    isPublic: boolean;
+    likes: number;
+    likedBy: mongoose.Types.ObjectId[];
+    tags: string[];
+    coverImage?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -41,6 +46,27 @@ const SavedTripSchema: Schema = new Schema(
             type: String,
             trim: true,
             maxlength: [1000, 'Notes cannot exceed 1000 characters'],
+        },
+        isPublic: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        likes: {
+            type: Number,
+            default: 0,
+        },
+        likedBy: [{
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+        tags: [{
+            type: String,
+            trim: true,
+        }],
+        coverImage: {
+            type: String,
+            trim: true,
         },
     },
     {
