@@ -10,10 +10,13 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
-const getSystemTheme = (): 'light' | 'dark' =>
-  window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+const getSystemTheme = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
 
 const applyTheme = (resolved: 'light' | 'dark') => {
+  if (typeof document === 'undefined') return;
   const root = document.documentElement;
   if (resolved === 'dark') {
     root.classList.add('dark');
@@ -49,18 +52,20 @@ export const useThemeStore = create<ThemeState>()(
 );
 
 // Apply the correct theme after rehydration from localStorage
-useThemeStore.persist.onFinishHydration((state) => {
-  const resolved = state.theme === 'system' ? getSystemTheme() : state.theme;
-  applyTheme(resolved);
-  useThemeStore.setState({ resolvedTheme: resolved });
-});
-
-// Listen for OS theme changes to update when in 'system' mode
-window
-  .matchMedia('(prefers-color-scheme: dark)')
-  .addEventListener('change', () => {
-    const { theme, setTheme } = useThemeStore.getState();
-    if (theme === 'system') {
-      setTheme('system');
-    }
+if (typeof window !== 'undefined') {
+  useThemeStore.persist.onFinishHydration((state) => {
+    const resolved = state.theme === 'system' ? getSystemTheme() : state.theme;
+    applyTheme(resolved);
+    useThemeStore.setState({ resolvedTheme: resolved });
   });
+
+  // Listen for OS theme changes to update when in 'system' mode
+  window
+    .matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', () => {
+      const { theme, setTheme } = useThemeStore.getState();
+      if (theme === 'system') {
+        setTheme('system');
+      }
+    });
+}

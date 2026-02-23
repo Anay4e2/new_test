@@ -4,7 +4,7 @@ import SavedTrip from '../models/SavedTrip';
 import { AuthRequest } from '../middleware/authMiddleware';
 import mongoose from 'mongoose';
 
-// POST /api/journal — create entry
+// POST /api/journal â€” create entry
 export const createEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userId } = req as AuthRequest;
@@ -40,11 +40,11 @@ export const createEntry = async (req: Request, res: Response): Promise<void> =>
 
         res.status(201).json({ success: true, entry });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to create journal entry' });
+        res.status(500).json({ success: false, message: 'Failed to create journal entry' });
     }
 };
 
-// GET /api/journal/trip/:tripId — get all entries for a trip (owner only)
+// GET /api/journal/trip/:tripId â€” get all entries for a trip (owner only)
 export const getEntriesByTrip = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userId } = req as AuthRequest;
@@ -59,11 +59,11 @@ export const getEntriesByTrip = async (req: Request, res: Response): Promise<voi
 
         res.json({ success: true, entries, count: entries.length });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch journal entries' });
+        res.status(500).json({ success: false, message: 'Failed to fetch journal entries' });
     }
 };
 
-// PUT /api/journal/:id — update entry
+// PUT /api/journal/:id â€” update entry
 export const updateEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userId } = req as AuthRequest;
@@ -92,11 +92,11 @@ export const updateEntry = async (req: Request, res: Response): Promise<void> =>
 
         res.json({ success: true, entry: updated });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to update journal entry' });
+        res.status(500).json({ success: false, message: 'Failed to update journal entry' });
     }
 };
 
-// DELETE /api/journal/:id — delete entry
+// DELETE /api/journal/:id â€” delete entry
 export const deleteEntry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userId } = req as AuthRequest;
@@ -115,11 +115,11 @@ export const deleteEntry = async (req: Request, res: Response): Promise<void> =>
 
         res.json({ success: true, message: 'Entry deleted' });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to delete journal entry' });
+        res.status(500).json({ success: false, message: 'Failed to delete journal entry' });
     }
 };
 
-// GET /api/journal/trip/:tripId/public — get public entries (no auth)
+// GET /api/journal/trip/:tripId/public â€” get public entries (no auth)
 export const getPublicJournal = async (req: Request, res: Response): Promise<void> => {
     try {
         const { tripId } = req.params;
@@ -141,11 +141,11 @@ export const getPublicJournal = async (req: Request, res: Response): Promise<voi
             tripTitle: trip?.title || 'Untitled Trip',
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch public journal' });
+        res.status(500).json({ success: false, message: 'Failed to fetch public journal' });
     }
 };
 
-// POST /api/journal/upload-photo — accept base64 data URI
+// POST /api/journal/upload-photo â€” accept base64 data URI
 export const uploadPhoto = async (req: Request, res: Response): Promise<void> => {
     try {
         const { photo } = req.body;
@@ -161,7 +161,7 @@ export const uploadPhoto = async (req: Request, res: Response): Promise<void> =>
             return;
         }
 
-        // Check size (base64 is ~4/3 of original, so 1.4MB base64 ≈ 1MB image)
+        // Check size (base64 is ~4/3 of original, so 1.4MB base64 â‰ˆ 1MB image)
         const sizeInBytes = photo.length * 0.75;
         const maxSize = 1.5 * 1024 * 1024; // ~1MB image after base64 overhead
         if (sizeInBytes > maxSize) {
@@ -172,11 +172,11 @@ export const uploadPhoto = async (req: Request, res: Response): Promise<void> =>
         // For MVP, just return the data URI as the "URL"
         res.json({ success: true, url: photo });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to upload photo' });
+        res.status(500).json({ success: false, message: 'Failed to upload photo' });
     }
 };
 
-// GET /api/journal/trip/:tripId/count — get entry count for a trip (for dashboard badge)
+// GET /api/journal/trip/:tripId/count â€” get entry count for a trip (for dashboard badge)
 export const getEntryCount = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userId } = req as AuthRequest;
@@ -186,6 +186,6 @@ export const getEntryCount = async (req: Request, res: Response): Promise<void> 
 
         res.json({ success: true, count });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to get entry count' });
+        res.status(500).json({ success: false, message: 'Failed to get entry count' });
     }
 };

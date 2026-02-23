@@ -18,6 +18,7 @@ interface ItineraryEditStore {
     moveActivity: (fromDayIndex: number, toDayIndex: number, activityIndex: number) => void;
     removeActivity: (dayIndex: number, activityIndex: number) => void;
     replaceActivity: (dayIndex: number, activityIndex: number, newPlace: any) => void;
+    addActivity: (dayIndex: number, activity: any) => void;
 
     runValidation: () => Promise<void>;
 }
@@ -98,6 +99,23 @@ export const useItineraryEditStore = create<ItineraryEditStore>((set, get) => ({
         const days = [...get().editableItinerary];
         const day = { ...days[dayIndex], activities: [...days[dayIndex].activities] };
         day.activities[activityIndex] = newPlace;
+        days[dayIndex] = day;
+        set({ editableItinerary: days, validationStatus: 'idle' });
+    },
+
+    addActivity: (dayIndex, activity) => {
+        const days = [...get().editableItinerary];
+        if (!days[dayIndex]) return;
+
+        const day = { ...days[dayIndex], activities: [...(days[dayIndex].activities || [])] };
+
+        // Ensure the activity has a unique ID if not present
+        const newActivity = {
+            ...activity,
+            _id: activity._id || `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        };
+
+        day.activities.push(newActivity);
         days[dayIndex] = day;
         set({ editableItinerary: days, validationStatus: 'idle' });
     },

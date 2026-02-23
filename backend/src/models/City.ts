@@ -23,4 +23,4 @@ const CitySchema: Schema = new Schema({
   imageUrl: { type: String }
 });
 
-export default mongoose.model<ICity>('City', CitySchema);
+export default mongoose.models.City || mongoose.model<ICity>('City', CitySchema);

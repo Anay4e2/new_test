@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { TripRequest, TripResult, City, Place, Package, Hotel, BudgetTier, Restaurant, SavedTrip, FavoritePlace, PackingList, TrainLiveStatus, Review, ParsedTripQuery, TripSuggestion, Festival, EmergencyInfo, BookingLink, Expense, ExpenseSummary, TripGroup, GroupChat, GroupPoll, PublicTrip, TrendingDestination, UserPublicProfile, AppNotification, JournalEntry } from '../types';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -58,6 +58,37 @@ export const adminLoginUser = async (email: string, password: string): Promise<A
 
 export const getCurrentUser = async (): Promise<AuthResponse> => {
     const response = await api.get('/auth/me');
+    return response.data;
+};
+
+// Admin Management API
+export const getAllPlacesAdminApi = async (params: { page?: number; limit?: number; search?: string; type?: string } = {}) => {
+    const response = await api.get('/admin/places', { params });
+    return response.data;
+};
+
+export const createPlaceApi = async (data: any) => {
+    const response = await api.post('/admin/places', data);
+    return response.data;
+};
+
+export const updatePlaceApi = async (id: string, data: any) => {
+    const response = await api.put(`/admin/places/${id}`, data);
+    return response.data;
+};
+
+export const deletePlaceApi = async (id: string) => {
+    const response = await api.delete(`/admin/places/${id}`);
+    return response.data;
+};
+
+export const getAllTripsAdminApi = async (params: { page?: number; limit?: number; search?: string } = {}) => {
+    const response = await api.get('/admin/trips', { params });
+    return response.data;
+};
+
+export const deleteTripAdminApi = async (id: string) => {
+    const response = await api.delete(`/admin/trips/${id}`);
     return response.data;
 };
 
@@ -382,7 +413,7 @@ export const getBookingLinks = async (from: string, to: string, date: string, mo
 // ========== Calendar Sync API ==========
 
 export const downloadICalFile = async (tripResult: TripResult, startDate: string): Promise<void> => {
-    const response = await fetch('http://localhost:3001/api/itinerary/calendar/ical', {
+    const response = await fetch(`${API_BASE_URL}/itinerary/calendar/ical`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tripResult, startDate }),

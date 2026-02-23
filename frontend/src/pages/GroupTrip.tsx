@@ -1,6 +1,7 @@
 import { FC, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import toast from 'react-hot-toast';
 import {
     getGroup,
     respondToInvite,
@@ -60,7 +61,7 @@ export const GroupTrip: FC = () => {
             const res = await getGroup(groupId);
             if (res.success) setGroup(res.group);
         } catch {
-            // silently fail
+            toast.error('Failed to load group.');
         } finally {
             setLoading(false);
         }
@@ -71,7 +72,9 @@ export const GroupTrip: FC = () => {
         try {
             const res = await getChatHistory(groupId);
             if (res.success) setMessages(res.messages);
-        } catch { /* ignore */ }
+        } catch {
+            toast.error('Failed to load chat.');
+        }
     };
 
     useEffect(() => {
@@ -104,8 +107,9 @@ export const GroupTrip: FC = () => {
             await addChatMessage(groupId, chatInput.trim());
             setChatInput('');
             fetchChat();
-        } catch { /* ignore */ }
-        finally { setSendingChat(false); }
+        } catch {
+            toast.error('Failed to send message.');
+        } finally { setSendingChat(false); }
     };
 
     const handleCreatePoll = async () => {
@@ -118,7 +122,9 @@ export const GroupTrip: FC = () => {
             setPollOptions(['', '']);
             setShowPollForm(false);
             fetchGroup();
-        } catch { /* ignore */ }
+        } catch {
+            toast.error('Failed to create poll.');
+        }
     };
 
     const handleRemoveMember = async (memberId: string) => {
@@ -126,7 +132,9 @@ export const GroupTrip: FC = () => {
         try {
             await removeMemberApi(groupId, memberId);
             fetchGroup();
-        } catch { /* ignore */ }
+        } catch {
+            toast.error('Failed to remove member.');
+        }
     };
 
     const handleRespond = async (response: 'accepted' | 'declined') => {
@@ -134,7 +142,9 @@ export const GroupTrip: FC = () => {
         try {
             await respondToInvite(groupId, response);
             fetchGroup();
-        } catch { /* ignore */ }
+        } catch {
+            toast.error('Failed to respond to invite.');
+        }
     };
 
     if (loading) {

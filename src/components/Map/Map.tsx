@@ -95,12 +95,26 @@ export default function Map({
 }: MapProps) {
   const [activeState, setActiveState] = useState<string | null>(null);
   const [geoData, setGeoData] = useState<any>(null);
+  const [geoLoading, setGeoLoading] = useState(true);
+  const [geoError, setGeoError] = useState(false);
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson')
-      .then(res => res.json())
-      .then(data => setGeoData(data))
-      .catch(err => console.error('Failed to load GeoJSON', err));
+    setGeoLoading(true);
+    fetch('/data/india_states.geojson')
+      .then(res => {
+        if (!res.ok) throw new Error('Local GeoJSON not available');
+        return res.json();
+      })
+      .catch(() =>
+        fetch('https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson')
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to load map data');
+            return res.json();
+          })
+      )
+      .then(data => { setGeoData(data); setGeoError(false); })
+      .catch(err => { console.error('Failed to load GeoJSON', err); setGeoError(true); })
+      .finally(() => setGeoLoading(false));
   }, []);
 
   const highlightFeature = (e: any) => {
@@ -120,14 +134,7 @@ export default function Map({
 
   const resetHighlight = (e: any) => {
     const layer = e.target;
-    layer.setStyle({
-      fillColor: '#3b82f6',
-      weight: 1,
-      opacity: 1,
-      color: 'white',
-      dashArray: '3',
-      fillOpacity: 0.2
-    });
+    layer.setStyle(defaultStyle);
     setActiveState(null);
   };
 
@@ -145,7 +152,7 @@ export default function Map({
   };
 
   return (
-    <div className="relative h-full w-full bg-neutral-900">
+    <div className="relative h-full w-full bg-neutral-900" role="region" aria-label="Interactive map">
       <MapContainer
         center={center}
         zoom={zoom}
@@ -163,6 +170,7 @@ export default function Map({
 
         {geoData && (
           <GeoJSON
+            key={JSON.stringify(geoData).length}
             data={geoData}
             style={defaultStyle}
             onEachFeature={onEachFeature}
@@ -191,6 +199,7 @@ export default function Map({
             key={marker.id}
             position={[marker.lat, marker.lng]}
             icon={selectedMarkers.includes(marker.id) ? SelectedIcon : UnselectedIcon}
+            alt={marker.title}
             eventHandlers={{
               click: () => onMarkerClick && onMarkerClick(marker.id),
             }}
@@ -214,6 +223,18 @@ export default function Map({
       {activeState && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/20 shadow-2xl z-[1000] pointer-events-none animate-in fade-in slide-in-from-top-4 duration-300">
           <span className="text-lg font-light tracking-widest">{activeState}</span>
+        </div>
+      )}
+
+      {/* GeoJSON Loading Indicator */}
+      {geoLoading && (
+        <div className="absolute bottom-4 left-4 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full z-[1000]">
+          Loading state boundaries...
+        </div>
+      )}
+      {geoError && !geoData && (
+        <div className="absolute bottom-4 left-4 bg-red-900/80 text-white text-xs px-3 py-1.5 rounded-full z-[1000]">
+          Could not load state boundaries
         </div>
       )}
     </div>

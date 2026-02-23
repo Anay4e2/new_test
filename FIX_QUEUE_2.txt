@@ -1,0 +1,609 @@
+================================================================================
+  INDIA TRAVEL PACKAGE BUILDER — FIX QUEUE 2 (Post-Audit)
+================================================================================
+
+Findings from a full codebase audit across all three projects.
+Ordered by severity and dependency. Each fix is safe to commit independently.
+
+
+================================================================================
+  ROUND 1 — CRITICAL SECURITY FIXES
+================================================================================
+
+
+================================================================================
+  P1 — HARDCODED API KEYS IN SOURCE CODE
+================================================================================
+
+Files:
+  backend/src/services/distanceService.ts  (line 7)
+  backend/src/services/trainService.ts     (line 7)
+
+Problem:
+A RapidAPI key is hardcoded in plain text in both files:
+  const RAPIDAPI_KEY = '551491d80amsha4ae220a02402d9p...';
+
+This key is committed to version control and publicly visible. It should be
+rotated immediately and moved to environment variables.
+
+Fix:
+1. Replace both hardcoded keys with: process.env.RAPIDAPI_KEY || ''
+2. Add a guard: if (!process.env.RAPIDAPI_KEY) log a warning and return
+   mock/fallback data.
+3. Add RAPIDAPI_KEY to .env.example
+4. Rotate the exposed key in the RapidAPI dashboard immediately.
+
+Verify: grep -r "551491d80" backend/  — should return zero results.
+
+
+================================================================================
+  P2 — JWT SECRET FALLBACK ALLOWS TOKEN FORGERY
+================================================================================
+
+Files:
+  backend/src/middleware/authMiddleware.ts   (line 4)
+  backend/src/middleware/adminMiddleware.ts  (line 5)
+  backend/src/controllers/authController.ts (line 5)
+
+Problem:
+All three files use:
+  const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+If the env var is unset, the app silently runs with a publicly known secret,
+allowing anyone to forge JWT tokens and impersonate any user or admin. The
+secret is also duplicated in 3 files — updating one but not the others breaks
+auth silently.
+
+Fix:
+1. Create backend/src/config/auth.ts:
+     const JWT_SECRET = process.env.JWT_SECRET;
+     if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+     export { JWT_SECRET };
+2. Update all 3 files to import from the central config.
+3. Remove the fallback string entirely.
+
+Verify: Start the app without JWT_SECRET set — should throw on startup.
+
+
+================================================================================
+  P3 — OPEN CORS — ACCEPTS ALL ORIGINS
+================================================================================
+
+File: backend/src/app.ts (line ~15)
+
+Problem:
+  app.use(cors());
+With no origin config, any website can make authenticated cross-origin
+requests to the API. Combined with the JWT in headers, this enables CSRF-like
+attacks from malicious sites.
+
+Fix:
+  app.use(cors({
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+    credentials: true
+  }));
+
+Verify: Make a fetch from a random origin — should be rejected.
+
+
+================================================================================
+  P4 — NO RATE LIMITING ON AUTH ENDPOINTS
+================================================================================
+
+File: backend/src/routes/authRoutes.ts
+
+Problem:
+Login, register, and admin-login have zero rate limiting, enabling brute-force
+password attacks and registration spam.
+
+Fix:
+  npm install express-rate-limit
+  
+  import rateLimit from 'express-rate-limit';
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10,
+    message: { error: 'Too many attempts. Try again later.' }
+  });
+  router.post('/login', authLimiter, login);
+  router.post('/register', authLimiter, register);
+  router.post('/admin-login', authLimiter, adminLogin);
+
+Verify: Hit /api/auth/login 11 times — 11th should return 429.
+
+
+================================================================================
+  ROUND 2 — FRONTEND CRITICAL (BREAKS IN PRODUCTION)
+================================================================================
+
+
+================================================================================
+  P5 — HARDCODED localhost:3001 API URL (5 locations)
+================================================================================
+
+Files:
+  frontend/src/services/api.ts                               (line 4, 416)
+  frontend/src/stores/tripStore.ts                            (line 203)
+  frontend/src/components/planner/Itinerary/ExportButtons.tsx (line 46)
+  frontend/src/components/planner/Trip/TripSidebar.tsx        (line 47)
+
+Problem:
+The API URL is hardcoded to http://localhost:3001/api in 5 places. The app
+already defines VITE_API_URL in vite-env.d.ts but never uses it. On any
+deployment (Vercel, VPS, etc.), all API calls will fail.
+
+Three of the five locations bypass the configured axios instance entirely,
+losing auth headers and error interceptors.
+
+Fix:
+1. In api.ts, change line 4 to:
+     const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+2. In api.ts line 416, replace the raw fetch URL with API_BASE_URL.
+3. In tripStore.ts, ExportButtons.tsx, and TripSidebar.tsx, replace raw
+   axios/fetch calls with the configured `api` instance from services/api.ts.
+
+Verify: Set VITE_API_URL=https://api.example.com, build — all API calls
+should use the new URL.
+
+
+================================================================================
+  P6 — NO ERROR BOUNDARY — APP WHITE-SCREENS ON ERRORS
+================================================================================
+
+File: frontend/src/App.tsx
+
+Problem:
+Zero ErrorBoundary components in the frontend. If any component throws during
+render (e.g., unexpected null from API, missing field), the entire app
+white-screens with no recovery option.
+
+Fix:
+1. Create frontend/src/components/common/ErrorBoundary.tsx — a class component
+   that catches render errors and shows a "Something went wrong" UI with a
+   "Reload" button.
+2. Wrap the main <Routes> in App.tsx with <ErrorBoundary>.
+
+Verify: Temporarily throw an error in a component — should show fallback UI
+instead of white screen.
+
+
+================================================================================
+  P7 — NO 404 / CATCH-ALL ROUTE
+================================================================================
+
+File: frontend/src/App.tsx
+
+Problem:
+No <Route path="*" /> defined. Unknown URLs render a blank page with no
+navigation back to the app.
+
+Fix:
+  Add before the closing </Routes>:
+    <Route path="*" element={<NotFound />} />
+  
+  Create a simple NotFound page with a "Go Home" link.
+
+Verify: Navigate to /asdf — should show 404 page.
+
+
+================================================================================
+  ROUND 3 — DATA & LOGIC BUGS
+================================================================================
+
+
+================================================================================
+  P8 — BACKEND MOCK DATA: STATE CODE MISMATCH
+================================================================================
+
+File: backend/src/services/mockData.ts
+
+Problem:
+STATES use short codes (code: 'RJ', 'KL', 'GA'), but CITIES use full names
+(stateCode: 'RAJASTHAN', 'KERALA', 'GOA'). Any filter that matches
+city.stateCode against state.code (e.g., filtering cities by state) returns
+zero results. This breaks multi-state trip planning and state-based filtering.
+
+Fix:
+Update all CITIES entries to use the short code matching their state:
+  'RAJASTHAN' → 'RJ'
+  'KERALA' → 'KL' 
+  'GOA' → 'GA'
+  'MAHARASHTR' → 'MH' (also fix truncation)
+  'TAMIL_NADU' → 'TN'
+  'HIMACHAL_PRADESH' → 'HP'
+  'UTTAR_PRADESH' → 'UP'
+  'MADHYA_PRADESH' → 'MP'
+  'KARNATAKA' → 'KA'
+
+Verify: Filter cities by state code in the API — should return matching cities.
+
+
+================================================================================
+  P9 — BACKEND PLANNER: daysPerCity CAN BE 0
+================================================================================
+
+File: backend/src/services/planner.ts (line ~310)
+
+Problem:
+  const daysPerCity = Math.floor(duration / totalCities);
+When duration < totalCities (e.g., 2 days, 5 cities), daysPerCity = 0. Cities
+with 0 days generate no itinerary entries. The root Next.js planner handles
+this correctly by limiting effectiveCities = min(cities.length, duration).
+
+Fix:
+Add before city allocation:
+  const effectiveCities = cities.slice(0, Math.min(cities.length, duration));
+  if (effectiveCities.length < cities.length) {
+    warnings.push(`Only ${effectiveCities.length} of ${cities.length} cities could fit in ${duration} days.`);
+  }
+
+Verify: Request 2-day trip with 5 cities — should get 2 days covering 2
+cities with a warning about the other 3.
+
+
+================================================================================
+  P10 — BACKEND: MISSING INPUT VALIDATION ON createTrip
+================================================================================
+
+File: backend/src/controllers/tripController.ts
+
+Problem:
+Only validates selectedCityIds.length === 0. Missing checks:
+  - duration < 1 or > 30
+  - Non-numeric duration
+  - Invalid budget tier
+  - Invalid travelStyle
+  - Missing or malformed constraints object
+The root Next.js API route validates all of these correctly.
+
+Fix:
+Add validation matching the root API route:
+  if (!duration || duration < 1 || duration > 30)
+    return res.status(400).json({ error: 'Duration must be 1-30 days' });
+  if (!['budget','standard','premium'].includes(budget))
+    return res.status(400).json({ error: 'Invalid budget tier' });
+  // etc.
+
+Verify: POST /api/generate-trip with duration: -1 — should return 400.
+
+
+================================================================================
+  P11 — NOSQL INJECTION VIA $regex WITH RAW USER INPUT
+================================================================================
+
+Files:
+  backend/src/controllers/adminController.ts  (lines 18-19, 94)
+  backend/src/services/planner.ts             (line 272)
+
+Problem:
+User input is interpolated directly into RegExp constructors:
+  { name: { $regex: search, $options: 'i' } }
+  new RegExp(`^${id}$`, 'i')
+
+An attacker can craft a ReDoS attack with pathological regex patterns
+(e.g., "(a+)+$") that cause catastrophic backtracking and hang the server.
+
+Fix:
+Escape special regex characters before use:
+  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+Or use MongoDB collation for case-insensitive matching instead of $regex.
+
+Verify: Search with pattern "(a+)+$" — should not hang.
+
+
+================================================================================
+  ROUND 4 — ROBUSTNESS & BEST PRACTICES
+================================================================================
+
+
+================================================================================
+  P12 — NO SECURITY HEADERS (helmet)
+================================================================================
+
+File: backend/src/app.ts
+
+Problem:
+No security headers middleware. Missing X-Content-Type-Options, X-Frame-Options,
+Strict-Transport-Security, Content-Security-Policy, etc.
+
+Fix:
+  npm install helmet
+  import helmet from 'helmet';
+  app.use(helmet());
+
+Verify: Check response headers — should include X-Content-Type-Options etc.
+
+
+================================================================================
+  P13 — INTERNAL ERROR MESSAGES LEAKED TO CLIENTS
+================================================================================
+
+Files: 8+ controllers and route files
+
+Problem:
+  res.status(500).json({ error: error.message || 'Something went wrong' });
+error.message from caught exceptions leaks database schema details, internal
+paths, or stack trace fragments.
+
+Fix:
+Create a centralized error handler middleware. Return generic messages to
+clients. Log error.message server-side only.
+
+  // Global error handler
+  app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(err.status || 500).json({ error: 'Internal server error' });
+  });
+
+
+================================================================================
+  P14 — NO express.json() BODY SIZE LIMIT
+================================================================================
+
+File: backend/src/app.ts
+
+Problem:
+  app.use(express.json());
+No limit option — an attacker can send arbitrarily large JSON bodies to exhaust
+server memory.
+
+Fix:
+  app.use(express.json({ limit: '2mb' }));
+
+Verify: POST a 5MB JSON body — should return 413 Payload Too Large.
+
+
+================================================================================
+  P15 — NO GRACEFUL SHUTDOWN
+================================================================================
+
+File: backend/src/app.ts
+
+Problem:
+No SIGTERM/SIGINT handlers. On shutdown, in-flight requests are dropped and
+the Mongoose connection isn't closed.
+
+Fix:
+  const server = app.listen(PORT, ...);
+  const shutdown = () => {
+    server.close(() => {
+      mongoose.connection.close();
+      process.exit(0);
+    });
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+
+
+================================================================================
+  P16 — UNPROTECTED send-email ENDPOINT (OPEN RELAY)
+================================================================================
+
+File: backend/src/routes/itineraryRoutes.ts
+
+Problem:
+POST /api/itinerary/send-email accepts an arbitrary email address and sends
+to it with no authentication. Can be abused as spam relay.
+
+Fix:
+Add the auth middleware to this route:
+  router.post('/send-email', authMiddleware, ...handler);
+Add rate limiting (max 5 emails per hour per user).
+
+
+================================================================================
+  P17 — SILENT ERROR SWALLOWING IN FRONTEND
+================================================================================
+
+Files:
+  frontend/src/pages/Dashboard.tsx     (10+ silent catches)
+  frontend/src/pages/GroupTrip.tsx      (6+ silent catches)
+  frontend/src/stores/notificationStore.ts
+  frontend/src/pages/Journal.tsx
+
+Problem:
+Dozens of catch blocks silently swallow errors with no user feedback. Users
+perform actions (save, delete, send) with no indication of failure.
+
+Fix:
+1. Create a toast notification system (or use a library like react-hot-toast).
+2. Replace silent catches with toast.error('Failed to X. Please try again.').
+3. For critical operations (save trip, send message), show inline error states.
+
+
+================================================================================
+  P18 — NO CODE SPLITTING — MONOLITHIC BUNDLE
+================================================================================
+
+File: frontend/src/App.tsx
+
+Problem:
+All 14 pages are eagerly imported. Admin, Journal, GroupTrip, etc. are loaded
+even for unauthenticated users visiting the homepage.
+
+Fix:
+  const Dashboard = lazy(() => import('./pages/Dashboard'));
+  const Admin = lazy(() => import('./pages/Admin'));
+  // etc.
+  
+  Wrap <Routes> in <Suspense fallback={<Loading />}>
+
+Verify: Check network tab — page-specific JS should load on navigation.
+
+
+================================================================================
+  P19 — NOTIFICATION POLLING MEMORY LEAK
+================================================================================
+
+File: frontend/src/stores/notificationStore.ts
+
+Problem:
+let pollInterval is module-scoped. startPolling() sets an interval but is
+never cleaned up when the user navigates away. API calls continue in the
+background indefinitely.
+
+Fix:
+Either:
+A) Track the interval in the store and clear it on stopPolling()
+B) Use a useEffect cleanup in the component that starts polling
+C) Switch to a WebSocket approach
+
+
+================================================================================
+  P20 — MONGODB URI LOGGED WITH CREDENTIALS
+================================================================================
+
+File: backend/src/config/db.ts (line 9)
+
+Problem:
+  console.log(`Connecting to MongoDB at ${mongoURI}...`);
+If the URI contains embedded credentials, they are written to logs.
+
+Fix:
+  const safeUri = mongoURI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
+  console.log(`Connecting to MongoDB at ${safeUri}...`);
+
+
+================================================================================
+  P21 — @types/pdfkit IN PRODUCTION DEPENDENCIES
+================================================================================
+
+File: backend/package.json
+
+Problem:
+@types/pdfkit is listed in dependencies instead of devDependencies.
+
+Fix:
+  npm install -D @types/pdfkit
+  (or move it manually in package.json)
+
+
+================================================================================
+  P22 — PLANNER: INVALID startDate NOT VALIDATED
+================================================================================
+
+Files:
+  src/lib/planner.ts     (line ~123)
+  src/app/api/generate-trip/route.ts
+
+Problem:
+new Date(req.startDate) on an invalid string produces Invalid Date, which
+propagates as NaN dates in the itinerary output.
+
+Fix:
+  if (req.startDate) {
+    const d = new Date(req.startDate);
+    if (isNaN(d.getTime())) {
+      return { error: 'Invalid start date format' };
+    }
+  }
+
+
+================================================================================
+  P23 — WEAK PASSWORD POLICY
+================================================================================
+
+File: backend/src/models/User.ts
+
+Problem:
+Minimum 6 characters with no complexity requirements.
+
+Fix:
+Increase to minimum 8 characters. Optionally require at least one uppercase,
+one lowercase, one digit.
+
+
+================================================================================
+  ROUND 5 — NICE-TO-HAVE IMPROVEMENTS
+================================================================================
+
+
+================================================================================
+  P24 — helpfulCount CAN BE INFINITELY INFLATED
+================================================================================
+
+File: backend/src/controllers/reviewController.ts
+
+Problem:
+markHelpful increments helpfulCount without tracking who already voted.
+A user can call it repeatedly to inflate counts.
+
+Fix:
+Add helpfulBy: [ObjectId] array to Review schema. Use $addToSet in the
+update and set helpfulCount based on array length.
+
+
+================================================================================
+  P25 — FRONTEND: DASHBOARD DOUBLE-FETCH ON MOUNT
+================================================================================
+
+File: frontend/src/pages/Dashboard.tsx
+
+Problem:
+fetchData() called in first useEffect on mount AND again via second useEffect
+watching activeTab (initialized to 'trips'). Causes duplicate API calls.
+
+Fix:
+Remove the explicit fetchData() call from the mount effect or skip the
+activeTab effect on first render with a ref guard.
+
+
+================================================================================
+  P26 — FRONTEND: WIZARD VALIDATION GAPS
+================================================================================
+
+File: frontend/src/components/planner/Wizard/TripWizard.tsx
+
+Problem:
+handleSubmit only checks field existence. Missing: duration > 0 validation,
+selectedCityIds non-empty at submit (user can go back and deselect all).
+Duration field allows 0 or NaN via keyboard.
+
+Fix:
+Add explicit validation in handleSubmit:
+  if (duration < 1) → show error
+  if (selectedCityIds.length === 0) → show error
+
+
+================================================================================
+  ORDER OF EXECUTION
+================================================================================
+
+  Round 1 — Critical Security (P1-P4):
+    P1  Remove hardcoded API keys
+    P2  Fix JWT secret (centralize + fail-fast)
+    P3  Configure CORS whitelist
+    P4  Add rate limiting to auth routes
+
+  Round 2 — Frontend Production Readiness (P5-P7):
+    P5  Make API URL configurable
+    P6  Add ErrorBoundary
+    P7  Add 404 route
+
+  Round 3 — Data & Logic Bugs (P8-P11):
+    P8  Fix stateCode mismatch in mock data
+    P9  Fix daysPerCity = 0 bug
+    P10 Add input validation to createTrip
+    P11 Fix NoSQL/ReDoS injection
+
+  Round 4 — Robustness (P12-P20):
+    P12 Add helmet
+    P13 Stop leaking error messages
+    P14 Set body size limit
+    P15 Add graceful shutdown
+    P16 Protect send-email endpoint
+    P17 Add toast notifications for errors
+    P18 Add code splitting
+    P19 Fix notification polling leak
+    P20 Mask MongoDB URI in logs
+
+  Round 5 — Polish (P21-P26):
+    P21 Move @types/pdfkit to devDeps
+    P22 Validate startDate
+    P23 Strengthen password policy
+    P24 Fix helpfulCount inflation
+    P25 Fix dashboard double-fetch
+    P26 Fix wizard validation gaps
+
+================================================================================

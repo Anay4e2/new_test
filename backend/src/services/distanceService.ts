@@ -4,9 +4,13 @@
 import axios from 'axios';
 
 // RapidAPI Configuration
-const RAPIDAPI_KEY = '551491d80amsha4ae220a02402d9p179fd0jsna1a484b21945';
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '';
 const RAPIDAPI_HOST = 'distances1.p.rapidapi.com';
 const BASE_URL = 'https://distances1.p.rapidapi.com';
+
+if (!RAPIDAPI_KEY) {
+    console.warn('RAPIDAPI_KEY not set — distance API calls will use Haversine fallback only');
+}
 
 export interface DistanceResult {
     straightLineDistance: number; // km (Haversine)

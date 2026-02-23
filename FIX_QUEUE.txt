@@ -1,0 +1,361 @@
+================================================================================
+  INDIA TRAVEL PACKAGE BUILDER — FIX QUEUE (Prioritized)
+================================================================================
+
+Each prompt below is self-contained and ordered by dependency/severity.
+Work through them top-to-bottom. Each fix is safe to commit independently.
+
+
+================================================================================
+  P1 — FRONTEND TSCONFIG BUILD ERROR (Blocks: npm run build)
+================================================================================
+
+File: frontend/tsconfig.app.json
+
+Problem:
+Running `tsc -b` (which `npm run build` does via `tsc -b && vite build`) fails:
+  tsconfig.app.json(30,18): error TS6310: Referenced project 'tsconfig.node.json'
+  may not disable emit.
+
+The tsconfig.app.json has a `"references": [{ "path": "./tsconfig.node.json" }]`
+entry. In TypeScript project-reference build mode (`tsc -b`), all referenced
+projects must have emit enabled. tsconfig.node.json already has
+`"noEmit": false` and `"emitDeclarationOnly": true`, which should be fine, but
+tsconfig.app.json itself has `"noEmit": true` — the conflict arises when tsc -b
+sees the reference chain.
+
+Fix:
+In tsconfig.app.json, remove the `"references"` array pointing to
+tsconfig.node.json. The top-level tsconfig.json already wires both together via
+its own `"references"` array. The app config doesn't need to re-reference the
+node config.
+
+Verify: cd frontend && npx tsc -b --noEmit  (should produce zero errors)
+
+
+================================================================================
+  P2 — BACKEND DUAL ENTRY POINT (Blocks: predictable API behavior)
+================================================================================
+
+Files:
+  backend/src/app.ts    (current start script target — clean, uses router)
+  backend/src/index.ts  (legacy monolith — NOT used by start script)
+
+Problem:
+backend/package.json scripts point to `ts-node src/app.ts`, but index.ts is a
+completely separate Express server with ~500 lines of inline route handlers. It
+also mounts the same `routes/index.ts` router, causing double-registration of
+every route. Meanwhile index.ts contains ~15 unique endpoints (trains, distance,
+PDF generation, route optimization, etc.) that app.ts does NOT have, so those
+endpoints are unreachable when running via `npm start`.
+
+Fix:
+1. Audit every inline route in index.ts. For each one, check if the matching
+   router file (e.g. trainRoutes.ts, distanceRoutes.ts, itineraryRoutes.ts,
+   tripRoutes.ts) already covers it. Most should already be covered by the
+   centralized router.
+
+2. For any endpoint in index.ts that is NOT already covered by a router file,
+   add it to the appropriate router file or create a new one and register it
+   in routes/index.ts.
+
+3. Once all unique logic is migrated, delete (or rename to .bak) index.ts.
+
+4. Confirm app.ts + routes/index.ts is the single entry point.
+
+Verify: cd backend && npm run dev — hit every API endpoint once (config, places,
+routes, generate-trip, trains, distance, PDF, etc.)
+
+
+================================================================================
+  P3 — REMOVE DEPRECATED @types/mongoose (Quick win)
+================================================================================
+
+File: backend/package.json
+
+Problem:
+devDependencies includes `"@types/mongoose": "^5.11.96"`. Since mongoose v5+,
+TypeScript types ship built-in with the mongoose package. Having this legacy
+@types package installed alongside mongoose@^9.1.0 can cause type conflicts
+(wrong overloads, missing new methods, etc.).
+
+Fix:
+  cd backend
+  npm uninstall @types/mongoose
+
+Verify: npx tsc --noEmit  (should still compile cleanly)
+
+
+================================================================================
+  P4 — FRONTEND TripResult MISSING `warnings` FIELD (Data loss)
+================================================================================
+
+File: frontend/src/types/index.ts
+
+Problem:
+The backend planner returns `{ itinerary, warnings, summary }` but the frontend
+TripResult interface only has `{ itinerary, summary }`. The `warnings: string[]`
+field is silently dropped when the response is typed, so users never see
+itinerary warnings like "These cities could not fit" or "Too many cities for
+the duration."
+
+Fix:
+Add `warnings?: string[];` to the TripResult interface in
+frontend/src/types/index.ts, right after the `itinerary` field:
+
+  export interface TripResult {
+    itinerary: DayItinerary[];
+    warnings?: string[];         // <-- ADD THIS
+    summary: { ... };
+  }
+
+Then anywhere in the frontend Planner page or itinerary display that renders trip
+results, add a warnings section (if warnings exist, show them in an amber alert
+box).
+
+Verify: Search frontend/src for uses of TripResult and confirm warnings are
+handled.
+
+
+================================================================================
+  P5 — nightStay TYPE MISMATCH (Runtime crash risk)
+================================================================================
+
+Files:
+  src/lib/planner.ts              → nightStay: string
+  backend/src/services/planner.ts → nightStay: string | NightStayInfo
+  frontend/src/types/index.ts     → nightStay: string | NightStayInfo
+
+Problem:
+The Next.js planner sets nightStay as a plain string (city name). The backend
+planner sets it as either a string OR a NightStayInfo object (with hotel name,
+price, rating, amenities). The frontend ItineraryView component in
+src/components/Itinerary/ItineraryView.tsx renders `day.nightStay` directly as
+text, which would display "[object Object]" if the backend returns the object
+form.
+
+Fix:
+Option A (align to object everywhere):
+  Update src/lib/planner.ts DayItinerary to use `nightStay: string | NightStayInfo`.
+  Update ItineraryView.tsx to check `typeof day.nightStay === 'string'` and
+  render accordingly.
+
+Option B (keep Next.js MVP simple):
+  Keep src/lib/planner.ts as `nightStay: string`.
+  In the frontend ItineraryView, add a guard:
+    const nightStayLabel = typeof day.nightStay === 'string'
+      ? day.nightStay
+      : day.nightStay.hotel.name + ' — ' + day.nightStay.city;
+
+Verify: Generate a trip via both Next.js and backend APIs, confirm nightStay
+renders correctly in both cases.
+
+
+================================================================================
+  P6 — MODEL SCHEMA SYNC (Place.ts, City.ts)
+================================================================================
+
+Files:
+  src/models/Place.ts         (Next.js)
+  backend/src/models/Place.ts (Backend)
+  src/models/City.ts          (Next.js)
+  backend/src/models/City.ts  (Backend)
+
+Problem:
+The two copies of each model have diverged:
+- Backend Place has: description, visitDuration, entryFee, bestTime,
+  reviewCount, averageRating, images[], thumbnailUrl. Next.js Place is missing
+  all of these.
+- Next.js Place has `cityId` (ObjectId ref). Backend Place does not.
+- Backend City has `imageUrl: string` (required). Next.js has `imageUrl?: string`
+  (optional).
+- Next.js models use `mongoose.models.X || mongoose.model(...)` pattern (safe
+  for Next.js HMR). Backend models use `mongoose.model(...)` directly (would
+  crash on HMR).
+
+Fix:
+Pick one as the source of truth (recommend backend since it's more complete).
+Copy the backend schema to the Next.js models, but keep the
+`mongoose.models.X || mongoose.model(...)` registration pattern in the Next.js
+versions.
+
+Verify: npx tsc --noEmit in root (Next.js project) — no model-related errors.
+
+
+================================================================================
+  P7 — themeStore.ts SSR / TEST SAFETY
+================================================================================
+
+File: frontend/src/stores/themeStore.ts
+
+Problem:
+The file calls `window.matchMedia(...)` and `document.documentElement` at
+MODULE SCOPE (lines 14, 17, 53-60, 62-68). This means importing this module in
+any SSR or Node.js test environment will immediately throw
+`ReferenceError: window is not defined`.
+
+Fix:
+Wrap all browser-only APIs in guards:
+
+1. getSystemTheme(): add `if (typeof window === 'undefined') return 'light';`
+2. applyTheme(): add `if (typeof document === 'undefined') return;`
+3. The `useThemeStore.persist.onFinishHydration(...)` call and the
+   `window.matchMedia(...).addEventListener(...)` call at module scope:
+   wrap both in `if (typeof window !== 'undefined') { ... }`
+
+Verify: Import themeStore in a Node environment (e.g., a test file) — should
+not throw.
+
+
+================================================================================
+  P8 — BACKEND: ENSURE ALL ROUTES REACHABLE VIA app.ts
+================================================================================
+
+Files:
+  backend/src/app.ts
+  backend/src/routes/index.ts
+  backend/src/routes/*.ts
+
+Problem:
+After fixing P2 (removing index.ts), verify every route the frontend api.ts
+calls is actually registered somewhere in the router tree:
+
+  Frontend calls (from frontend/src/services/api.ts):
+    POST /api/auth/register, /api/auth/login, /api/auth/admin-login
+    GET  /api/auth/me
+    GET  /api/config
+    GET  /api/places, /api/places/by-state/:stateCode
+    GET  /api/cities
+    GET  /api/states
+    GET  /api/routes, /api/routes/transport
+    POST /api/generate-trip, /api/generate-trip/compare
+    POST /api/trips/optimize-route
+    GET  /api/trains/...
+    POST /api/distance
+    GET  /api/distance/:from/:to
+    GET  /api/distance/quick
+    POST /api/itinerary/validate, /pdf, /packing-list, /whatsapp-text,
+         /send-email, /booking-links, /calendar/ical, /calendar/google-urls
+    CRUD /api/my-trips, /api/favorites, /api/share, /api/reviews
+    GET  /api/weather/forecast/:city, /api/weather/seasonal/:city/:month
+    GET  /api/festivals, /api/safety
+    CRUD /api/expenses, /api/groups, /api/notifications, /api/journal
+    POST /api/suggest-trip
+    GET  /api/trip-ideas
+    GET  /api/packages
+    CRUD /api/admin/...
+
+Cross-reference each one against backend/src/routes/index.ts mount points and
+individual route files. Add any missing routes.
+
+Verify: For each endpoint, confirm the controller function exists and is
+properly imported.
+
+
+================================================================================
+  P9 — DEPENDENCY VERSION ALIGNMENT
+================================================================================
+
+Files:
+  package.json          (root / Next.js)
+  backend/package.json
+  frontend/package.json
+
+Problem:
+  - mongoose: root has ^9.0.2, backend has ^9.1.0. Minor version skew could
+    cause subtle behavioral differences.
+  - @types/node: root has ^20, backend has ^25.0.3, frontend has ^24.10.4.
+    Major version mismatch.
+  - react: root has exact 19.2.0, frontend has ^19.2.0 (range). Not a bug but
+    inconsistent.
+  - tailwindcss: root has ^4, frontend has ^4.1.18.
+
+Fix:
+  - Align mongoose to the same version across root and backend (use ^9.1.0).
+  - Align @types/node to the same major (recommend ^24 or ^25 for all).
+  - These are non-breaking but prevent surprises when deploying.
+
+Verify: npm install in each directory — no peer dependency warnings.
+
+
+================================================================================
+  P10 — MAP: GEOJSON EXTERNAL DEPENDENCY
+================================================================================
+
+File: src/components/Map/Map.tsx (line ~105)
+
+Problem:
+The Map component fetches India state boundary GeoJSON at runtime from:
+  https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson
+
+If that GitHub repo is deleted, renamed, or rate-limited, the map loses all
+state boundary rendering with no fallback. The component does handle the error
+(shows "Could not load state boundaries") but the core feature is lost.
+
+Fix:
+1. Download the GeoJSON file and place it in public/data/india_states.geojson
+2. Change the fetch URL to '/data/india_states.geojson'
+3. Keep the external URL as a fallback if the local file fails (or vice versa)
+
+Verify: Disconnect from internet, load the app — map boundaries should still
+appear.
+
+
+================================================================================
+  P11 — TEST FRAMEWORK SETUP
+================================================================================
+
+Files:
+  src/tests/planner.test.ts
+  backend/package.json (test script = echo error)
+  frontend/package.json (no test script)
+
+Problem:
+No test runner is configured anywhere. The existing test file uses a manual
+runTests() with console.log and process.exit(1). Backend test script is a
+placeholder. Frontend has no test script at all.
+
+Fix:
+For the Next.js root project:
+  npm install -D vitest
+  Add to package.json scripts: "test": "vitest run"
+  Convert src/tests/planner.test.ts to use vitest syntax (describe/it/expect).
+
+For the backend:
+  npm install -D vitest
+  Add to package.json scripts: "test": "vitest run"
+  Create at least one smoke test for the planner service.
+
+For the frontend:
+  npm install -D vitest @testing-library/react
+  Add to package.json scripts: "test": "vitest run"
+
+Verify: npm test in each directory — tests pass.
+
+
+================================================================================
+  ORDER OF EXECUTION
+================================================================================
+
+  Round 1 — Unblock builds:
+    P1  Frontend tsconfig build error
+    P3  Remove @types/mongoose
+
+  Round 2 — Fix architecture:
+    P2  Backend dual entry point consolidation
+    P8  Verify all routes reachable
+
+  Round 3 — Fix type safety:
+    P4  Add warnings to frontend TripResult
+    P5  Fix nightStay type mismatch
+    P6  Sync model schemas
+
+  Round 4 — Robustness:
+    P7  themeStore SSR safety
+    P10 GeoJSON local fallback
+
+  Round 5 — Housekeeping:
+    P9  Dependency version alignment
+    P11 Test framework setup
+
+================================================================================

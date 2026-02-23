@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 import Hotel from '../models/Hotel';
 import { HOTELS as MOCK_HOTELS } from '../services/mockData';
 
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 interface MockHotel {
     _id: string;
     name: string;
@@ -38,7 +42,7 @@ export const getHotelsByCity = async (req: Request, res: Response): Promise<void
         const { cityName } = req.params;
         const decodedCity = decodeURIComponent(cityName);
 
-        const hotels = await Hotel.find({ cityName: new RegExp(`^${decodedCity}$`, 'i') });
+        const hotels = await Hotel.find({ cityName: new RegExp(`^${escapeRegex(decodedCity)}$`, 'i') });
         if (hotels.length > 0) {
             res.json(hotels);
             return;
@@ -64,7 +68,7 @@ export const getHotelsByTier = async (req: Request, res: Response): Promise<void
         const decodedCity = decodeURIComponent(cityName);
 
         const hotels = await Hotel.find({
-            cityName: new RegExp(`^${decodedCity}$`, 'i'),
+            cityName: new RegExp(`^${escapeRegex(decodedCity)}$`, 'i'),
             tier
         });
         if (hotels.length > 0) {

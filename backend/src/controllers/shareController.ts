@@ -32,7 +32,7 @@ export const createShare = async (req: Request, res: Response): Promise<void> =>
             shareUrl,
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to create share link' });
+        res.status(500).json({ success: false, message: 'Failed to create share link' });
     }
 };
 
@@ -58,7 +58,7 @@ export const getShare = async (req: Request, res: Response): Promise<void> => {
         const totalDays = itinerary.length;
         const totalCost = Math.round(tripResult?.summary?.totalCost || 0);
         const ogTitle = `${totalDays}-Day ${cities.slice(0, 3).join(', ')} Adventure`;
-        const ogDescription = `${totalDays}-day trip through ${cities.join(', ')} — ₹${totalCost.toLocaleString('en-IN')} budget`;
+        const ogDescription = `${totalDays}-day trip through ${cities.join(', ')} â€” â‚¹${totalCost.toLocaleString('en-IN')} budget`;
 
         res.json({
             success: true,
@@ -74,6 +74,6 @@ export const getShare = async (req: Request, res: Response): Promise<void> => {
             },
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to get shared trip' });
+        res.status(500).json({ success: false, message: 'Failed to get shared trip' });
     }
 };

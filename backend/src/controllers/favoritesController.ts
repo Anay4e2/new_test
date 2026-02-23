@@ -27,7 +27,7 @@ export const toggleFavoritePlace = async (req: AuthRequest, res: Response): Prom
             res.json({ success: true, favorited: true, message: 'Added to favorites' });
         }
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to toggle favorite' });
+        res.status(500).json({ success: false, message: 'Failed to toggle favorite' });
     }
 };
 
@@ -36,6 +36,6 @@ export const getMyFavorites = async (req: AuthRequest, res: Response): Promise<v
         const favorites = await FavoritePlace.find({ userId: req.userId }).sort({ addedAt: -1 });
         res.json({ success: true, favorites });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch favorites' });
+        res.status(500).json({ success: false, message: 'Failed to fetch favorites' });
     }
 };

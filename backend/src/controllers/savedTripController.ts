@@ -20,7 +20,7 @@ export const saveTrip = async (req: AuthRequest, res: Response): Promise<void> =
 
         res.status(201).json({ success: true, trip: savedTrip });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to save trip' });
+        res.status(500).json({ success: false, message: 'Failed to save trip' });
     }
 };
 
@@ -32,7 +32,7 @@ export const getMyTrips = async (req: AuthRequest, res: Response): Promise<void>
 
         res.json({ success: true, trips });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch trips' });
+        res.status(500).json({ success: false, message: 'Failed to fetch trips' });
     }
 };
 
@@ -52,7 +52,7 @@ export const getTrip = async (req: AuthRequest, res: Response): Promise<void> =>
 
         res.json({ success: true, trip });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch trip' });
+        res.status(500).json({ success: false, message: 'Failed to fetch trip' });
     }
 };
 
@@ -78,7 +78,7 @@ export const updateTrip = async (req: AuthRequest, res: Response): Promise<void>
         await trip.save();
         res.json({ success: true, trip });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to update trip' });
+        res.status(500).json({ success: false, message: 'Failed to update trip' });
     }
 };
 
@@ -99,6 +99,6 @@ export const deleteTrip = async (req: AuthRequest, res: Response): Promise<void>
         await SavedTrip.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'Trip deleted' });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to delete trip' });
+        res.status(500).json({ success: false, message: 'Failed to delete trip' });
     }
 };

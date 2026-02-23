@@ -5,6 +5,8 @@ import AdminSidebar from '../components/admin/AdminSidebar';
 import DashboardOverview from '../components/admin/DashboardOverview';
 import PackageManager from '../components/admin/PackageManager';
 import AnalyticsView from '../components/admin/AnalyticsView';
+import PlacesManager from '../components/admin/PlacesManager';
+import TripsManager from '../components/admin/TripsManager';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Admin: FC = () => {
@@ -20,6 +22,8 @@ export const Admin: FC = () => {
     const renderContent = () => {
         switch (activeTab) {
             case 'overview': return <DashboardOverview />;
+            case 'places': return <PlacesManager />;
+            case 'trips': return <TripsManager />;
             case 'packages': return <PackageManager />;
             case 'analytics': return <AnalyticsView />;
             default: return <DashboardOverview />;

@@ -6,8 +6,8 @@ export interface ICity extends Document {
   coordinates: { lat: number; lng: number };
   tier: 'tier1' | 'tier2' | 'tier3';
   description: string;
-  idealDays: number; // Suggested minimum days to visit
-  imageUrl?: string;
+  idealDays: number;
+  imageUrl: string;
 }
 
 const CitySchema: Schema = new Schema({

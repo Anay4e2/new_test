@@ -2,6 +2,8 @@ import { FC, useState } from 'react';
 import { TripResult } from '@/types';
 import { FileText, MessageCircle, Mail, Loader2, Check, X, AlertCircle, Calendar, Download, ExternalLink, Palette } from 'lucide-react';
 import { getWhatsAppText, sendItineraryEmail, downloadICalFile, getGoogleCalendarUrls } from '@/services/api';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { PostcardEditor } from '../Trip/PostcardEditor';
@@ -43,7 +45,7 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
     const handleDownloadPDF = async () => {
         setIsGeneratingPDF(true);
         try {
-            const response = await fetch('http://localhost:3001/api/itinerary/pdf', {
+            const response = await fetch(`${API_BASE_URL}/itinerary/pdf`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(result),

@@ -4,9 +4,8 @@ import { MOCK_STATES, MOCK_CITIES } from '@/lib/mockData';
 
 export async function GET() {
   // In a real app, this would query MongoDB
-  // const states = await State.find({});
-  return NextResponse.json({
-    states: MOCK_STATES,
-    cities: MOCK_CITIES,
-  });
+  return NextResponse.json(
+    { states: MOCK_STATES, cities: MOCK_CITIES },
+    { headers: { 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400' } }
+  );
 }

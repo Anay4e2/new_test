@@ -10,7 +10,7 @@ interface AuthRequest extends Request {
     userId?: string;
 }
 
-// GET /api/notifications — paginated, filterable
+// GET /api/notifications â€” paginated, filterable
 export const getNotifications = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as AuthRequest).userId;
@@ -60,7 +60,7 @@ export const getNotifications = async (req: Request, res: Response): Promise<voi
             },
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch notifications' });
+        res.status(500).json({ success: false, message: 'Failed to fetch notifications' });
     }
 };
 
@@ -85,7 +85,7 @@ export const markAsRead = async (req: Request, res: Response): Promise<void> => 
         await markReadService(id);
         res.json({ success: true, message: 'Notification marked as read' });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to mark as read' });
+        res.status(500).json({ success: false, message: 'Failed to mark as read' });
     }
 };
 
@@ -101,7 +101,7 @@ export const markAllAsRead = async (req: Request, res: Response): Promise<void> 
         const count = await markAllReadService(userId);
         res.json({ success: true, markedCount: count });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to mark all as read' });
+        res.status(500).json({ success: false, message: 'Failed to mark all as read' });
     }
 };
 
@@ -117,7 +117,7 @@ export const getUnreadCount = async (req: Request, res: Response): Promise<void>
         const count = await getUnreadCountService(userId);
         res.json({ success: true, count });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to get unread count' });
+        res.status(500).json({ success: false, message: 'Failed to get unread count' });
     }
 };
 
@@ -140,6 +140,6 @@ export const deleteNotification = async (req: Request, res: Response): Promise<v
 
         res.json({ success: true, message: 'Notification deleted' });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to delete notification' });
+        res.status(500).json({ success: false, message: 'Failed to delete notification' });
     }
 };

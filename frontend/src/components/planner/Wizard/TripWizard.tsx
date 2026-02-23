@@ -383,6 +383,12 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, states = [], onGenerat
   const handleBack = () => setStep(step - 1);
 
   const handleSubmit = (compare: boolean = false) => {
+    if (!formData.duration || formData.duration < 1) {
+      return;
+    }
+    if (selectedCityIds.length === 0) {
+      return;
+    }
     if (formData.duration && formData.budget && formData.travelStyle && formData.constraints) {
       const req: TripRequest = {
         stateCode: selectedStateCodes[0] || 'RJ',

@@ -2,6 +2,8 @@ import { FC, useState, useEffect } from 'react';
 import { useTripStore, RouteSegment } from '../../../stores/tripStore';
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 // Train info interface
 interface TrainInfo {
     trainNumber: string;
@@ -44,7 +46,7 @@ const TransportCard: FC<{ segment: RouteSegment }> = ({ segment }) => {
         setLoadingTrains(true);
         setTrainError(null);
         try {
-            const res = await axios.get<TrainSearchResult>(`http://localhost:3001/api/trains/${encodeURIComponent(segment.from)}/${encodeURIComponent(segment.to)}`);
+            const res = await axios.get<TrainSearchResult>(`${API_BASE_URL}/trains/${encodeURIComponent(segment.from)}/${encodeURIComponent(segment.to)}`);
             if (res.data.trains && res.data.trains.length > 0) {
                 setTrains(res.data.trains);
                 setStationInfo({ from: `${res.data.fromStation} (${res.data.fromCode})`, to: `${res.data.toStation} (${res.data.toCode})` });

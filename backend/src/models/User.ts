@@ -33,7 +33,13 @@ const UserSchema = new Schema<IUser, mongoose.Model<IUser, {}, IUserMethods>, IU
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minlength: [6, 'Password must be at least 6 characters'],
+        minlength: [8, 'Password must be at least 8 characters'],
+        validate: {
+            validator: function (v: string) {
+                return /[a-z]/.test(v) && /[A-Z]/.test(v) && /[0-9]/.test(v);
+            },
+            message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit'
+        },
         select: false
     },
     role: {

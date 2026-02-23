@@ -31,7 +31,7 @@ export const getTransportOptions = async (req: Request, res: Response): Promise<
         res.json(result);
     } catch (error: any) {
         console.error('Error fetching transport options:', error);
-        res.status(500).json({ error: error.message || 'Failed to fetch transport options' });
+        res.status(500).json({ error: 'Failed to fetch transport options' });
     }
 };
 
@@ -68,7 +68,7 @@ export const getRouteTrains = async (req: Request, res: Response): Promise<void>
         });
     } catch (error: any) {
         console.error('Error fetching route trains:', error);
-        res.status(500).json({ error: error.message || 'Failed to fetch train information' });
+        res.status(500).json({ error: 'Failed to fetch train information' });
     }
 };
 
@@ -88,6 +88,6 @@ export const optimizeTripRoute = async (req: Request, res: Response): Promise<vo
         res.json(result);
     } catch (error: any) {
         console.error('Error optimizing route:', error);
-        res.status(500).json({ error: error.message || 'Failed to optimize route' });
+        res.status(500).json({ error: 'Failed to optimize route' });
     }
 };

@@ -1,9 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User, { UserDocument } from '../models/User';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRE = '7d';
+import { JWT_SECRET, JWT_EXPIRE } from '../config/auth';
 
 // Generate JWT token
 const generateToken = (userId: string): string => {

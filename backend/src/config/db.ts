@@ -6,7 +6,8 @@ dotenv.config();
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/trip_planner';
-    console.log(`Connecting to MongoDB at ${mongoURI}...`);
+    const safeUri = mongoURI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
+    console.log(`Connecting to MongoDB at ${safeUri}...`);
     await mongoose.connect(mongoURI);
     console.log('MongoDB Connected');
   } catch (err) {

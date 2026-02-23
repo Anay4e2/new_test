@@ -36,7 +36,7 @@ const recalculateRating = async (placeId: string): Promise<void> => {
     }
 };
 
-// POST /api/reviews — create or update review
+// POST /api/reviews â€” create or update review
 export const createReview = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
@@ -97,7 +97,7 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
     }
 };
 
-// GET /api/reviews/place/:placeId — get reviews for a place
+// GET /api/reviews/place/:placeId â€” get reviews for a place
 export const getReviewsForPlace = async (req: Request, res: Response): Promise<void> => {
     try {
         const { placeId } = req.params;
@@ -142,7 +142,7 @@ export const getReviewsForPlace = async (req: Request, res: Response): Promise<v
     }
 };
 
-// GET /api/reviews/my — get my reviews
+// GET /api/reviews/my â€” get my reviews
 export const getMyReviews = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
@@ -162,7 +162,7 @@ export const getMyReviews = async (req: AuthRequest, res: Response): Promise<voi
     }
 };
 
-// POST /api/reviews/:id/helpful — mark review as helpful
+// POST /api/reviews/:id/helpful â€” mark review as helpful
 export const markHelpful = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
@@ -174,7 +174,7 @@ export const markHelpful = async (req: AuthRequest, res: Response): Promise<void
         const { id } = req.params;
         const review = await Review.findByIdAndUpdate(
             id,
-            { $inc: { helpfulCount: 1 } },
+            { $addToSet: { helpfulBy: userId } },
             { new: true }
         );
 
@@ -183,6 +183,10 @@ export const markHelpful = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
 
+        // Sync helpfulCount with array length
+        review.helpfulCount = review.helpfulBy.length;
+        await review.save();
+
         res.json({ success: true, helpfulCount: review.helpfulCount });
     } catch (error) {
         console.error('Error marking helpful:', error);
@@ -190,7 +194,7 @@ export const markHelpful = async (req: AuthRequest, res: Response): Promise<void
     }
 };
 
-// DELETE /api/reviews/:id — delete own review
+// DELETE /api/reviews/:id â€” delete own review
 export const deleteReview = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;

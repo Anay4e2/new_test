@@ -80,6 +80,7 @@ export interface DayItinerary {
 
 export interface TripResult {
   itinerary: DayItinerary[];
+  warnings?: string[];
   summary: {
     totalCost: number;
     totalDistance: number;

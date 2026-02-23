@@ -35,7 +35,7 @@ export const addExpense = async (req: AuthRequest, res: Response): Promise<void>
         res.status(201).json({ success: true, expense });
     } catch (error: any) {
         console.error('Error adding expense:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to add expense' });
+        res.status(500).json({ success: false, message: 'Failed to add expense' });
     }
 };
 
@@ -63,7 +63,7 @@ export const getExpensesByTrip = async (req: AuthRequest, res: Response): Promis
         });
     } catch (error: any) {
         console.error('Error fetching expenses:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch expenses' });
+        res.status(500).json({ success: false, message: 'Failed to fetch expenses' });
     }
 };
 
@@ -87,7 +87,7 @@ export const updateExpense = async (req: AuthRequest, res: Response): Promise<vo
         res.json({ success: true, expense });
     } catch (error: any) {
         console.error('Error updating expense:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to update expense' });
+        res.status(500).json({ success: false, message: 'Failed to update expense' });
     }
 };
 
@@ -105,7 +105,7 @@ export const deleteExpense = async (req: AuthRequest, res: Response): Promise<vo
         res.json({ success: true, message: 'Expense deleted' });
     } catch (error: any) {
         console.error('Error deleting expense:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to delete expense' });
+        res.status(500).json({ success: false, message: 'Failed to delete expense' });
     }
 };
 
@@ -175,6 +175,6 @@ export const getExpenseSummary = async (req: AuthRequest, res: Response): Promis
         });
     } catch (error: any) {
         console.error('Error getting expense summary:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to get summary' });
+        res.status(500).json({ success: false, message: 'Failed to get summary' });
     }
 };

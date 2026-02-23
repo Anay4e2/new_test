@@ -47,7 +47,7 @@ export const Packages: FC = () => {
             setLoading(true);
             setError(null);
             try {
-                const [pkgRes, cfgRes] = await Promise.all([getPackages(), getConfig()]);
+                const [pkgRes] = await Promise.all([getPackages(), getConfig()]);
                 if (pkgRes.success) setPackages(pkgRes.data);
                 // Derive unique states
                 const uniqueStates = Array.from(new Set(pkgRes.data.map((p: Package) => p.state))).sort();
@@ -152,7 +152,7 @@ export const Packages: FC = () => {
                 </h3>
                 <div className="space-y-2">
                     {DURATION_OPTIONS.map((opt, idx) => (
-                        <label key={idx} className="flex items-center gap-3 cursor-pointer group">
+                        <div key={idx} onClick={() => toggleDuration(idx)} className="flex items-center gap-3 cursor-pointer group">
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectedDurations.includes(idx)
                                 ? 'bg-blue-600 border-blue-600'
                                 : 'border-slate-300 dark:border-slate-500 group-hover:border-blue-400'
@@ -166,7 +166,7 @@ export const Packages: FC = () => {
                             <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                                 {opt.label}
                             </span>
-                        </label>
+                        </div>
                     ))}
                 </div>
             </div>
@@ -179,7 +179,7 @@ export const Packages: FC = () => {
                 </h3>
                 <div className="space-y-2">
                     {BUDGET_OPTIONS.map((opt, idx) => (
-                        <label key={idx} className="flex items-center gap-3 cursor-pointer group">
+                        <div key={idx} onClick={() => toggleBudget(idx)} className="flex items-center gap-3 cursor-pointer group">
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectedBudgets.includes(idx)
                                 ? 'bg-emerald-500 border-emerald-500'
                                 : 'border-slate-300 dark:border-slate-500 group-hover:border-emerald-400'
@@ -193,10 +193,11 @@ export const Packages: FC = () => {
                             <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                                 {opt.label}
                             </span>
-                        </label>
+                        </div>
                     ))}
                 </div>
             </div>
+
 
             {/* State */}
             <div className="mb-6">

@@ -111,6 +111,7 @@ export interface DayItinerary {
 
 export interface TripResult {
   itinerary: DayItinerary[];
+  warnings?: string[];
   summary: {
     totalCost: number;
     totalDistance: number;
@@ -266,7 +267,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     if (otherIds.length > 0) {
       // Try to find by name (case insensitive) or if we had a string _id field
       const byName = await CityModel.find({
-        name: { $in: otherIds.map(id => new RegExp(`^${id}$`, 'i')) }
+        name: { $in: otherIds.map(id => new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')) }
       });
       dbCities = [...dbCities, ...byName];
     }
@@ -306,9 +307,17 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   const totalCities = cities.length;
   if (totalCities === 0) throw new Error("No cities selected");
 
+  const warnings: string[] = [];
+
+  // Limit cities to duration — can't visit more cities than days available
+  if (cities.length > duration) {
+    warnings.push(`Only ${duration} of ${cities.length} cities could fit in ${duration} days. Remaining cities were dropped.`);
+    cities = cities.slice(0, duration);
+  }
+
   // Basic allocation
-  let daysPerCity = Math.floor(duration / totalCities);
-  let extraDays = duration % totalCities;
+  let daysPerCity = Math.floor(duration / cities.length);
+  let extraDays = duration % cities.length;
 
   const itinerary: DayItinerary[] = [];
   let currentDay = 1;
@@ -319,7 +328,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
 
   const costConfig = COSTS[budget];
 
-  for (let i = 0; i < totalCities; i++) {
+  for (let i = 0; i < cities.length; i++) {
     const city = cities[i];
     const nextCity = cities[i + 1];
 
@@ -483,6 +492,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
 
   return {
     itinerary,
+    warnings,
     summary: {
       totalCost,
       totalDistance: totalDist,

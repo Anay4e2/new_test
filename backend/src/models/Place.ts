@@ -49,4 +49,4 @@ const PlaceSchema: Schema = new Schema({
   thumbnailUrl: { type: String }
 });
 
-export default mongoose.model<IPlace>('Place', PlaceSchema);
+export default mongoose.models.Place || mongoose.model<IPlace>('Place', PlaceSchema);

@@ -4,9 +4,13 @@
 import axios from 'axios';
 
 // RapidAPI Configuration
-const RAPIDAPI_KEY = '551491d80amsha4ae220a02402d9p179fd0jsna1a484b21945';
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '';
 const RAPIDAPI_HOST = 'irctc1.p.rapidapi.com';
 const BASE_URL = 'https://irctc1.p.rapidapi.com';
+
+if (!RAPIDAPI_KEY) {
+    console.warn('RAPIDAPI_KEY not set — train API calls will use mock data');
+}
 
 // Station codes for major cities (mapping city/location to nearest railway station)
 export const STATION_CODES: Record<string, string> = {

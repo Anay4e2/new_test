@@ -1,27 +1,35 @@
-import { FC } from 'react';
+import { FC, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Home } from './pages/Home';
-import { Planner } from './pages/Planner';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { Admin } from './pages/Admin';
-import { AdminLogin } from './pages/AdminLogin';
-import { Dashboard } from './pages/Dashboard';
-import { SharedTrip } from './pages/SharedTrip';
-import { Festivals } from './pages/Festivals';
-import { GroupTrip } from './pages/GroupTrip';
 import { Explore } from './pages/Explore';
-import { Notifications } from './pages/Notifications';
-import { Journal } from './pages/Journal';
-import { Packages } from './pages/Packages';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { NotFound } from './pages/NotFound';
+import { Toaster } from 'react-hot-toast';
+
+// Lazy-loaded pages
+const Planner = lazy(() => import('./pages/Planner').then(m => ({ default: m.Planner })));
+const Admin = lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
+const AdminLogin = lazy(() => import('./pages/AdminLogin').then(m => ({ default: m.AdminLogin })));
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const SharedTrip = lazy(() => import('./pages/SharedTrip').then(m => ({ default: m.SharedTrip })));
+const Festivals = lazy(() => import('./pages/Festivals').then(m => ({ default: m.Festivals })));
+const GroupTrip = lazy(() => import('./pages/GroupTrip').then(m => ({ default: m.GroupTrip })));
+const Notifications = lazy(() => import('./pages/Notifications').then(m => ({ default: m.Notifications })));
+const Journal = lazy(() => import('./pages/Journal').then(m => ({ default: m.Journal })));
+const Packages = lazy(() => import('./pages/Packages').then(m => ({ default: m.Packages })));
 
 const App: FC = () => {
   return (
     <>
+      <Toaster position="top-right" />
       <OfflineIndicator />
+      <ErrorBoundary>
       <Router>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
@@ -42,8 +50,13 @@ const App: FC = () => {
 
           {/* Admin route — requires admin role */}
           <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+
+          {/* Catch-all 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </Router>
+      </ErrorBoundary>
     </>
   );
 };

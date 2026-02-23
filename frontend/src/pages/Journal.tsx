@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Loader2, Share2, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
+import toast from 'react-hot-toast';
 import { getJournalEntries, createJournalEntry, updateJournalEntry, deleteJournalEntry, getPublicJournal, getMyTrips } from '@/services/api';
 import type { JournalEntry, JournalMood, SavedTrip } from '@/types';
 import { JournalEditor } from '@/components/planner/Trip/JournalEditor';
@@ -57,7 +58,7 @@ export const Journal: FC = () => {
                 }
                 setIsOwner(false);
             } catch {
-                // silently fail
+                toast.error('Failed to load journal.');
             } finally {
                 setLoading(false);
             }
@@ -92,8 +93,9 @@ export const Journal: FC = () => {
             }
             setShowEditor(false);
             setEditingEntry(null);
-        } catch { /* ignore */ }
-        finally { setSaving(false); }
+        } catch {
+            toast.error('Failed to save journal entry.');
+        } finally { setSaving(false); }
     }, [tripId, editingEntry]);
 
     const handleDelete = useCallback(async (entryId: string) => {
@@ -102,7 +104,9 @@ export const Journal: FC = () => {
             if (res.success) {
                 setEntries(prev => prev.filter(e => e._id !== entryId));
             }
-        } catch { /* ignore */ }
+        } catch {
+            toast.error('Failed to delete journal entry.');
+        }
     }, []);
 
     const handleEdit = useCallback((entry: JournalEntry) => {

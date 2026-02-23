@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 import Restaurant from '../models/Restaurant';
 import { RESTAURANTS as MOCK_RESTAURANTS } from '../services/mockData';
 
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 interface MockRestaurant {
     _id: string;
     name: string;
@@ -37,7 +41,7 @@ export const getRestaurantsByCity = async (req: Request, res: Response): Promise
         const { cityName } = req.params;
         const decodedCity = decodeURIComponent(cityName);
 
-        const restaurants = await Restaurant.find({ cityName: new RegExp(`^${decodedCity}$`, 'i') });
+        const restaurants = await Restaurant.find({ cityName: new RegExp(`^${escapeRegex(decodedCity)}$`, 'i') });
         if (restaurants.length > 0) {
             res.json(restaurants);
             return;
@@ -62,7 +66,7 @@ export const getRestaurantsByType = async (req: Request, res: Response): Promise
         const decodedCity = decodeURIComponent(cityName);
 
         const restaurants = await Restaurant.find({
-            cityName: new RegExp(`^${decodedCity}$`, 'i'),
+            cityName: new RegExp(`^${escapeRegex(decodedCity)}$`, 'i'),
             type
         });
         if (restaurants.length > 0) {

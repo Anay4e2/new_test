@@ -1,6 +1,7 @@
 import { FC, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline, DirectionsRenderer } from '@react-google-maps/api';
 import { useTripStore } from '../../../stores/tripStore';
+import { useItineraryEditStore } from '../../../stores/itineraryEditStore';
 import { RouteLayer, TravelSegment } from './RouteLayer';
 import { AnimatedMarker } from './AnimatedMarker';
 import { TripPlaybackControls } from './TripPlaybackControls';
@@ -126,6 +127,8 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
         showRouteOnMap,
         getRouteCoordinates
     } = useTripStore();
+
+    const { isEditMode, editableItinerary, addActivity } = useItineraryEditStore();
 
     // --- State ---
     const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -602,18 +605,40 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                                 <span>⭐ {selectedInfoWindow.rating || 4.5}</span>
                                 <span>🕒 {selectedInfoWindow.visitDuration || '1 hr'}</span>
                             </div>
-                            <button
-                                onClick={() => {
-                                    togglePlace(selectedInfoWindow);
-                                    setSelectedInfoWindow(null);
-                                }}
-                                className={`w-full py-2 rounded-md text-xs font-bold transition-all shadow-sm ${isPlaceSelected(selectedInfoWindow._id)
-                                    ? 'bg-red-500 text-white hover:bg-red-600'
-                                    : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                    }`}
-                            >
-                                {isPlaceSelected(selectedInfoWindow._id) ? '✓ Remove from Trip' : '+ Add to Trip'}
-                            </button>
+
+                            {isEditMode ? (
+                                <div className="space-y-2 pt-2 border-t border-gray-100">
+                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Add to Day</div>
+                                    <div className="grid grid-cols-4 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar">
+                                        {editableItinerary.map((day, idx) => (
+                                            <button
+                                                key={day.day}
+                                                onClick={() => {
+                                                    addActivity(idx, selectedInfoWindow);
+                                                    setSelectedInfoWindow(null);
+                                                }}
+                                                className="px-1 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-semibold border border-blue-200 transition-colors text-center"
+                                                title={`Add to Day ${day.day} (${day.city})`}
+                                            >
+                                                {day.day}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        togglePlace(selectedInfoWindow);
+                                        setSelectedInfoWindow(null);
+                                    }}
+                                    className={`w-full py-2 rounded-md text-xs font-bold transition-all shadow-sm ${isPlaceSelected(selectedInfoWindow._id)
+                                        ? 'bg-red-500 text-white hover:bg-red-600'
+                                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                        }`}
+                                >
+                                    {isPlaceSelected(selectedInfoWindow._id) ? '✓ Remove from Trip' : '+ Add to Trip'}
+                                </button>
+                            )}
                         </div>
                     </InfoWindow>
                 )}

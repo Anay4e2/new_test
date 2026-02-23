@@ -19,7 +19,7 @@ function createTransporter() {
     });
 }
 
-// POST /api/groups — create group from a saved trip
+// POST /api/groups â€” create group from a saved trip
 export const createGroup = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { tripId, name } = req.body;
@@ -65,11 +65,11 @@ export const createGroup = async (req: AuthRequest, res: Response): Promise<void
         res.status(201).json({ success: true, group });
     } catch (error: any) {
         console.error('Error creating group:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to create group' });
+        res.status(500).json({ success: false, message: 'Failed to create group' });
     }
 };
 
-// POST /api/groups/:id/invite — invite members by email
+// POST /api/groups/:id/invite â€” invite members by email
 export const inviteMembers = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -129,11 +129,11 @@ export const inviteMembers = async (req: AuthRequest, res: Response): Promise<vo
                     await transporter.sendMail({
                         from: process.env.SMTP_FROM || process.env.SMTP_USER,
                         to: email,
-                        subject: `🏖️ You're invited to join "${group.name}" trip!`,
+                        subject: `ðŸ–ï¸ You're invited to join "${group.name}" trip!`,
                         html: `
                             <div style="font-family:'Segoe UI',sans-serif;max-width:500px;margin:0 auto;padding:20px;">
                                 <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:16px;padding:32px 24px;text-align:center;color:#fff;">
-                                    <h1 style="margin:0;font-size:22px;">🗺️ Trip Invitation</h1>
+                                    <h1 style="margin:0;font-size:22px;">ðŸ—ºï¸ Trip Invitation</h1>
                                     <p style="margin:8px 0 0;opacity:0.85;">${user?.name || 'A friend'} invited you to join</p>
                                     <h2 style="margin:12px 0 0;font-size:18px;">"${group.name}"</h2>
                                 </div>
@@ -154,11 +154,11 @@ export const inviteMembers = async (req: AuthRequest, res: Response): Promise<vo
         res.json({ success: true, added, group });
     } catch (error: any) {
         console.error('Error inviting members:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to invite' });
+        res.status(500).json({ success: false, message: 'Failed to invite' });
     }
 };
 
-// POST /api/groups/:id/respond — accept or decline invite
+// POST /api/groups/:id/respond â€” accept or decline invite
 export const respondToInvite = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -202,11 +202,11 @@ export const respondToInvite = async (req: AuthRequest, res: Response): Promise<
         res.json({ success: true, group });
     } catch (error: any) {
         console.error('Error responding to invite:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to respond' });
+        res.status(500).json({ success: false, message: 'Failed to respond' });
     }
 };
 
-// GET /api/groups — groups the user belongs to
+// GET /api/groups â€” groups the user belongs to
 export const getMyGroups = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const user = await User.findById(req.userId);
@@ -223,11 +223,11 @@ export const getMyGroups = async (req: AuthRequest, res: Response): Promise<void
         res.json({ success: true, groups });
     } catch (error: any) {
         console.error('Error getting groups:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to get groups' });
+        res.status(500).json({ success: false, message: 'Failed to get groups' });
     }
 };
 
-// GET /api/groups/:id — group details
+// GET /api/groups/:id â€” group details
 export const getGroup = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -256,11 +256,11 @@ export const getGroup = async (req: AuthRequest, res: Response): Promise<void> =
         res.json({ success: true, group });
     } catch (error: any) {
         console.error('Error getting group:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to get group' });
+        res.status(500).json({ success: false, message: 'Failed to get group' });
     }
 };
 
-// POST /api/groups/:id/chat — add chat message
+// POST /api/groups/:id/chat â€” add chat message
 export const addChatMessage = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -303,11 +303,11 @@ export const addChatMessage = async (req: AuthRequest, res: Response): Promise<v
         res.json({ success: true, message: group.chat[group.chat.length - 1] });
     } catch (error: any) {
         console.error('Error adding chat message:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to send message' });
+        res.status(500).json({ success: false, message: 'Failed to send message' });
     }
 };
 
-// GET /api/groups/:id/chat — get chat history
+// GET /api/groups/:id/chat â€” get chat history
 export const getChatHistory = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -323,11 +323,11 @@ export const getChatHistory = async (req: AuthRequest, res: Response): Promise<v
         res.json({ success: true, messages });
     } catch (error: any) {
         console.error('Error getting chat:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to get chat' });
+        res.status(500).json({ success: false, message: 'Failed to get chat' });
     }
 };
 
-// POST /api/groups/:id/polls — create poll
+// POST /api/groups/:id/polls â€” create poll
 export const createPoll = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
@@ -356,11 +356,11 @@ export const createPoll = async (req: AuthRequest, res: Response): Promise<void>
         res.status(201).json({ success: true, poll: group.polls[group.polls.length - 1] });
     } catch (error: any) {
         console.error('Error creating poll:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to create poll' });
+        res.status(500).json({ success: false, message: 'Failed to create poll' });
     }
 };
 
-// POST /api/groups/:id/polls/:pollId/vote — vote on a poll
+// POST /api/groups/:id/polls/:pollId/vote â€” vote on a poll
 export const votePoll = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id, pollId } = req.params;
@@ -406,11 +406,11 @@ export const votePoll = async (req: AuthRequest, res: Response): Promise<void> =
         res.json({ success: true, poll });
     } catch (error: any) {
         console.error('Error voting on poll:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to vote' });
+        res.status(500).json({ success: false, message: 'Failed to vote' });
     }
 };
 
-// DELETE /api/groups/:id/members/:memberId — remove member (owner only)
+// DELETE /api/groups/:id/members/:memberId â€” remove member (owner only)
 export const removeMember = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id, memberId } = req.params;
@@ -438,11 +438,11 @@ export const removeMember = async (req: AuthRequest, res: Response): Promise<voi
         res.json({ success: true, group });
     } catch (error: any) {
         console.error('Error removing member:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to remove member' });
+        res.status(500).json({ success: false, message: 'Failed to remove member' });
     }
 };
 
-// POST /api/groups/:id/polls/:pollId/close — close poll (creator or owner)
+// POST /api/groups/:id/polls/:pollId/close â€” close poll (creator or owner)
 export const closePoll = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { id, pollId } = req.params;
@@ -472,6 +472,6 @@ export const closePoll = async (req: AuthRequest, res: Response): Promise<void> 
         res.json({ success: true, poll });
     } catch (error: any) {
         console.error('Error closing poll:', error);
-        res.status(500).json({ success: false, message: error.message || 'Failed to close poll' });
+        res.status(500).json({ success: false, message: 'Failed to close poll' });
     }
 };

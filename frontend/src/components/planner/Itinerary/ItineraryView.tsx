@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useCallback } from 'react';
 import { TripResult, TripRequest, NightStayInfo, Hotel, MealRecommendation, Restaurant } from '@/types';
-import { Car, Moon, ArrowLeft, Loader2, Star, Building2, ChevronDown, X, Coffee, UtensilsCrossed, RefreshCw, Save, Heart, Thermometer, CloudRain, Sun, AlertTriangle, Train, Plane, Pencil, Check, Download } from 'lucide-react';
+import { Car, Moon, ArrowLeft, Loader2, Star, Building2, ChevronDown, X, Coffee, UtensilsCrossed, RefreshCw, Save, Heart, Thermometer, CloudRain, Sun, AlertTriangle, Train, Plane, Pencil, Check, Download, Plus } from 'lucide-react';
 import { ExportButtons } from './ExportButtons';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ import { SafetyInfo } from './SafetyInfo';
 import TrainStatusComponent from '../Transport/TrainStatus';
 import { SOSButton } from '../../common/SOSButton';
 import { BookingLinks } from '../Transport/BookingLinks';
+import { AddActivityModal } from './AddActivityModal';
 
 interface ItineraryViewProps {
   result: TripResult;
@@ -30,7 +31,7 @@ interface ItineraryViewProps {
 }
 
 export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset, activeDay, onDaySelect, startDate }) => {
-  const { itinerary, summary } = result;
+  const { itinerary, warnings, summary } = result;
   const { isAuthenticated } = useAuthStore();
   const editStore = useItineraryEditStore();
   const isEditMode = editStore.isEditMode;
@@ -46,6 +47,10 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
 
   // Train tracking state
   const [trackingTrainDay, setTrackingTrainDay] = useState<number | null>(null);
+
+  // Add Activity Modal State
+  const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
+  const [activeAddDay, setActiveAddDay] = useState<number | null>(null);
 
   // DnD sensors (pointer + touch for mobile)
   const sensors = useSensors(
@@ -218,6 +223,20 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
     }
   };
 
+  const handleOpenAddActivity = (dayNumber: number) => {
+    setActiveAddDay(dayNumber);
+    setIsAddActivityModalOpen(true);
+  };
+
+  const handleAddActivity = (activity: any) => {
+    if (activeAddDay === null) return;
+    // Find index of day
+    const dayIndex = displayItinerary.findIndex(d => d.day === activeAddDay);
+    if (dayIndex !== -1) {
+      editStore.addActivity(dayIndex, activity);
+    }
+  };
+
   const renderMealCard = (meal: MealRecommendation, mealType: 'breakfast' | 'lunch' | 'dinner', dayIdx: number, cityName: string) => {
     const key = `${dayIdx}-${mealType}`;
     const displayMeal = swappedMeals[key] || meal;
@@ -349,6 +368,19 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
             </button>
           </div>
         </div>
+
+        {/* Warnings */}
+        {warnings && warnings.length > 0 && (
+          <div className="mx-4 mt-3 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg shrink-0">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-semibold text-sm mb-1">
+              <AlertTriangle size={16} />
+              Warnings
+            </div>
+            <ul className="list-disc list-inside text-amber-600 dark:text-amber-300 text-sm space-y-0.5">
+              {warnings.map((w, i) => <li key={i}>{w}</li>)}
+            </ul>
+          </div>
+        )}
 
         {/* Summary Stats */}
         <div className="p-4 grid grid-cols-3 gap-4 border-b border-gray-100 dark:border-slate-700 bg-secondary/10 dark:bg-slate-700/50 shrink-0">
@@ -560,6 +592,16 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
                     {(day.activities || []).length === 0 && (
                       <div className="text-sm text-gray-400 dark:text-gray-500 italic p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl text-center">Free day for leisure or local exploration.</div>
                     )}
+
+                    {isEditMode && (
+                      <button
+                        onClick={() => handleOpenAddActivity(day.day)}
+                        className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-slate-600 rounded-xl flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all font-medium"
+                      >
+                        <Plus size={18} />
+                        Add Activity
+                      </button>
+                    )}
                   </div>
 
                   {/* Meal Recommendations */}
@@ -740,6 +782,14 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
           <SafetyInfo cities={tripCities} />
         </div>
       </motion.div>
+
+      {/* Add Activity Modal */}
+      <AddActivityModal
+        isOpen={isAddActivityModalOpen}
+        onClose={() => setIsAddActivityModalOpen(false)}
+        onAdd={handleAddActivity}
+        dayNumber={activeAddDay || undefined}
+      />
 
       {/* Save Trip Modal */}
       <AnimatePresence>

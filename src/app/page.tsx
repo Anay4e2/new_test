@@ -4,39 +4,76 @@ import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import TripWizard from '@/components/Wizard/TripWizard';
 import ItineraryView from '@/components/Itinerary/ItineraryView';
-import { TripRequest, TripResult } from '@/lib/planner';
-import { MapPin } from 'lucide-react';
+import { TripRequest, TripResult, PlaceData } from '@/lib/planner';
+
+interface StateData {
+  _id: string;
+  code: string;
+  name: string;
+  center: { lat: number; lng: number };
+  zoom: number;
+  description: string;
+}
+
+interface CityData {
+  _id: string;
+  name: string;
+  stateCode: string;
+  coordinates: { lat: number; lng: number };
+  tier: string;
+  description: string;
+  idealDays: number;
+}
+
+interface RouteData {
+  fromCity: string;
+  toCity: string;
+  distance: number;
+  duration: number;
+  mode: string;
+}
 
 // Dynamic import for Leaflet map to avoid SSR issues
 const Map = dynamic(() => import('@/components/Map/Map'), { ssr: false });
 
 export default function Home() {
-  const [config, setConfig] = useState<{ states: any[], cities: any[] }>({ states: [], cities: [] });
-  const [places, setPlaces] = useState<any[]>([]);
-  const [routesData, setRoutesData] = useState<any[]>([]);
-  const [selectedState, setSelectedState] = useState<any>(null);
+  const [config, setConfig] = useState<{ states: StateData[], cities: CityData[] }>({ states: [], cities: [] });
+  const [places, setPlaces] = useState<PlaceData[]>([]);
+  const [routesData, setRoutesData] = useState<RouteData[]>([]);
+  const [selectedState, setSelectedState] = useState<StateData | null>(null);
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([]);
   const [tripResult, setTripResult] = useState<TripResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [tripError, setTripError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'map' | 'itinerary'>('map');
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState<string | null>(null);
+  const [placesError, setPlacesError] = useState(false);
 
   useEffect(() => {
-    // Fetch config (states and cities)
+    setConfigLoading(true);
     fetch('/api/config')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load configuration');
+        return res.json();
+      })
       .then(data => {
         setConfig(data);
-        // Removed default state selection to show whole India initially
-        // if (data.states.length > 0) setSelectedState(data.states[0]); 
-      });
-
-    // Fetch places for map markers
-    fetch('/api/places')
-      .then(res => res.json())
-      .then(data => {
-        setPlaces(data);
+        setConfigError(null);
       })
-      .catch(err => console.error('Error fetching places:', err));
+      .catch(err => {
+        console.error('Error fetching config:', err);
+        setConfigError('Failed to load trip data. Please refresh the page.');
+      })
+      .finally(() => setConfigLoading(false));
+
+    fetch('/api/places')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load places');
+        return res.json();
+      })
+      .then(data => setPlaces(data))
+      .catch(err => { console.error('Error fetching places:', err); setPlacesError(true); });
   }, []);
 
   const handleCityToggle = (id: string) => {
@@ -44,6 +81,23 @@ export default function Home() {
       setSelectedCityIds(selectedCityIds.filter(c => c !== id));
     } else {
       setSelectedCityIds([...selectedCityIds, id]);
+    }
+  };
+
+  const handleMarkerClick = (id: string) => {
+    // Check if this is a city marker
+    const city = config.cities.find(c => c._id === id);
+    if (city) {
+      handleCityToggle(id);
+      return;
+    }
+    // If it's a place marker, select the parent city instead
+    const place = places.find(p => p._id === id);
+    if (place) {
+      const parentCity = config.cities.find(c => c.name === place.cityName);
+      if (parentCity) {
+        handleCityToggle(parentCity._id);
+      }
     }
   };
 
@@ -69,10 +123,11 @@ export default function Home() {
       if (data.error) throw new Error(data.error);
 
       setTripResult(data);
+      setTripError(null);
       setActiveTab('itinerary'); // Switch to itinerary view on mobile automatically
     } catch (e) {
       console.error(e);
-      alert('Failed to generate trip. Please try again.');
+      setTripError('Failed to generate trip. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -133,9 +188,9 @@ export default function Home() {
       lng: p.coordinates.lng,
       title: p.name,
       description: p.description || `${p.type} in ${p.cityName}`,
-      visitDuration: p.visitDuration,
-      bestTime: p.bestTime,
-      entryFee: p.entryFee
+      visitDuration: `${p.timeRequired}h`,
+      bestTime: p.bestTimeOfDay,
+      entryFee: p.priceTier
     }));
 
     return [...cityMarkers, ...placeMarkers];
@@ -143,7 +198,7 @@ export default function Home() {
 
   // Generate route coordinates for the map if result exists
   const routeCoordinates: Array<[number, number]> | undefined = useMemo(() => {
-    if (!tripResult) return undefined;
+    if (!tripResult || tripResult.itinerary.length === 0) return undefined;
 
     // Extract sequence of cities from itinerary
     const route: Array<[number, number]> = [];
@@ -160,19 +215,37 @@ export default function Home() {
     });
 
     return route;
-  }, [tripResult]);
+  }, [tripResult, config.cities]);
 
   return (
     <div className="flex h-screen w-full bg-gray-100 overflow-hidden relative">
       {/* Sidebar / Overlay Panel */}
       <div className={`absolute md:relative z-20 top-0 left-0 h-full w-full md:w-[450px] transition-transform duration-300 ${activeTab === 'map' ? 'translate-x-full md:translate-x-0' : 'translate-x-0'} md:translate-x-0 flex flex-col`}>
-        {!tripResult ? (
+        {configLoading ? (
+          <div className="bg-white p-6 shadow-lg rounded-lg h-full flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading trip data...</p>
+            </div>
+          </div>
+        ) : configError ? (
+          <div className="bg-white p-6 shadow-lg rounded-lg h-full flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{configError}</p>
+              <button onClick={() => window.location.reload()} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : !tripResult ? (
           <TripWizard
             cities={selectedState ? config.cities.filter(c => c.stateCode === selectedState.code) : []}
             selectedCityIds={selectedCityIds}
             onCityToggle={handleCityToggle}
             onGenerate={handleGenerate}
             isLoading={loading}
+            stateCode={selectedState?.code || 'RJ'}
+            error={tripError}
           />
         ) : (
           <ItineraryView result={tripResult} onReset={() => setTripResult(null)} />
@@ -186,11 +259,25 @@ export default function Home() {
           zoom={selectedState ? selectedState.zoom : 5}
           markers={mapMarkers}
           selectedMarkers={selectedCityIds}
-          onMarkerClick={handleCityToggle}
+          onMarkerClick={handleMarkerClick}
           route={routeCoordinates}
           intercityRoutes={intercityRoutes}
           onStateSelect={handleStateSelect}
         />
+
+        {/* Onboarding hint when no state is selected */}
+        {!selectedState && !tripResult && !configLoading && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur text-gray-800 px-4 py-2 rounded-lg shadow-lg z-[1000] text-sm text-center pointer-events-none">
+            Click on a state to start planning your trip
+          </div>
+        )}
+
+        {/* Places fetch error */}
+        {placesError && (
+          <div className="absolute bottom-14 left-4 bg-red-900/80 text-white text-xs px-3 py-1.5 rounded-full z-[1000]">
+            Could not load tourist places
+          </div>
+        )}
 
         {/* Mobile Toggle Button */}
         <div className="absolute bottom-4 right-4 md:hidden z-[1000]">

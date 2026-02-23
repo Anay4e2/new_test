@@ -23,4 +23,4 @@ const StateSchema: Schema = new Schema({
   zoom: { type: Number, default: 7 }
 });
 
-export default mongoose.model<IState>('State', StateSchema);
+export default mongoose.models.State || mongoose.model<IState>('State', StateSchema);

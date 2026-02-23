@@ -5,7 +5,7 @@ import Review from '../models/Review';
 import { AuthRequest } from '../middleware/authMiddleware';
 import mongoose from 'mongoose';
 
-// GET /api/feed — paginated public trips
+// GET /api/feed â€” paginated public trips
 export const getPublicTrips = async (req: Request, res: Response): Promise<void> => {
     try {
         const {
@@ -115,11 +115,11 @@ export const getPublicTrips = async (req: Request, res: Response): Promise<void>
             },
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch feed' });
+        res.status(500).json({ success: false, message: 'Failed to fetch feed' });
     }
 };
 
-// POST /api/feed/:tripId/like — toggle like
+// POST /api/feed/:tripId/like â€” toggle like
 export const likeTrip = async (req: Request, res: Response): Promise<void> => {
     try {
         const { tripId } = req.params;
@@ -157,11 +157,11 @@ export const likeTrip = async (req: Request, res: Response): Promise<void> => {
             likes: trip.likes,
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to toggle like' });
+        res.status(500).json({ success: false, message: 'Failed to toggle like' });
     }
 };
 
-// GET /api/feed/trending — aggregate most-visited cities
+// GET /api/feed/trending â€” aggregate most-visited cities
 export const getTrendingDestinations = async (_req: Request, res: Response): Promise<void> => {
     try {
         const trending = await SavedTrip.aggregate([
@@ -188,11 +188,11 @@ export const getTrendingDestinations = async (_req: Request, res: Response): Pro
 
         res.json({ success: true, destinations: trending });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch trending' });
+        res.status(500).json({ success: false, message: 'Failed to fetch trending' });
     }
 };
 
-// GET /api/feed/user/:userId — public user profile
+// GET /api/feed/user/:userId â€” public user profile
 export const getUserProfile = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userId } = req.params;
@@ -224,11 +224,11 @@ export const getUserProfile = async (req: Request, res: Response): Promise<void>
             trips: publicTrips,
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to fetch user profile' });
+        res.status(500).json({ success: false, message: 'Failed to fetch user profile' });
     }
 };
 
-// PUT /api/feed/:tripId/publish — publish/unpublish a trip
+// PUT /api/feed/:tripId/publish â€” publish/unpublish a trip
 export const publishTrip = async (req: Request, res: Response): Promise<void> => {
     try {
         const { tripId } = req.params;
@@ -258,6 +258,6 @@ export const publishTrip = async (req: Request, res: Response): Promise<void> =>
             },
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message || 'Failed to publish trip' });
+        res.status(500).json({ success: false, message: 'Failed to publish trip' });
     }
 };

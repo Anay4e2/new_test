@@ -12,6 +12,7 @@ export interface IReview extends Document {
     visitDate?: Date;
     photos?: string[];
     helpfulCount: number;
+    helpfulBy: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -68,6 +69,10 @@ const ReviewSchema: Schema = new Schema(
             type: Number,
             default: 0,
         },
+        helpfulBy: [{
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+        }],
     },
     {
         timestamps: true,

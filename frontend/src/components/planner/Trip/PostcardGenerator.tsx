@@ -422,7 +422,7 @@ export const PostcardGenerator: FC<PostcardGeneratorProps> = ({
     return (
         <canvas
             ref={canvasRef}
-            style={{ width, height, maxWidth: '100%', height: 'auto' }}
+            style={{ width, maxWidth: '100%', height: 'auto' }}
             className="rounded-xl shadow-lg"
         />
     );

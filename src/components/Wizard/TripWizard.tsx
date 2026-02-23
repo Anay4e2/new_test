@@ -5,18 +5,29 @@ import { TripRequest } from '@/lib/planner';
 import { Calendar, CheckCircle, Clock, DollarSign, MapPin, Moon, Sun, Users } from 'lucide-react';
 import clsx from 'clsx';
 
+interface CityInfo {
+  _id: string;
+  name: string;
+  description?: string;
+  idealDays?: number;
+  tier?: string;
+}
+
 interface TripWizardProps {
-  cities: any[];
+  cities: CityInfo[];
   onGenerate: (data: TripRequest) => void;
   selectedCityIds: string[];
   onCityToggle: (id: string) => void;
   isLoading: boolean;
+  stateCode: string;
+  error?: string | null;
 }
 
-export default function TripWizard({ cities, onGenerate, selectedCityIds, onCityToggle, isLoading }: TripWizardProps) {
+export default function TripWizard({ cities, onGenerate, selectedCityIds, onCityToggle, isLoading, stateCode, error }: TripWizardProps) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Partial<TripRequest>>({
     duration: 5,
+    startDate: new Date().toISOString().split('T')[0],
     budget: 'standard',
     travelStyle: 'relaxed',
     constraints: {
@@ -31,23 +42,25 @@ export default function TripWizard({ cities, onGenerate, selectedCityIds, onCity
   const handleBack = () => setStep(step - 1);
 
   const handleSubmit = () => {
+    if (selectedCityIds.length === 0) return;
     if (formData.duration && formData.budget && formData.travelStyle && formData.constraints) {
       onGenerate({
-        stateCode: 'RJ',
+        stateCode,
         selectedCityIds,
         duration: formData.duration,
-        budget: formData.budget as any,
-        travelStyle: formData.travelStyle as any,
+        startDate: formData.startDate,
+        budget: formData.budget as 'budget' | 'standard' | 'premium',
+        travelStyle: formData.travelStyle as 'relaxed' | 'fast',
         constraints: formData.constraints
       });
     }
   };
 
   return (
-    <div className="bg-white p-6 shadow-lg rounded-lg max-w-md w-full h-full overflow-y-auto">
+    <div className="bg-white p-6 shadow-lg rounded-lg max-w-md w-full h-full overflow-y-auto" role="form" aria-label="Trip planner wizard">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Plan Your Trip</h2>
-        <div className="flex space-x-2 mt-2">
+        <div className="flex space-x-2 mt-2" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3} aria-label={`Step ${step} of 3`}>
           {[1, 2, 3].map(i => (
             <div key={i} className={clsx("h-1 flex-1 rounded", i <= step ? "bg-blue-600" : "bg-gray-200")} />
           ))}
@@ -73,7 +86,7 @@ export default function TripWizard({ cities, onGenerate, selectedCityIds, onCity
               >
                 <div>
                   <div className="font-medium">{city.name}</div>
-                  <div className="text-xs text-gray-500">{city.description.substring(0, 40)}...</div>
+                  <div className="text-xs text-gray-500">{(city.description || '').substring(0, 40)}...</div>
                 </div>
                 {selectedCityIds.includes(city._id) && <CheckCircle size={16} className="text-blue-500" />}
               </div>
@@ -103,7 +116,21 @@ export default function TripWizard({ cities, onGenerate, selectedCityIds, onCity
               min={1}
               max={30}
               value={formData.duration}
-              onChange={e => setFormData({...formData, duration: parseInt(e.target.value)})}
+              onChange={e => {
+                const val = parseInt(e.target.value);
+                setFormData({...formData, duration: isNaN(val) ? 1 : Math.max(1, Math.min(30, val))});
+              }}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 flex items-center gap-2"><Calendar size={16} /> Start Date</label>
+            <input
+              type="date"
+              value={formData.startDate}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={e => setFormData({...formData, startDate: e.target.value})}
               className="w-full p-2 border rounded"
             />
           </div>
@@ -214,11 +241,17 @@ export default function TripWizard({ cities, onGenerate, selectedCityIds, onCity
             </div>
           </div>
 
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
+              {error}
+            </div>
+          )}
+
           <div className="flex justify-between mt-8">
             <button onClick={handleBack} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Back</button>
             <button
               onClick={handleSubmit}
-              disabled={isLoading}
+              disabled={isLoading || selectedCityIds.length === 0}
               className="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
             >
               {isLoading ? 'Generating...' : 'Build My Package'}

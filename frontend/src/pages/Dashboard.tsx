@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { getMyTrips, getMyFavorites, updateTrip, deleteTrip as deleteTripApi, getExpenseSummary, getMyGroups, createGroup, publishTripApi, getJournalEntryCount } from '@/services/api';
 import type { SavedTrip, FavoritePlace, ExpenseSummary, TripGroup } from '@/types';
@@ -31,7 +32,6 @@ export const Dashboard: FC = () => {
             navigate('/login');
             return;
         }
-        fetchData();
     }, []);
 
     const fetchData = async () => {
@@ -45,7 +45,7 @@ export const Dashboard: FC = () => {
                 if (res.success) setFavorites(res.favorites);
             }
         } catch {
-            // silently fail
+            toast.error('Failed to load data. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -95,7 +95,7 @@ export const Dashboard: FC = () => {
                 setTrips(prev => prev.map(t => t._id === trip._id ? { ...t, isFavorite: !t.isFavorite } : t));
             }
         } catch {
-            // silently fail
+            toast.error('Failed to update favorite.');
         }
     };
 
@@ -107,7 +107,7 @@ export const Dashboard: FC = () => {
                 setTrips(prev => prev.filter(t => t._id !== id));
             }
         } catch {
-            // silently fail
+            toast.error('Failed to delete trip.');
         } finally {
             setDeletingId(null);
         }
@@ -117,7 +117,9 @@ export const Dashboard: FC = () => {
         try {
             const res = await getMyGroups();
             if (res.success) setGroups(res.groups);
-        } catch { /* ignore */ }
+        } catch {
+            toast.error('Failed to load groups.');
+        }
     };
 
     const handleCreateGroup = async (tripId: string, tripTitle: string) => {
@@ -128,8 +130,9 @@ export const Dashboard: FC = () => {
                 setActiveTab('groups');
                 setGroups(prev => [...prev, res.group]);
             }
-        } catch { /* ignore */ }
-        finally { setCreatingGroup(null); }
+        } catch {
+            toast.error('Failed to create group.');
+        } finally { setCreatingGroup(null); }
     };
 
     const getCities = (trip: SavedTrip): string => {
@@ -151,7 +154,9 @@ export const Dashboard: FC = () => {
                 setPublishingTrip(null);
                 setPublishTags([]);
             }
-        } catch { /* ignore */ }
+        } catch {
+            toast.error('Failed to publish trip.');
+        }
     };
 
     return (
