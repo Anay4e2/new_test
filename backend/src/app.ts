@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
@@ -6,12 +7,17 @@ import connectDB from './config/db';
 import routes from './routes';
 import adminRoutes from './routes/adminRoutes';
 import { analyticsMiddleware } from './middleware/analyticsMiddleware';
+import { initSocketIO } from './socket';
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 
 // Connect to Database
 connectDB();
+
+// Initialize Socket.IO
+initSocketIO(httpServer);
 
 // Middleware
 app.use(helmet());
@@ -42,7 +48,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = httpServer.listen(PORT, () => {
     console.log(`Backend server running on http://localhost:${PORT}`);
 });
 

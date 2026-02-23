@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User, { UserDocument } from '../models/User';
 import { JWT_SECRET, JWT_EXPIRE } from '../config/auth';
+import { sendResetPasswordEmail } from '../services/emailService';
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
@@ -180,5 +182,185 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
     } catch (error) {
         console.error('Admin login error:', error);
         res.status(500).json({ success: false, message: 'Server error during admin login' });
+    }
+};
+
+// @desc    Forgot password — send reset email
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            res.status(400).json({ success: false, message: 'Please provide an email address' });
+            return;
+        }
+
+        const user = await User.findOne({ email }).select('+resetPasswordToken +resetPasswordExpire');
+        if (!user) {
+            // Return success even if user doesn't exist to prevent email enumeration
+            res.status(200).json({ success: true, message: 'If an account with that email exists, a reset link has been sent.' });
+            return;
+        }
+
+        // Generate reset token
+        const resetToken = user.getResetPasswordToken();
+        await user.save({ validateBeforeSave: false });
+
+        // Send email
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+
+        try {
+            await sendResetPasswordEmail(user.email, user.name, resetUrl);
+        } catch (emailError) {
+            // Clear token if email fails
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save({ validateBeforeSave: false });
+            console.error('Reset email send error:', emailError);
+            res.status(500).json({ success: false, message: 'Failed to send reset email. Please try again later.' });
+            return;
+        }
+
+        res.status(200).json({ success: true, message: 'If an account with that email exists, a reset link has been sent.' });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// @desc    Reset password with token
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { password } = req.body;
+        if (!password) {
+            res.status(400).json({ success: false, message: 'Please provide a new password' });
+            return;
+        }
+
+        // Hash the URL token and find matching user
+        const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: new Date() }
+        }).select('+resetPasswordToken +resetPasswordExpire');
+
+        if (!user) {
+            res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+            return;
+        }
+
+        // Set new password and clear reset fields
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+
+        // Auto-login after reset
+        const token = generateToken(user._id.toString());
+
+        res.status(200).json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                createdAt: user.createdAt
+            },
+            message: 'Password reset successful'
+        });
+    } catch (error: any) {
+        console.error('Reset password error:', error);
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map((err: any) => err.message);
+            res.status(400).json({ success: false, message: messages.join(', ') });
+            return;
+        }
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// @desc    Update profile (name, email)
+// @route   PUT /api/auth/profile
+// @access  Private
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).userId;
+        const { name, email } = req.body;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        if (name !== undefined) user.name = name.trim();
+        if (email !== undefined) {
+            const existing = await User.findOne({ email: email.toLowerCase(), _id: { $ne: userId } });
+            if (existing) {
+                res.status(400).json({ success: false, message: 'Email is already in use' });
+                return;
+            }
+            user.email = email;
+        }
+
+        await user.save();
+
+        res.json({
+            success: true,
+            user: { id: user._id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt },
+        });
+    } catch (error: any) {
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map((err: any) => err.message);
+            res.status(400).json({ success: false, message: messages.join(', ') });
+            return;
+        }
+        res.status(500).json({ success: false, message: 'Failed to update profile' });
+    }
+};
+
+// @desc    Change password
+// @route   PUT /api/auth/password
+// @access  Private
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).userId;
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            res.status(400).json({ success: false, message: 'Current and new passwords are required' });
+            return;
+        }
+
+        const user = await User.findById(userId).select('+password');
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            res.status(401).json({ success: false, message: 'Current password is incorrect' });
+            return;
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error: any) {
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map((err: any) => err.message);
+            res.status(400).json({ success: false, message: messages.join(', ') });
+            return;
+        }
+        res.status(500).json({ success: false, message: 'Failed to change password' });
     }
 };

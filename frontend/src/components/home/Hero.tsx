@@ -2,6 +2,8 @@ import { FC } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../common/ThemeToggle';
 import { NotificationBell } from '../common/NotificationBell';
+import { LanguageSelector } from '../common/LanguageSelector';
+import { CurrencySelector } from '../common/CurrencySelector';
 import { useAuthStore } from '@/stores/authStore';
 
 // Accurate Rajasthan state map SVG based on geographic outline
@@ -131,7 +133,7 @@ export const Hero: FC = () => {
   return (
     <div className="min-h-[85vh] bg-white dark:bg-slate-900 transition-colors duration-200">
       {/* Navigation */}
-      <nav className="flex items-center justify-between px-10 py-4 border-b border-slate-100 dark:border-slate-800">
+      <nav className="flex items-center justify-between px-10 py-4 border-b border-slate-100 dark:border-slate-800" role="navigation" aria-label="Main navigation">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">T</span>
@@ -148,6 +150,8 @@ export const Hero: FC = () => {
             <Link to="/dashboard" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium">My Trips</Link>
           )}
           <NotificationBell />
+          <CurrencySelector />
+          <LanguageSelector />
           <ThemeToggle />
           {isAuthenticated() ? (
             <div className="flex items-center gap-3">

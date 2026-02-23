@@ -1,7 +1,21 @@
-import { FC, useState, FormEvent } from 'react';
+import { FC, useState, FormEvent, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
+
+declare global {
+    interface Window {
+        google?: {
+            accounts: {
+                id: {
+                    initialize: (config: any) => void;
+                    renderButton: (element: HTMLElement, config: any) => void;
+                };
+            };
+        };
+    }
+}
 
 // Icons
 const EyeIcon: FC<{ className?: string }> = ({ className }) => (
@@ -25,11 +39,50 @@ const PlaneIcon: FC = () => (
 
 export const Login: FC = () => {
     const navigate = useNavigate();
-    const { login, isLoading, error, clearError } = useAuthStore();
+    const { login, googleLogin, isLoading, error, clearError } = useAuthStore();
+    const { t } = useTranslation();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const googleBtnRef = useRef<HTMLDivElement>(null);
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    useEffect(() => {
+        if (!googleClientId) return;
+
+        const handleCredentialResponse = async (response: any) => {
+            clearError();
+            const success = await googleLogin(response.credential);
+            if (success) navigate('/plan');
+        };
+
+        const initGoogle = () => {
+            if (window.google && googleBtnRef.current) {
+                window.google.accounts.id.initialize({
+                    client_id: googleClientId,
+                    callback: handleCredentialResponse,
+                });
+                window.google.accounts.id.renderButton(googleBtnRef.current, {
+                    theme: 'filled_blue',
+                    size: 'large',
+                    width: googleBtnRef.current.offsetWidth,
+                    text: 'signin_with',
+                });
+            }
+        };
+
+        if (window.google) {
+            initGoogle();
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = initGoogle;
+            document.head.appendChild(script);
+        }
+    }, [googleClientId]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -112,8 +165,8 @@ export const Login: FC = () => {
                     {/* Glass card */}
                     <div className="bg-white/[0.07] backdrop-blur-xl border border-white/[0.1] rounded-3xl p-8 sm:p-10 shadow-2xl shadow-black/20">
                         <div className="mb-8">
-                            <h1 className="text-2xl font-bold text-white mb-2">Welcome back</h1>
-                            <p className="text-blue-200/60">Sign in to continue planning your trips.</p>
+                            <h1 className="text-2xl font-bold text-white mb-2">{t('auth.welcomeBack')}</h1>
+                            <p className="text-blue-200/60">{t('auth.signInSubtitle')}</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
@@ -177,6 +230,13 @@ export const Login: FC = () => {
                                 </div>
                             </div>
 
+                            {/* Forgot password */}
+                            <div className="flex justify-end">
+                                <Link to="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                                    Forgot password?
+                                </Link>
+                            </div>
+
                             {/* Submit */}
                             <button
                                 type="submit"
@@ -196,6 +256,21 @@ export const Login: FC = () => {
                                 )}
                             </button>
                         </form>
+
+                        {/* Google Sign-In */}
+                        {googleClientId && (
+                            <>
+                                <div className="relative my-6">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-white/10" />
+                                    </div>
+                                    <div className="relative flex justify-center text-sm">
+                                        <span className="px-3 bg-transparent text-blue-200/40">or</span>
+                                    </div>
+                                </div>
+                                <div ref={googleBtnRef} className="w-full flex justify-center" />
+                            </>
+                        )}
 
                         {/* Register link */}
                         <div className="mt-8 text-center">

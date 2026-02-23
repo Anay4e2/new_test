@@ -201,3 +201,36 @@ export async function sendItineraryEmail(
         };
     }
 }
+
+export async function sendResetPasswordEmail(
+    to: string,
+    userName: string,
+    resetUrl: string
+): Promise<void> {
+    if (!isSmtpConfigured()) {
+        console.log(`[DEV] Password reset link for ${to}: ${resetUrl}`);
+        return;
+    }
+
+    const transporter = createTransporter();
+
+    const html = `
+    <div style="max-width:480px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:32px;">
+        <h2 style="color:#1e40af;margin-bottom:16px;">Reset Your Password</h2>
+        <p style="color:#374151;line-height:1.6;">Hi ${userName},</p>
+        <p style="color:#374151;line-height:1.6;">We received a request to reset your TripPlanner password. Click the button below to set a new password:</p>
+        <div style="text-align:center;margin:32px 0;">
+            <a href="${resetUrl}" style="background:#2563eb;color:#fff;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:600;display:inline-block;">Reset Password</a>
+        </div>
+        <p style="color:#6b7280;font-size:14px;line-height:1.6;">This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+        <p style="color:#9ca3af;font-size:12px;">TripPlanner — Your next adventure starts here.</p>
+    </div>`;
+
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to,
+        subject: '🔑 Reset Your TripPlanner Password',
+        html,
+    });
+}

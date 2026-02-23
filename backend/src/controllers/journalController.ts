@@ -3,6 +3,7 @@ import JournalEntry from '../models/JournalEntry';
 import SavedTrip from '../models/SavedTrip';
 import { AuthRequest } from '../middleware/authMiddleware';
 import mongoose from 'mongoose';
+import { isCloudinaryConfigured, uploadToCloudinary } from '../services/uploadService';
 
 // POST /api/journal â€” create entry
 export const createEntry = async (req: Request, res: Response): Promise<void> => {
@@ -145,31 +146,50 @@ export const getPublicJournal = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// POST /api/journal/upload-photo â€” accept base64 data URI
+// POST /api/journal/upload-photo — accept file upload or base64 data URI
 export const uploadPhoto = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { photo } = req.body;
-
-        if (!photo || typeof photo !== 'string') {
-            res.status(400).json({ success: false, message: 'Photo data URI is required' });
+        // Multer file upload (multipart/form-data)
+        const file = (req as any).file as { buffer: Buffer; mimetype: string } | undefined;
+        if (file) {
+            if (!isCloudinaryConfigured()) {
+                const base64 = file.buffer.toString('base64');
+                const mimeType = file.mimetype || 'image/jpeg';
+                res.json({ success: true, url: `data:${mimeType};base64,${base64}` });
+                return;
+            }
+            const result = await uploadToCloudinary(file.buffer, 'journal');
+            res.json({ success: true, url: result.url, publicId: result.publicId });
             return;
         }
 
-        // Validate it's a data URI
+        // Legacy base64 body upload
+        const { photo } = req.body;
+        if (!photo || typeof photo !== 'string') {
+            res.status(400).json({ success: false, message: 'Photo file or data URI is required' });
+            return;
+        }
+
         if (!photo.startsWith('data:image/')) {
             res.status(400).json({ success: false, message: 'Invalid image format. Must be a data URI.' });
             return;
         }
 
-        // Check size (base64 is ~4/3 of original, so 1.4MB base64 â‰ˆ 1MB image)
         const sizeInBytes = photo.length * 0.75;
-        const maxSize = 1.5 * 1024 * 1024; // ~1MB image after base64 overhead
+        const maxSize = 1.5 * 1024 * 1024;
         if (sizeInBytes > maxSize) {
             res.status(400).json({ success: false, message: 'Photo exceeds 1MB limit. Please compress before uploading.' });
             return;
         }
 
-        // For MVP, just return the data URI as the "URL"
+        if (isCloudinaryConfigured()) {
+            const base64Data = photo.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const result = await uploadToCloudinary(buffer, 'journal');
+            res.json({ success: true, url: result.url, publicId: result.publicId });
+            return;
+        }
+
         res.json({ success: true, url: photo });
     } catch (error: any) {
         res.status(500).json({ success: false, message: 'Failed to upload photo' });

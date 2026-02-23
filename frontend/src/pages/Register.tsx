@@ -1,7 +1,20 @@
-import { FC, useState, FormEvent, useMemo } from 'react';
+import { FC, useState, FormEvent, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
+
+declare global {
+    interface Window {
+        google?: {
+            accounts: {
+                id: {
+                    initialize: (config: any) => void;
+                    renderButton: (element: HTMLElement, config: any) => void;
+                };
+            };
+        };
+    }
+}
 
 // Icons
 const EyeIcon: FC<{ className?: string }> = ({ className }) => (
@@ -41,7 +54,7 @@ const getPasswordStrength = (password: string): { score: number; label: string; 
 
 export const Register: FC = () => {
     const navigate = useNavigate();
-    const { register, isLoading, error, clearError } = useAuthStore();
+    const { register, googleLogin, isLoading, error, clearError } = useAuthStore();
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -50,8 +63,47 @@ export const Register: FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [localError, setLocalError] = useState('');
+    const googleBtnRef = useRef<HTMLDivElement>(null);
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
+
+    useEffect(() => {
+        if (!googleClientId) return;
+
+        const handleCredentialResponse = async (response: any) => {
+            clearError();
+            setLocalError('');
+            const success = await googleLogin(response.credential);
+            if (success) navigate('/plan');
+        };
+
+        const initGoogle = () => {
+            if (window.google && googleBtnRef.current) {
+                window.google.accounts.id.initialize({
+                    client_id: googleClientId,
+                    callback: handleCredentialResponse,
+                });
+                window.google.accounts.id.renderButton(googleBtnRef.current, {
+                    theme: 'filled_blue',
+                    size: 'large',
+                    width: googleBtnRef.current.offsetWidth,
+                    text: 'signup_with',
+                });
+            }
+        };
+
+        if (window.google) {
+            initGoogle();
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = initGoogle;
+            document.head.appendChild(script);
+        }
+    }, [googleClientId]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -300,6 +352,21 @@ export const Register: FC = () => {
                                 )}
                             </button>
                         </form>
+
+                        {/* Google Sign-Up */}
+                        {googleClientId && (
+                            <>
+                                <div className="relative my-6">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-white/10" />
+                                    </div>
+                                    <div className="relative flex justify-center text-sm">
+                                        <span className="px-3 bg-transparent text-blue-200/40">or</span>
+                                    </div>
+                                </div>
+                                <div ref={googleBtnRef} className="w-full flex justify-center" />
+                            </>
+                        )}
 
                         {/* Login link */}
                         <div className="mt-8 text-center">

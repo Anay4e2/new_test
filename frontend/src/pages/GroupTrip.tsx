@@ -5,11 +5,11 @@ import toast from 'react-hot-toast';
 import {
     getGroup,
     respondToInvite,
-    addChatMessage,
     getChatHistory,
     createPoll as createPollApi,
     removeMember as removeMemberApi,
 } from '@/services/api';
+import { useGroupSocket } from '@/hooks/useGroupSocket';
 import type { TripGroup, GroupChat, SavedTrip } from '@/types';
 import {
     ArrowLeft, Loader2, Users, MessageCircle, BarChart3,
@@ -37,7 +37,7 @@ const STATUS_BADGE: Record<string, { icon: FC<any>; label: string; color: string
 export const GroupTrip: FC = () => {
     const { groupId } = useParams<{ groupId: string }>();
     const navigate = useNavigate();
-    const { isAuthenticated, user } = useAuthStore();
+    const { isAuthenticated, user, token } = useAuthStore();
     const chatEndRef = useRef<HTMLDivElement>(null);
 
     const [group, setGroup] = useState<TripGroup | null>(null);
@@ -45,10 +45,11 @@ export const GroupTrip: FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('members');
     const [showInvite, setShowInvite] = useState(false);
 
-    // Chat state
-    const [messages, setMessages] = useState<GroupChat[]>([]);
+    // Socket-based chat
+    const { messages, connected, typingUsers, sendMessage, sendTyping, stopTyping, setInitialMessages } = useGroupSocket(groupId, token);
     const [chatInput, setChatInput] = useState('');
     const [sendingChat, setSendingChat] = useState(false);
+    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
     // Poll creation state
     const [showPollForm, setShowPollForm] = useState(false);
@@ -71,7 +72,7 @@ export const GroupTrip: FC = () => {
         if (!groupId) return;
         try {
             const res = await getChatHistory(groupId);
-            if (res.success) setMessages(res.messages);
+            if (res.success) setInitialMessages(res.messages);
         } catch {
             toast.error('Failed to load chat.');
         }
@@ -85,12 +86,10 @@ export const GroupTrip: FC = () => {
         fetchGroup();
     }, [groupId]);
 
+    // Load chat history when switching to chat tab
     useEffect(() => {
         if (activeTab === 'chat') {
             fetchChat();
-            // Poll for new messages every 10 seconds
-            const interval = setInterval(fetchChat, 10000);
-            return () => clearInterval(interval);
         }
     }, [activeTab, groupId]);
 
@@ -104,12 +103,23 @@ export const GroupTrip: FC = () => {
         if (!chatInput.trim() || sendingChat || !groupId) return;
         setSendingChat(true);
         try {
-            await addChatMessage(groupId, chatInput.trim());
+            sendMessage(chatInput.trim());
             setChatInput('');
-            fetchChat();
+            stopTyping();
         } catch {
             toast.error('Failed to send message.');
         } finally { setSendingChat(false); }
+    };
+
+    const handleChatInputChange = (value: string) => {
+        setChatInput(value);
+        if (value.trim() && user?.name) {
+            sendTyping(user.name);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => stopTyping(), 2000);
+        } else {
+            stopTyping();
+        }
     };
 
     const handleCreatePoll = async () => {
@@ -373,6 +383,13 @@ export const GroupTrip: FC = () => {
                             {/* Chat Tab */}
                             {activeTab === 'chat' && (
                                 <div className="flex flex-col" style={{ height: '400px' }}>
+                                    {/* Connection status */}
+                                    <div className={clsx(
+                                        'px-3 py-1 text-xs text-center transition-all',
+                                        connected ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                    )}>
+                                        {connected ? '● Live' : '○ Reconnecting...'}
+                                    </div>
                                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                                         {messages.length === 0 ? (
                                             <div className="text-center text-gray-400 text-sm py-12">
@@ -407,12 +424,18 @@ export const GroupTrip: FC = () => {
                                         )}
                                         <div ref={chatEndRef} />
                                     </div>
+                                    {/* Typing indicator */}
+                                    {typingUsers.size > 0 && (
+                                        <div className="px-4 py-1 text-xs text-gray-400 italic">
+                                            {[...typingUsers.values()].join(', ')} {typingUsers.size === 1 ? 'is' : 'are'} typing...
+                                        </div>
+                                    )}
                                     {/* Chat Input */}
                                     <div className="border-t border-gray-200 dark:border-slate-700 p-3 flex items-center gap-2">
                                         <input
                                             type="text"
                                             value={chatInput}
-                                            onChange={(e) => setChatInput(e.target.value)}
+                                            onChange={(e) => handleChatInputChange(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
                                             placeholder="Type a message..."
                                             className="flex-1 border border-gray-200 dark:border-slate-600 rounded-full px-4 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"

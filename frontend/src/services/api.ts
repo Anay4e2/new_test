@@ -61,6 +61,31 @@ export const getCurrentUser = async (): Promise<AuthResponse> => {
     return response.data;
 };
 
+export const forgotPasswordApi = async (email: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+};
+
+export const resetPasswordApi = async (token: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post(`/auth/reset-password/${token}`, { password });
+    return response.data;
+};
+
+export const updateProfileApi = async (data: { name?: string; email?: string }): Promise<AuthResponse> => {
+    const response = await api.put('/auth/profile', data);
+    return response.data;
+};
+
+export const changePasswordApi = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.put('/auth/password', { currentPassword, newPassword });
+    return response.data;
+};
+
+export const googleAuthApi = async (idToken: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/google', { idToken });
+    return response.data;
+};
+
 // Admin Management API
 export const getAllPlacesAdminApi = async (params: { page?: number; limit?: number; search?: string; type?: string } = {}) => {
     const response = await api.get('/admin/places', { params });
@@ -224,6 +249,11 @@ export const deleteTrip = async (id: string): Promise<{ success: boolean; messag
     return response.data;
 };
 
+export const cloneTripApi = async (id: string): Promise<{ success: boolean; trip: SavedTrip }> => {
+    const response = await api.post(`/my-trips/${id}/clone`);
+    return response.data;
+};
+
 // Favorites API
 export const toggleFavoritePlace = async (placeId: string, placeName: string, cityName: string): Promise<{ success: boolean; favorited: boolean }> => {
     const response = await api.post('/favorites/toggle', { placeId, placeName, cityName });
@@ -300,6 +330,50 @@ export const getPackingList = async (
 export const getTrainLiveStatus = async (trainNumber: string, date?: string): Promise<TrainLiveStatus> => {
     const params = date ? `?date=${date}` : '';
     const response = await api.get(`/trains/${trainNumber}/status${params}`);
+    return response.data;
+};
+
+// PNR Status
+export const checkPNRStatus = async (pnrNumber: string) => {
+    const response = await api.get(`/trains/pnr/${pnrNumber}`);
+    return response.data;
+};
+
+// Station search
+export const searchStation = async (query: string) => {
+    const response = await api.get(`/trains/search/station?query=${encodeURIComponent(query)}`);
+    return response.data;
+};
+
+// Station codes
+export const getStationCodes = async () => {
+    const response = await api.get('/trains/stations');
+    return response.data;
+};
+
+// Live station board
+export const getLiveStationBoard = async (stationCode: string, hours?: number) => {
+    const params = hours ? `?hours=${hours}` : '';
+    const response = await api.get(`/trains/station/${stationCode}/live${params}`);
+    return response.data;
+};
+
+// Train schedule
+export const getTrainSchedule = async (trainNumber: string) => {
+    const response = await api.get(`/trains/${trainNumber}/schedule`);
+    return response.data;
+};
+
+// Seat availability
+export const checkSeatAvailability = async (trainNumber: string, from: string, to: string, classType: string, date: string, quota?: string) => {
+    const params = new URLSearchParams({ from, to, class: classType, date, quota: quota || 'GN' });
+    const response = await api.get(`/trains/${trainNumber}/availability?${params}`);
+    return response.data;
+};
+
+// Train fare
+export const getTrainFare = async (trainNumber: string, from: string, to: string) => {
+    const response = await api.get(`/trains/${trainNumber}/fare?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
     return response.data;
 };
 
@@ -599,12 +673,92 @@ export const getPublicJournal = async (tripId: string): Promise<{ success: boole
     return response.data;
 };
 
-export const uploadJournalPhoto = async (photo: string): Promise<{ success: boolean; url: string }> => {
+export const uploadJournalPhoto = async (photo: string | File): Promise<{ success: boolean; url: string; publicId?: string }> => {
+    if (photo instanceof File) {
+        const formData = new FormData();
+        formData.append('photo', photo);
+        const response = await api.post('/journal/upload-photo', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    }
     const response = await api.post('/journal/upload-photo', { photo });
     return response.data;
 };
 
 export const getJournalEntryCount = async (tripId: string): Promise<{ success: boolean; count: number }> => {
     const response = await api.get(`/journal/trip/${tripId}/count`);
+    return response.data;
+};
+
+// ========== Postcard API ==========
+
+export const savePostcard = async (imageBlob: Blob, data: { tripId?: string; template?: string; title?: string; message?: string }): Promise<{ success: boolean; postcard: any }> => {
+    const formData = new FormData();
+    formData.append('image', imageBlob, 'postcard.png');
+    if (data.tripId) formData.append('tripId', data.tripId);
+    if (data.template) formData.append('template', data.template);
+    if (data.title) formData.append('title', data.title);
+    if (data.message) formData.append('message', data.message);
+    const response = await api.post('/postcards', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return response.data;
+};
+
+export const getMyPostcards = async (): Promise<{ success: boolean; postcards: any[] }> => {
+    const response = await api.get('/postcards');
+    return response.data;
+};
+
+export const deletePostcardApi = async (id: string): Promise<{ success: boolean }> => {
+    const response = await api.delete(`/postcards/${id}`);
+    return response.data;
+};
+
+export const sendPostcardEmail = async (id: string, recipientEmail: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post(`/postcards/${id}/send`, { recipientEmail });
+    return response.data;
+};
+
+// Currency API
+export const getExchangeRates = async () => {
+    const response = await api.get('/currency/rates');
+    return response.data;
+};
+
+export const convertCurrencyApi = async (amount: number, from: string, to: string) => {
+    const response = await api.get('/currency/convert', { params: { amount, from, to } });
+    return response.data;
+};
+
+// Checklist API
+export const getChecklistsApi = async (tripId?: string) => {
+    const params = tripId ? { tripId } : {};
+    const response = await api.get('/checklists', { params });
+    return response.data;
+};
+
+export const createChecklistApi = async (title: string, tripId?: string) => {
+    const response = await api.post('/checklists', { title, tripId });
+    return response.data;
+};
+
+export const updateChecklistApi = async (id: string, data: { title?: string; items?: any[] }) => {
+    const response = await api.put(`/checklists/${id}`, data);
+    return response.data;
+};
+
+export const addChecklistItemApi = async (id: string, label: string, category?: string) => {
+    const response = await api.post(`/checklists/${id}/items`, { label, category });
+    return response.data;
+};
+
+export const deleteChecklistApi = async (id: string) => {
+    const response = await api.delete(`/checklists/${id}`);
+    return response.data;
+};
+
+// Health / Integration Status API
+export const getHealthStatus = async () => {
+    const response = await api.get('/config/health');
     return response.data;
 };

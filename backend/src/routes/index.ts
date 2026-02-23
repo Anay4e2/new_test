@@ -24,6 +24,9 @@ import groupRoutes from './groupRoutes';
 import feedRoutes from './feedRoutes';
 import notificationRoutes from './notificationRoutes';
 import journalRoutes from './journalRoutes';
+import postcardRoutes from './postcardRoutes';
+import currencyRoutes from './currencyRoutes';
+import checklistRoutes from './checklistRoutes';
 
 const router = Router();
 
@@ -52,6 +55,9 @@ router.use('/groups', groupRoutes);
 router.use('/feed', feedRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/journal', journalRoutes);
+router.use('/postcards', postcardRoutes);
+router.use('/currency', currencyRoutes);
+router.use('/checklists', checklistRoutes);
 
 
 // Trip routes are mounted at root level (e.g., /api/generate-trip)

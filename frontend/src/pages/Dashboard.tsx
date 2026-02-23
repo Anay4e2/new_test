@@ -2,9 +2,9 @@ import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
-import { getMyTrips, getMyFavorites, updateTrip, deleteTrip as deleteTripApi, getExpenseSummary, getMyGroups, createGroup, publishTripApi, getJournalEntryCount } from '@/services/api';
+import { getMyTrips, getMyFavorites, updateTrip, deleteTrip as deleteTripApi, getExpenseSummary, getMyGroups, createGroup, publishTripApi, getJournalEntryCount, cloneTripApi } from '@/services/api';
 import type { SavedTrip, FavoritePlace, ExpenseSummary, TripGroup } from '@/types';
-import { Star, Trash2, MapPin, Clock, ArrowLeft, Loader2, Heart, Calendar, IndianRupee, Wallet, Users, Plus, Globe, BookOpen } from 'lucide-react';
+import { Star, Trash2, MapPin, Clock, ArrowLeft, Loader2, Heart, Calendar, IndianRupee, Wallet, Users, Plus, Globe, BookOpen, Copy } from 'lucide-react';
 import clsx from 'clsx';
 import { ExpenseTracker } from '@/components/planner/Trip/ExpenseTracker';
 
@@ -113,6 +113,18 @@ export const Dashboard: FC = () => {
         }
     };
 
+    const handleClone = async (id: string) => {
+        try {
+            const res = await cloneTripApi(id);
+            if (res.success) {
+                setTrips(prev => [res.trip, ...prev]);
+                toast.success('Trip cloned!');
+            }
+        } catch {
+            toast.error('Failed to clone trip.');
+        }
+    };
+
     const fetchGroups = async () => {
         try {
             const res = await getMyGroups();
@@ -216,6 +228,18 @@ export const Dashboard: FC = () => {
                     >
                         Group Trips ({groups.length})
                     </button>
+                    <button
+                        onClick={() => navigate('/my-reviews')}
+                        className="px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors"
+                    >
+                        My Reviews
+                    </button>
+                    <button
+                        onClick={() => navigate('/checklist')}
+                        className="px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors"
+                    >
+                        📋 Checklist
+                    </button>
                 </div>
             </div>
 
@@ -258,6 +282,13 @@ export const Dashboard: FC = () => {
                                                     className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                                                 >
                                                     <Star size={16} className={clsx(trip.isFavorite ? 'fill-amber-400 text-amber-400' : 'text-gray-300 dark:text-gray-600')} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleClone(trip._id)}
+                                                    title="Clone trip"
+                                                    className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-colors text-gray-300 hover:text-blue-500"
+                                                >
+                                                    <Copy size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(trip._id)}

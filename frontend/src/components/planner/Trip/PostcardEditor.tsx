@@ -1,11 +1,13 @@
 import { FC, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Share2, Image, Type, BarChart3, QrCode, Route, Palette, Check } from 'lucide-react';
+import { X, Download, Share2, Image, Type, BarChart3, QrCode, Route, Palette, Check, Save, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 import type { TripResult } from '@/types';
 import { PostcardGenerator, PostcardConfig, PostcardTemplate, ColorTheme } from './PostcardGenerator';
 import { TripStatsCard } from './TripStatsCard';
 import { MapSticker } from '../Map/MapSticker';
+import { savePostcard } from '@/services/api';
 
 interface PostcardEditorProps {
     result: TripResult;
@@ -30,6 +32,7 @@ type EditorTab = 'postcard' | 'stats' | 'sticker';
 
 export const PostcardEditor: FC<PostcardEditorProps> = ({ result, isOpen, onClose, shareUrl }) => {
     const [activeTab, setActiveTab] = useState<EditorTab>('postcard');
+    const [saving, setSaving] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const cities = [...new Set(result.itinerary.map(d => d.city))];
 
@@ -84,6 +87,22 @@ export const PostcardEditor: FC<PostcardEditorProps> = ({ result, isOpen, onClos
 
     const updateConfig = (partial: Partial<PostcardConfig>) => {
         setConfig(prev => ({ ...prev, ...partial }));
+    };
+
+    const handleSaveToGallery = async () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        setSaving(true);
+        try {
+            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (!blob) throw new Error('Failed to generate image');
+            await savePostcard(blob, { template: config.template, title: config.title, message: config.message });
+            toast.success('Postcard saved to gallery!');
+        } catch {
+            toast.error('Failed to save postcard');
+        } finally {
+            setSaving(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -275,6 +294,9 @@ export const PostcardEditor: FC<PostcardEditorProps> = ({ result, isOpen, onClos
                     <div className="border-t border-gray-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between bg-white dark:bg-slate-900">
                         <p className="text-xs text-gray-400">1200×630px · Optimized for social sharing</p>
                         <div className="flex gap-2">
+                            <button onClick={handleSaveToGallery} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">
+                                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} {saving ? 'Saving...' : 'Save'}
+                            </button>
                             <button onClick={handleShare} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
                                 <Share2 size={16} /> Share
                             </button>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { TripWizard, ItineraryView, Map, TripSidebar, TripComparison, SmartSearch } from '@/components/planner';
 import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
-import { getConfig, generateTrip, generateTripVariants } from '@/services/api';
+import { getConfig, generateTrip, generateTripVariants, getSeasonalWeather } from '@/services/api';
 import ThemeToggle from '@/components/common/ThemeToggle';
 
 export const Planner: FC = () => {
@@ -47,6 +47,28 @@ export const Planner: FC = () => {
     setLoading(true);
     try {
       const result = await generateTrip(req);
+
+      // Enrich itinerary days with seasonal weather
+      if (result.itinerary?.length) {
+        const month = req.startDate ? new Date(req.startDate).getMonth() + 1 : new Date().getMonth() + 1;
+        const weatherCache: Record<string, any> = {};
+        await Promise.all(
+          result.itinerary.map(async (day) => {
+            const city = day.city?.toLowerCase();
+            if (!city) return;
+            if (!weatherCache[city]) {
+              try {
+                const res = await getSeasonalWeather(city, month);
+                if (res.success) weatherCache[city] = res.data;
+              } catch { /* skip */ }
+            }
+            if (weatherCache[city]) {
+              day.weather = weatherCache[city];
+            }
+          })
+        );
+      }
+
       setTripResult(result);
       setActiveTab('itinerary');
     } catch (e) {

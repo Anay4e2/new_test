@@ -102,3 +102,31 @@ export const deleteTrip = async (req: AuthRequest, res: Response): Promise<void>
         res.status(500).json({ success: false, message: 'Failed to delete trip' });
     }
 };
+
+export const cloneTrip = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const original = await SavedTrip.findById(req.params.id);
+        if (!original) {
+            res.status(404).json({ success: false, message: 'Trip not found' });
+            return;
+        }
+
+        // Allow cloning own trips or public trips
+        if (original.userId.toString() !== req.userId && !original.isPublic) {
+            res.status(403).json({ success: false, message: 'Not authorized to clone this trip' });
+            return;
+        }
+
+        const cloned = await SavedTrip.create({
+            userId: req.userId,
+            title: `${original.title} (Copy)`,
+            tripRequest: original.tripRequest,
+            tripResult: original.tripResult,
+            tags: original.tags,
+        });
+
+        res.status(201).json({ success: true, trip: cloned });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: 'Failed to clone trip' });
+    }
+};

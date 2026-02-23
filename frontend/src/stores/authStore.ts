@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { registerUser, loginUser, adminLoginUser, getCurrentUser } from '../services/api';
+import { registerUser, loginUser, adminLoginUser, getCurrentUser, googleAuthApi } from '../services/api';
 
 interface User {
     id: string;
@@ -19,6 +19,7 @@ interface AuthState {
     // Actions
     register: (name: string, email: string, password: string) => Promise<boolean>;
     login: (email: string, password: string) => Promise<boolean>;
+    googleLogin: (idToken: string) => Promise<boolean>;
     adminLogin: (email: string, password: string) => Promise<boolean>;
     logout: () => void;
     fetchCurrentUser: () => Promise<void>;
@@ -78,6 +79,29 @@ export const useAuthStore = create<AuthState>()(
                     }
                 } catch (error: any) {
                     const message = error.response?.data?.message || 'Login failed';
+                    set({ isLoading: false, error: message });
+                    return false;
+                }
+            },
+
+            googleLogin: async (idToken: string): Promise<boolean> => {
+                set({ isLoading: true, error: null });
+                try {
+                    const response = await googleAuthApi(idToken);
+                    if (response.success) {
+                        set({
+                            user: response.user,
+                            token: response.token,
+                            isLoading: false,
+                            error: null
+                        });
+                        return true;
+                    } else {
+                        set({ isLoading: false, error: response.message || 'Google login failed' });
+                        return false;
+                    }
+                } catch (error: any) {
+                    const message = error.response?.data?.message || 'Google login failed';
                     set({ isLoading: false, error: message });
                     return false;
                 }

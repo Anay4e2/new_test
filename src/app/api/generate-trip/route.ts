@@ -20,6 +20,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid travel style' }, { status: 400 });
     }
 
+    // Try backend API first
+    const backendUrl = process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const response = await fetch(`${backendUrl}/api/generate-trip`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json(data);
+        }
+      } catch {
+        // Fall through to local planner
+      }
+    }
+
     const result = await generateTrip(body);
 
     return NextResponse.json(result);

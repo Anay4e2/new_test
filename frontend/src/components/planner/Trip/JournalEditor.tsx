@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Save, Eye, Edit3, ImagePlus, Trash2, Globe, Lock, Loader2, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 import type { JournalEntry, JournalMood } from '@/types';
+import { uploadJournalPhoto } from '@/services/api';
 
 const MOOD_OPTIONS: { value: JournalMood; emoji: string; label: string }[] = [
     { value: 'amazing', emoji: '😍', label: 'Amazing' },
@@ -129,18 +130,30 @@ export const JournalEditor: FC<JournalEditorProps> = ({ tripId, entry, days, onS
         } catch { /* ignore */ }
     }, []);
 
+    const [uploading, setUploading] = useState(false);
+
     const handlePhotoUpload = useCallback(async (files: FileList | File[]) => {
         const remaining = 5 - photos.length;
         if (remaining <= 0) return;
 
         const toProcess = Array.from(files).slice(0, remaining);
+        setUploading(true);
         for (const file of toProcess) {
             if (!file.type.startsWith('image/')) continue;
             try {
-                const compressed = await compressImage(file);
-                setPhotos(prev => [...prev, compressed]);
-            } catch { /* ignore bad files */ }
+                const result = await uploadJournalPhoto(file);
+                if (result.success && result.url) {
+                    setPhotos(prev => [...prev, result.url]);
+                }
+            } catch {
+                // Fallback: compress client-side
+                try {
+                    const compressed = await compressImage(file);
+                    setPhotos(prev => [...prev, compressed]);
+                } catch { /* ignore bad files */ }
+            }
         }
+        setUploading(false);
     }, [photos.length]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
@@ -279,9 +292,10 @@ export const JournalEditor: FC<JournalEditorProps> = ({ tripId, entry, days, onS
                             {photos.length < 5 && (
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 hover:underline"
+                                    disabled={uploading}
+                                    className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 hover:underline disabled:opacity-50"
                                 >
-                                    <ImagePlus size={14} /> Add photo
+                                    {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading...</> : <><ImagePlus size={14} /> Add photo</>}
                                 </button>
                             )}
                         </div>

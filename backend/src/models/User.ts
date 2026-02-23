@@ -1,16 +1,22 @@
 import mongoose, { Schema, Document, HydratedDocument } from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 export interface IUser {
     name: string;
     email: string;
     password: string;
     role: 'user' | 'admin';
+    provider?: string;
+    providerId?: string;
+    resetPasswordToken?: string;
+    resetPasswordExpire?: Date;
     createdAt: Date;
 }
 
 export interface IUserMethods {
     comparePassword(candidatePassword: string): Promise<boolean>;
+    getResetPasswordToken(): string;
 }
 
 export type UserDocument = HydratedDocument<IUser, IUserMethods>;
@@ -32,10 +38,11 @@ const UserSchema = new Schema<IUser, mongoose.Model<IUser, {}, IUserMethods>, IU
     },
     password: {
         type: String,
-        required: [true, 'Password is required'],
+        required: [function(this: any) { return !this.provider; }, 'Password is required'],
         minlength: [8, 'Password must be at least 8 characters'],
         validate: {
-            validator: function (v: string) {
+            validator: function (this: any, v: string) {
+                if (this.provider) return true;
                 return /[a-z]/.test(v) && /[A-Z]/.test(v) && /[0-9]/.test(v);
             },
             message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit'
@@ -46,6 +53,23 @@ const UserSchema = new Schema<IUser, mongoose.Model<IUser, {}, IUserMethods>, IU
         type: String,
         enum: ['user', 'admin'],
         default: 'user'
+    },
+    resetPasswordToken: {
+        type: String,
+        select: false
+    },
+    resetPasswordExpire: {
+        type: Date,
+        select: false
+    },
+    provider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local'
+    },
+    providerId: {
+        type: String,
+        select: false
     },
     createdAt: {
         type: Date,
@@ -65,6 +89,14 @@ UserSchema.pre('save', async function () {
 // Method to compare passwords
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Generate and hash password reset token
+UserSchema.methods.getResetPasswordToken = function (): string {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    this.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    return resetToken;
 };
 
 const User = mongoose.model<IUser, mongoose.Model<IUser, {}, IUserMethods>>('User', UserSchema);

@@ -1,5 +1,5 @@
 import { FC, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -7,6 +7,8 @@ import { Explore } from './pages/Explore';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { SkipToContent } from './components/common/SkipToContent';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { NotFound } from './pages/NotFound';
 import { Toaster } from 'react-hot-toast';
 
@@ -21,6 +23,18 @@ const GroupTrip = lazy(() => import('./pages/GroupTrip').then(m => ({ default: m
 const Notifications = lazy(() => import('./pages/Notifications').then(m => ({ default: m.Notifications })));
 const Journal = lazy(() => import('./pages/Journal').then(m => ({ default: m.Journal })));
 const Packages = lazy(() => import('./pages/Packages').then(m => ({ default: m.Packages })));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const Trains = lazy(() => import('./pages/Trains').then(m => ({ default: m.Trains })));
+const MyReviews = lazy(() => import('./pages/MyReviews').then(m => ({ default: m.MyReviews })));
+const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
+const TravelChecklist = lazy(() => import('./pages/TravelChecklist').then(m => ({ default: m.TravelChecklist })));
+
+const KeyboardNav: FC = () => {
+  const navigate = useNavigate();
+  useKeyboardShortcuts(navigate);
+  return null;
+};
 
 const App: FC = () => {
   return (
@@ -29,6 +43,9 @@ const App: FC = () => {
       <OfflineIndicator />
       <ErrorBoundary>
       <Router>
+        <SkipToContent />
+        <KeyboardNav />
+        <main id="main-content">
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>}>
         <Routes>
           {/* Public routes */}
@@ -40,6 +57,9 @@ const App: FC = () => {
           <Route path="/trip/:shareId" element={<SharedTrip />} />
           <Route path="/festivals" element={<Festivals />} />
           <Route path="/packages" element={<Packages />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/trains" element={<Trains />} />
 
           {/* Protected routes — require authentication */}
           <Route path="/plan" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
@@ -47,6 +67,9 @@ const App: FC = () => {
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/journal/:tripId" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
           <Route path="/group/:groupId" element={<ProtectedRoute><GroupTrip /></ProtectedRoute>} />
+          <Route path="/my-reviews" element={<ProtectedRoute><MyReviews /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/checklist" element={<ProtectedRoute><TravelChecklist /></ProtectedRoute>} />
 
           {/* Admin route — requires admin role */}
           <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
@@ -55,6 +78,7 @@ const App: FC = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
+        </main>
       </Router>
       </ErrorBoundary>
     </>

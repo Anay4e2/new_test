@@ -3,6 +3,7 @@ import State from '../models/State';
 import Package from '../models/Package';
 import City from '../models/City';
 import { STATES, CITIES, PACKAGES } from '../services/mockData';
+import { getIntegrationStatus } from '../config/integrations';
 
 export const getConfig = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -33,4 +34,14 @@ export const getConfig = async (req: Request, res: Response): Promise<void> => {
             packages: PACKAGES
         });
     }
+};
+
+export const getHealthStatus = async (_req: Request, res: Response): Promise<void> => {
+    const integrations = getIntegrationStatus();
+    res.json({
+        status: 'ok',
+        version: '1.0.0',
+        uptime: process.uptime(),
+        integrations,
+    });
 };
