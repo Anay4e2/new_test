@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import api from '../services/api';
 
 // Types
 export interface Place {
@@ -202,7 +200,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
         try {
             // Call Backend API
-            const response = await axios.post(`${API_BASE_URL}/routes/optimize`, {
+            const response = await api.post('/routes/optimize', {
                 placeIds: places.map(p => p._id),
                 places: places
             });

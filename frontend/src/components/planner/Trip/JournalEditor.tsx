@@ -4,6 +4,7 @@ import { X, Save, Eye, Edit3, ImagePlus, Trash2, Globe, Lock, Loader2, ChevronDo
 import clsx from 'clsx';
 import type { JournalEntry, JournalMood } from '@/types';
 import { uploadJournalPhoto } from '@/services/api';
+import DOMPurify from 'dompurify';
 
 const MOOD_OPTIONS: { value: JournalMood; emoji: string; label: string }[] = [
     { value: 'amazing', emoji: '😍', label: 'Amazing' },
@@ -13,9 +14,9 @@ const MOOD_OPTIONS: { value: JournalMood; emoji: string; label: string }[] = [
     { value: 'challenging', emoji: '💪', label: 'Challenging' },
 ];
 
-// Simple Markdown renderer (bold, italic, headers, lists)
+// Simple Markdown renderer (bold, italic, headers, lists) — sanitized against XSS
 const renderMarkdown = (md: string): string => {
-    return md
+    const html = md
         .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-3 mb-1">$1</h3>')
         .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
         .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-black mt-4 mb-2">$1</h1>')
@@ -24,6 +25,7 @@ const renderMarkdown = (md: string): string => {
         .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
         .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
         .replace(/\n/g, '<br/>');
+    return DOMPurify.sanitize(html);
 };
 
 interface JournalEditorProps {
@@ -127,7 +129,7 @@ export const JournalEditor: FC<JournalEditorProps> = ({ tripId, entry, days, onS
                 setIsPublic(draft.isPublic || false);
                 if (draft.selectedDay) setSelectedDay(draft.selectedDay);
             }
-        } catch { /* ignore */ }
+        } catch { console.warn('Failed to load journal draft from localStorage'); }
     }, []);
 
     const [uploading, setUploading] = useState(false);

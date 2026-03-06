@@ -1,10 +1,9 @@
 import { FC, useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { TripWizard, ItineraryView, Map, TripSidebar, TripComparison, SmartSearch } from '@/components/planner';
 import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
 import { getConfig, generateTrip, generateTripVariants, getSeasonalWeather } from '@/services/api';
-import ThemeToggle from '@/components/common/ThemeToggle';
+import toast from 'react-hot-toast';
 
 export const Planner: FC = () => {
   const [config, setConfig] = useState<{ states: any[], cities: any[] }>({ states: [], cities: [] });
@@ -60,7 +59,7 @@ export const Planner: FC = () => {
               try {
                 const res = await getSeasonalWeather(city, month);
                 if (res.success) weatherCache[city] = res.data;
-              } catch { /* skip */ }
+              } catch { console.warn(`Failed to fetch weather for ${city}`); }
             }
             if (weatherCache[city]) {
               day.weather = weatherCache[city];
@@ -73,7 +72,7 @@ export const Planner: FC = () => {
       setActiveTab('itinerary');
     } catch (e) {
       console.error(e);
-      alert('Failed to generate trip. Please try again.');
+      toast.error('Failed to generate trip. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,7 +86,7 @@ export const Planner: FC = () => {
       setActiveTab('compare');
     } catch (e) {
       console.error(e);
-      alert('Failed to compare trips. Please try again.');
+      toast.error('Failed to compare trips. Please try again.');
     } finally {
       setIsComparing(false);
     }
@@ -173,19 +172,9 @@ export const Planner: FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-900 overflow-hidden transition-colors duration-200">
+    <div className="flex h-[calc(100vh-3.5rem)] w-full bg-slate-50 dark:bg-slate-900 overflow-hidden transition-colors duration-200">
       {/* Left Sidebar */}
       <div className="hidden md:flex flex-col w-[420px] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">T</span>
-            </div>
-            <span className="font-semibold text-slate-800 dark:text-white">TripPlanner</span>
-          </Link>
-          <ThemeToggle />
-        </div>
 
         {/* Tab Switcher */}
         <div className="flex border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">

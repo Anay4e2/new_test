@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/auth';
+import logger from '../lib/logger';
 
 export interface AuthRequest extends Request {
     userId?: string;
@@ -30,7 +31,7 @@ export const authMiddleware = async (
 
         next();
     } catch (error) {
-        console.error('Auth middleware error:', error);
+        logger.warn('Auth middleware: invalid token');
         res.status(401).json({ success: false, message: 'Token is not valid' });
     }
 };

@@ -4,6 +4,7 @@ import SavedTrip from '../models/SavedTrip';
 import { AuthRequest } from '../middleware/authMiddleware';
 import mongoose from 'mongoose';
 import { isCloudinaryConfigured, uploadToCloudinary } from '../services/uploadService';
+import { isDbConnected } from '../lib/dbStatus';
 
 // POST /api/journal â€” create entry
 export const createEntry = async (req: Request, res: Response): Promise<void> => {
@@ -199,6 +200,11 @@ export const uploadPhoto = async (req: Request, res: Response): Promise<void> =>
 // GET /api/journal/trip/:tripId/count â€” get entry count for a trip (for dashboard badge)
 export const getEntryCount = async (req: Request, res: Response): Promise<void> => {
     try {
+        if (!isDbConnected()) {
+            res.json({ success: true, count: 0 });
+            return;
+        }
+
         const { userId } = req as AuthRequest;
         const { tripId } = req.params;
 

@@ -1,6 +1,9 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import SavedTrip from '../models/SavedTrip';
+import { isDbConnected } from '../lib/dbStatus';
+import { parsePagination, paginationMeta } from '../lib/pagination';
+import logger from '../lib/logger';
 
 export const saveTrip = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -26,11 +29,25 @@ export const saveTrip = async (req: AuthRequest, res: Response): Promise<void> =
 
 export const getMyTrips = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const trips = await SavedTrip.find({ userId: req.userId })
-            .sort({ createdAt: -1 })
-            .select('title isFavorite notes createdAt updatedAt tripResult.summary tripResult.itinerary');
+        if (!isDbConnected()) {
+            res.json({ success: true, trips: [], pagination: paginationMeta(0, 1, 20) });
+            return;
+        }
 
-        res.json({ success: true, trips });
+        const { page, limit, skip } = parsePagination(req);
+        const filter = { userId: req.userId };
+
+        const [trips, total] = await Promise.all([
+            SavedTrip.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .select('title isFavorite notes createdAt updatedAt tripResult.summary tripResult.itinerary')
+                .lean(),
+            SavedTrip.countDocuments(filter),
+        ]);
+
+        res.json({ success: true, trips, pagination: paginationMeta(total, page, limit) });
     } catch (error: any) {
         res.status(500).json({ success: false, message: 'Failed to fetch trips' });
     }

@@ -1,7 +1,9 @@
+import logger from '../lib/logger';
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import Expense from '../models/Expense';
 import SavedTrip from '../models/SavedTrip';
+import { isDbConnected } from '../lib/dbStatus';
 
 // Add a new expense
 export const addExpense = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -34,7 +36,7 @@ export const addExpense = async (req: AuthRequest, res: Response): Promise<void>
 
         res.status(201).json({ success: true, expense });
     } catch (error: any) {
-        console.error('Error adding expense:', error);
+        logger.error('Error adding expense:', error);
         res.status(500).json({ success: false, message: 'Failed to add expense' });
     }
 };
@@ -62,7 +64,7 @@ export const getExpensesByTrip = async (req: AuthRequest, res: Response): Promis
             count: expenses.length,
         });
     } catch (error: any) {
-        console.error('Error fetching expenses:', error);
+        logger.error('Error fetching expenses:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch expenses' });
     }
 };
@@ -86,7 +88,7 @@ export const updateExpense = async (req: AuthRequest, res: Response): Promise<vo
 
         res.json({ success: true, expense });
     } catch (error: any) {
-        console.error('Error updating expense:', error);
+        logger.error('Error updating expense:', error);
         res.status(500).json({ success: false, message: 'Failed to update expense' });
     }
 };
@@ -104,7 +106,7 @@ export const deleteExpense = async (req: AuthRequest, res: Response): Promise<vo
 
         res.json({ success: true, message: 'Expense deleted' });
     } catch (error: any) {
-        console.error('Error deleting expense:', error);
+        logger.error('Error deleting expense:', error);
         res.status(500).json({ success: false, message: 'Failed to delete expense' });
     }
 };
@@ -112,6 +114,11 @@ export const deleteExpense = async (req: AuthRequest, res: Response): Promise<vo
 // Get expense summary: estimated vs actual
 export const getExpenseSummary = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!isDbConnected()) {
+            res.json({ success: true, estimated: {}, actual: {}, totalEstimated: 0, totalActual: 0, difference: {}, currency: 'INR' });
+            return;
+        }
+
         const { tripId } = req.params;
 
         // Fetch trip for estimated costs
@@ -174,7 +181,7 @@ export const getExpenseSummary = async (req: AuthRequest, res: Response): Promis
             expenseCount: expenses.length,
         });
     } catch (error: any) {
-        console.error('Error getting expense summary:', error);
+        logger.error('Error getting expense summary:', error);
         res.status(500).json({ success: false, message: 'Failed to get summary' });
     }
 };

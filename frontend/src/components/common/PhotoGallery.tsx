@@ -84,6 +84,7 @@ export const PhotoGallery: FC<PhotoGalleryProps> = ({ images, alt = 'Photo', cla
                             alt={`${alt} ${idx + 1}`}
                             loading="lazy"
                             onLoad={() => handleImageLoad(idx)}
+                            referrerPolicy="no-referrer"
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                         {/* "+N more" overlay on last thumbnail */}
@@ -150,6 +151,7 @@ export const PhotoGallery: FC<PhotoGalleryProps> = ({ images, alt = 'Photo', cla
                                 alt={`${alt} ${currentIndex + 1}`}
                                 className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
                                 draggable={false}
+                                referrerPolicy="no-referrer"
                             />
                         </motion.div>
 

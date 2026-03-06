@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import Route from '../models/Route';
 import { getTransportOptions as getTransportOptionsService, optimizeRoute as optimizeRouteService } from '../services/routeOptimizer';
@@ -8,7 +9,7 @@ export const getAllRoutes = async (req: Request, res: Response): Promise<void> =
         const routes = await Route.find();
         res.json(routes);
     } catch (error) {
-        console.error('Error fetching routes:', error);
+        logger.error('Error fetching routes:', error);
         res.status(500).json({ error: 'Failed to fetch routes' });
     }
 };
@@ -30,7 +31,7 @@ export const getTransportOptions = async (req: Request, res: Response): Promise<
 
         res.json(result);
     } catch (error: any) {
-        console.error('Error fetching transport options:', error);
+        logger.error('Error fetching transport options:', error);
         res.status(500).json({ error: 'Failed to fetch transport options' });
     }
 };
@@ -67,7 +68,7 @@ export const getRouteTrains = async (req: Request, res: Response): Promise<void>
             source: trainData.source,
         });
     } catch (error: any) {
-        console.error('Error fetching route trains:', error);
+        logger.error('Error fetching route trains:', error);
         res.status(500).json({ error: 'Failed to fetch train information' });
     }
 };
@@ -87,7 +88,7 @@ export const optimizeTripRoute = async (req: Request, res: Response): Promise<vo
         const result = await optimizeRouteService({ placeIds, places, startCityName });
         res.json(result);
     } catch (error: any) {
-        console.error('Error optimizing route:', error);
+        logger.error('Error optimizing route:', error);
         res.status(500).json({ error: 'Failed to optimize route' });
     }
 };

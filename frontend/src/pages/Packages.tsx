@@ -1,9 +1,7 @@
 import { FC, useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { getPackages, getPackageById, getConfig } from '@/services/api';
 import { useTripStore } from '@/stores/tripStore';
 import type { Package, Place } from '@/types';
-import ThemeToggle from '@/components/common/ThemeToggle';
 
 // ── Filter constants ──
 const DURATION_OPTIONS = [
@@ -232,26 +230,14 @@ export const Packages: FC = () => {
     // ── Render ──
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-            {/* Top Header */}
-            <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+            {/* Search Header */}
+            <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
                 <div className="max-w-[1400px] mx-auto flex items-center justify-between px-4 lg:px-8 py-3">
-                    {/* Left */}
-                    <div className="flex items-center gap-4">
-                        <Link to="/" className="flex items-center gap-2">
-                            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-                                <span className="text-white font-bold text-sm">T</span>
-                            </div>
-                            <span className="font-bold text-lg text-slate-800 dark:text-white hidden sm:block">TripPlanner</span>
-                        </Link>
-                        <div className="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-600" />
-                        <nav className="hidden sm:flex items-center gap-1 text-sm">
-                            <Link to="/" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Home</Link>
-                            <span className="text-slate-300 dark:text-slate-600 mx-1">/</span>
-                            <span className="text-slate-800 dark:text-white font-medium">Packages</span>
-                        </nav>
-                    </div>
-
-                    {/* Search bar */}
+                    <nav className="hidden sm:flex items-center gap-1 text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">Home</span>
+                        <span className="text-slate-300 dark:text-slate-600 mx-1">/</span>
+                        <span className="text-slate-800 dark:text-white font-medium">Packages</span>
+                    </nav>
                     <div className="flex-1 max-w-md mx-4">
                         <div className="relative">
                             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -266,19 +252,8 @@ export const Packages: FC = () => {
                             />
                         </div>
                     </div>
-
-                    {/* Right */}
-                    <div className="flex items-center gap-3">
-                        <ThemeToggle />
-                        <Link
-                            to="/plan"
-                            className="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all"
-                        >
-                            ✈️ Plan Trip
-                        </Link>
-                    </div>
                 </div>
-            </header>
+            </div>
 
             {/* Category tabs bar */}
             <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">

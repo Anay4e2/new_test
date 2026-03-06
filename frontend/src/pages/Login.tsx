@@ -1,7 +1,8 @@
 import { FC, useState, FormEvent, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '../stores/authStore';
 
 declare global {
@@ -39,6 +40,8 @@ const PlaneIcon: FC = () => (
 
 export const Login: FC = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const redirectTo = searchParams.get('next') || '/plan';
     const { login, googleLogin, isLoading, error, clearError } = useAuthStore();
     const { t } = useTranslation();
 
@@ -54,7 +57,10 @@ export const Login: FC = () => {
         const handleCredentialResponse = async (response: any) => {
             clearError();
             const success = await googleLogin(response.credential);
-            if (success) navigate('/plan');
+            if (success) {
+                toast.success('Welcome back!');
+                navigate(redirectTo);
+            }
         };
 
         const initGoogle = () => {
@@ -90,7 +96,8 @@ export const Login: FC = () => {
 
         const success = await login(email, password);
         if (success) {
-            navigate('/plan');
+            toast.success('Welcome back!');
+            navigate(redirectTo);
         }
     };
 

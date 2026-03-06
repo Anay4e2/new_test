@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { TrendingUp, Filter, ChevronDown, Compass, Loader2, Frown } from 'lucide-react';
 import clsx from 'clsx';
@@ -7,8 +7,8 @@ import { getPublicTrips, getTrendingDestinations as fetchTrending } from '@/serv
 import type { PublicTrip, TrendingDestination } from '@/types';
 import { TripCard } from '@/components/common/TripCard';
 import { UserProfileModal } from '@/components/common/UserProfileModal';
-import { useAuthStore } from '@/stores/authStore';
-import ThemeToggle from '@/components/common/ThemeToggle';
+import toast from 'react-hot-toast';
+import { TripCardSkeleton } from '@/components/common/Skeleton';
 
 const SORT_OPTIONS = [
     { value: 'recent', label: '🕐 Most Recent' },
@@ -35,7 +35,7 @@ const BUDGET_OPTIONS = [
 
 export const Explore: FC = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, user, logout } = useAuthStore();
+
 
     // Feed state
     const [trips, setTrips] = useState<PublicTrip[]>([]);
@@ -86,7 +86,7 @@ export const Explore: FC = () => {
             setTotal(res.pagination.total);
             setPage(pageNum);
         } catch {
-            /* ignore */
+            toast.error('Failed to load trips.');
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -130,39 +130,6 @@ export const Explore: FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
-            {/* Navigation */}
-            <nav className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800">
-                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-                    <div className="flex items-center gap-6">
-                        <Link to="/" className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">T</span>
-                            </div>
-                            <span className="font-semibold text-slate-800 dark:text-white">TripPlanner</span>
-                        </Link>
-                        <div className="hidden sm:flex items-center gap-4 text-sm">
-                            <Link to="/" className="text-gray-500 hover:text-gray-900 dark:hover:text-white">Home</Link>
-                            <Link to="/explore" className="text-blue-600 dark:text-blue-400 font-semibold">Explore</Link>
-                            <Link to="/plan" className="text-gray-500 hover:text-gray-900 dark:hover:text-white">Plan Trip</Link>
-                            {isAuthenticated() && (
-                                <Link to="/dashboard" className="text-gray-500 hover:text-gray-900 dark:hover:text-white">My Trips</Link>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <ThemeToggle />
-                        {isAuthenticated() ? (
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-600 dark:text-gray-300">{user?.name}</span>
-                                <button onClick={logout} className="text-xs text-red-500 border border-red-300 dark:border-red-500/40 px-3 py-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">Logout</button>
-                            </div>
-                        ) : (
-                            <Link to="/login" className="text-sm text-blue-600 border border-blue-600 px-3 py-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30">Sign In</Link>
-                        )}
-                    </div>
-                </div>
-            </nav>
-
             {/* Hero */}
             <section className="relative py-16 px-6 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMyIvPjwvZz48L2c+PC9zdmc+')] pointer-events-none" />
@@ -313,8 +280,8 @@ export const Explore: FC = () => {
 
                 {/* Trip Grid */}
                 {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Loader2 size={32} className="animate-spin text-blue-500" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => <TripCardSkeleton key={i} />)}
                     </div>
                 ) : trips.length === 0 ? (
                     <div className="text-center py-20">

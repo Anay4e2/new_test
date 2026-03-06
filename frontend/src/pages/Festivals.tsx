@@ -1,4 +1,5 @@
 import { FC, useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { Festival } from '@/types';
 import { getAllFestivals } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
@@ -39,7 +40,7 @@ export const Festivals: FC = () => {
     const currentMonth = new Date().getMonth() + 1;
 
     useEffect(() => {
-        getAllFestivals().then(setFestivals).catch(() => { }).finally(() => setLoading(false));
+        getAllFestivals().then(setFestivals).catch(() => { toast.error('Failed to load festivals'); }).finally(() => setLoading(false));
     }, []);
 
     const states = useMemo(() => [...new Set(festivals.map(f => f.stateCode))], [festivals]);

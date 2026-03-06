@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import City from '../models/City';
 import distanceService, { haversineDistance } from '../services/distanceService';
@@ -19,7 +20,7 @@ export const calculateDistance = async (req: Request, res: Response): Promise<vo
 
         res.json(result);
     } catch (error) {
-        console.error('Error calculating distance:', error);
+        logger.error('Error calculating distance:', error);
         res.status(500).json({ error: 'Failed to calculate distance' });
     }
 };
@@ -53,7 +54,7 @@ export const getCityDistance = async (req: Request, res: Response): Promise<void
             drivingTime: distanceService.getDrivingTime(result.distanceUsed),
         });
     } catch (error) {
-        console.error('Error calculating city distance:', error);
+        logger.error('Error calculating city distance:', error);
         res.status(500).json({ error: 'Failed to calculate distance' });
     }
 };
@@ -83,7 +84,7 @@ export const getQuickDistance = (req: Request, res: Response): void => {
             drivingTimeHours: distanceService.getDrivingTime(roadEstimate),
         });
     } catch (error) {
-        console.error('Error calculating quick distance:', error);
+        logger.error('Error calculating quick distance:', error);
         res.status(500).json({ error: 'Failed to calculate distance' });
     }
 };

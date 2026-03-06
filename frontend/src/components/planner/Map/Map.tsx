@@ -8,6 +8,8 @@ import { TripPlaybackControls } from './TripPlaybackControls';
 import { DayMapView } from './DayMapView';
 import { MapLegend } from './MapLegend';
 import { CityClusterMarkers } from './CityClusterMarkers';
+import { PlaceDetailModal } from './PlaceDetailModal';
+import { getPlacePhotos } from '../../../services/api';
 
 // --- Dark Map Style ---
 const darkMapStyle: google.maps.MapTypeStyle[] = [
@@ -138,6 +140,8 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
     const [activeState, setActiveState] = useState<string | null>(null);
     const [hoveredStateName, setHoveredStateName] = useState<string | null>(null);
     const [selectedInfoWindow, setSelectedInfoWindow] = useState<Place | null>(null);
+    const [detailPlace, setDetailPlace] = useState<any>(null);
+    const [infoWindowPhoto, setInfoWindowPhoto] = useState<string | null>(null);
     const [googlePlaces, setGooglePlaces] = useState<Place[]>([]);
     const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
 
@@ -152,6 +156,23 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
 
     const activeDay = propActiveDay ?? internalActiveDay;
     const setActiveDay = onDaySelect ?? setInternalActiveDay;
+
+    // Fetch a thumbnail photo when InfoWindow opens
+    useEffect(() => {
+        if (!selectedInfoWindow) {
+            setInfoWindowPhoto(null);
+            return;
+        }
+        let cancelled = false;
+        getPlacePhotos(selectedInfoWindow.name, (selectedInfoWindow as any).cityName || (selectedInfoWindow as any).city)
+            .then((data) => {
+                if (!cancelled && data.photos.length > 0) {
+                    setInfoWindowPhoto(data.photos[0]);
+                }
+            })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, [selectedInfoWindow]);
 
     // Refs
     const dataLayerRef = useRef<google.maps.Data | null>(null);
@@ -248,8 +269,14 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                     dataLayer.revertStyle();
                     map.panTo(INDIA_CENTER);
                     setTimeout(() => map.setZoom(INDIA_ZOOM), 300);
+                    setSelectedInfoWindow(null);
+                    setGooglePlaces([]);
                     return null;
                 }
+
+                // Switching to a different state – clear previous place data
+                setSelectedInfoWindow(null);
+                setGooglePlaces([]);
 
                 // Revert previous active state style
                 if (activeFeatureRef.current) {
@@ -591,7 +618,18 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                         }}
                         onCloseClick={() => setSelectedInfoWindow(null)}
                     >
-                        <div className="min-w-[200px] p-2 font-sans">
+                        <div className="min-w-[220px] max-w-[280px] p-2 font-sans">
+                            {/* Place Photo */}
+                            {infoWindowPhoto && (
+                                <div className="w-full h-32 rounded-lg overflow-hidden mb-2">
+                                    <img
+                                        src={infoWindowPhoto}
+                                        alt={selectedInfoWindow.name}
+                                        className="w-full h-full object-cover"
+                                        referrerPolicy="no-referrer"
+                                    />
+                                </div>
+                            )}
                             <h3 className="font-bold text-lg text-orange-600">{selectedInfoWindow.name}</h3>
                             <div className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-1">
                                 {selectedInfoWindow.type}
@@ -626,18 +664,29 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                                     </div>
                                 </div>
                             ) : (
-                                <button
-                                    onClick={() => {
-                                        togglePlace(selectedInfoWindow);
-                                        setSelectedInfoWindow(null);
-                                    }}
-                                    className={`w-full py-2 rounded-md text-xs font-bold transition-all shadow-sm ${isPlaceSelected(selectedInfoWindow._id)
-                                        ? 'bg-red-500 text-white hover:bg-red-600'
-                                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                        }`}
-                                >
-                                    {isPlaceSelected(selectedInfoWindow._id) ? '✓ Remove from Trip' : '+ Add to Trip'}
-                                </button>
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => {
+                                            setDetailPlace(selectedInfoWindow);
+                                            setSelectedInfoWindow(null);
+                                        }}
+                                        className="w-full py-2 rounded-md text-xs font-bold bg-blue-500 text-white hover:bg-blue-600 transition-all shadow-sm"
+                                    >
+                                        📷 View Photos & Details
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            togglePlace(selectedInfoWindow);
+                                            setSelectedInfoWindow(null);
+                                        }}
+                                        className={`w-full py-2 rounded-md text-xs font-bold transition-all shadow-sm ${isPlaceSelected(selectedInfoWindow._id)
+                                            ? 'bg-red-500 text-white hover:bg-red-600'
+                                            : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                            }`}
+                                    >
+                                        {isPlaceSelected(selectedInfoWindow._id) ? '✓ Remove from Trip' : '+ Add to Trip'}
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </InfoWindow>
@@ -849,6 +898,13 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                     hasRoute={travelSegments.length > 0}
                 />
             )}
+
+            {/* Place Detail Modal with Google Photos */}
+            <PlaceDetailModal
+                place={detailPlace}
+                isOpen={!!detailPlace}
+                onClose={() => setDetailPlace(null)}
+            />
         </div>
     );
 };

@@ -4,6 +4,17 @@ import crypto from 'crypto';
 import User, { UserDocument } from '../models/User';
 import { JWT_SECRET, JWT_EXPIRE } from '../config/auth';
 import { sendResetPasswordEmail } from '../services/emailService';
+import { isDbConnected } from '../lib/dbStatus';
+import logger from '../lib/logger';
+
+const DEMO_USER_ID = '000000000000000000000001';
+const DEMO_USER = {
+    id: DEMO_USER_ID,
+    name: 'Demo User',
+    email: 'demo@tripplanner.com',
+    role: 'user' as const,
+    createdAt: new Date().toISOString(),
+};
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
@@ -16,6 +27,14 @@ const generateToken = (userId: string): string => {
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, email, password } = req.body;
+
+        // When MongoDB is down, allow demo-mode registration
+        if (!isDbConnected()) {
+            logger.info('MongoDB not connected – issuing demo token for register');
+            const token = generateToken(DEMO_USER_ID);
+            res.status(201).json({ success: true, token, user: { ...DEMO_USER, name: name || DEMO_USER.name, email: email || DEMO_USER.email } });
+            return;
+        }
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
@@ -42,7 +61,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             }
         });
     } catch (error: any) {
-        console.error('Register error:', error);
+        logger.error('Register error:', error);
 
         // Handle validation errors
         if (error.name === 'ValidationError') {
@@ -65,6 +84,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         // Validate input
         if (!email || !password) {
             res.status(400).json({ success: false, message: 'Please provide email and password' });
+            return;
+        }
+
+        // When MongoDB is down, allow demo-mode login
+        if (!isDbConnected()) {
+            logger.info('MongoDB not connected – issuing demo token');
+            const token = generateToken(DEMO_USER_ID);
+            res.status(200).json({ success: true, token, user: DEMO_USER });
             return;
         }
 
@@ -97,7 +124,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             }
         });
     } catch (error) {
-        console.error('Login error:', error);
+        logger.error('Login error:', error);
         res.status(500).json({ success: false, message: 'Server error during login' });
     }
 };
@@ -109,6 +136,11 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     try {
         // User is attached to request by auth middleware
         const userId = (req as any).userId;
+
+        if (!isDbConnected()) {
+            res.status(200).json({ success: true, user: { ...DEMO_USER, id: userId } });
+            return;
+        }
 
         const user = await User.findById(userId);
         if (!user) {
@@ -127,7 +159,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
             }
         });
     } catch (error) {
-        console.error('GetMe error:', error);
+        logger.error('GetMe error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -180,7 +212,7 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
             }
         });
     } catch (error) {
-        console.error('Admin login error:', error);
+        logger.error('Admin login error:', error);
         res.status(500).json({ success: false, message: 'Server error during admin login' });
     }
 };
@@ -218,14 +250,14 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
             user.resetPasswordToken = undefined;
             user.resetPasswordExpire = undefined;
             await user.save({ validateBeforeSave: false });
-            console.error('Reset email send error:', emailError);
+            logger.error('Reset email send error:', emailError);
             res.status(500).json({ success: false, message: 'Failed to send reset email. Please try again later.' });
             return;
         }
 
         res.status(200).json({ success: true, message: 'If an account with that email exists, a reset link has been sent.' });
     } catch (error) {
-        console.error('Forgot password error:', error);
+        logger.error('Forgot password error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -276,7 +308,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
             message: 'Password reset successful'
         });
     } catch (error: any) {
-        console.error('Reset password error:', error);
+        logger.error('Reset password error:', error);
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map((err: any) => err.message);
             res.status(400).json({ success: false, message: messages.join(', ') });

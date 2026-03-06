@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Router, Request, Response } from 'express';
 import { getSeasonalWeather, getWeatherForecast, getCityCoordinates } from '../services/weatherService';
 
@@ -21,7 +22,7 @@ router.get('/forecast/:cityName', async (req: Request, res: Response) => {
         const weather = await getWeatherForecast(coords.lat, coords.lng, date, cityName);
         res.json({ success: true, data: weather });
     } catch (error) {
-        console.error('Weather forecast error:', error);
+        logger.error('Weather forecast error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch weather forecast' });
     }
 });
@@ -40,7 +41,7 @@ router.get('/seasonal/:cityName/:month', (req: Request, res: Response) => {
         const weather = getSeasonalWeather(cityName, month);
         res.json({ success: true, data: weather });
     } catch (error) {
-        console.error('Seasonal weather error:', error);
+        logger.error('Seasonal weather error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch seasonal weather' });
     }
 });

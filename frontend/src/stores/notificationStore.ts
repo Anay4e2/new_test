@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import toast from 'react-hot-toast';
 import type { AppNotification } from '@/types';
 import { getNotificationsApi, getUnreadCountApi, markNotificationReadApi, markAllNotificationsReadApi, deleteNotificationApi } from '@/services/api';
 
@@ -41,7 +42,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
                     page: pageNum,
                 });
             }
-        } catch { /* ignore */ }
+        } catch { console.warn('Failed to fetch notifications'); }
         set({ isLoading: false });
     },
 
@@ -61,7 +62,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
                 ),
                 unreadCount: Math.max(0, get().unreadCount - 1),
             });
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to mark notification as read.'); }
     },
 
     markAllAsRead: async () => {
@@ -71,7 +72,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
                 notifications: get().notifications.map(n => ({ ...n, isRead: true })),
                 unreadCount: 0,
             });
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to mark all as read.'); }
     },
 
     deleteNotification: async (id: string) => {
@@ -82,7 +83,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
                 notifications: get().notifications.filter(n => n._id !== id),
                 unreadCount: deleted && !deleted.isRead ? Math.max(0, get().unreadCount - 1) : get().unreadCount,
             });
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to delete notification.'); }
     },
 
     pollUnreadCount: async () => {
@@ -91,7 +92,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
             if (res.success) {
                 set({ unreadCount: res.count });
             }
-        } catch { /* ignore */ }
+        } catch { console.warn('Failed to poll unread count'); }
     },
 
     startPolling: () => {

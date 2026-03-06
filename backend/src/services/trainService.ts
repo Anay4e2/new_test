@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 // Train API Service using RapidAPI IRCTC
 // Uses the RapidAPI IRCTC API for live Indian Railway train data
 
@@ -9,7 +10,7 @@ const RAPIDAPI_HOST = 'irctc1.p.rapidapi.com';
 const BASE_URL = 'https://irctc1.p.rapidapi.com';
 
 if (!RAPIDAPI_KEY) {
-    console.warn('RAPIDAPI_KEY not set — train API calls will use mock data');
+    logger.warn('RAPIDAPI_KEY not set — train API calls will use mock data');
 }
 
 // Station codes for major cities (mapping city/location to nearest railway station)
@@ -218,7 +219,7 @@ class TrainAPIService {
         const journeyDate = date || this.getTomorrowDate();
 
         try {
-            console.log(`Fetching trains from ${fromCode} to ${toCode} on ${journeyDate}...`);
+            logger.info(`Fetching trains from ${fromCode} to ${toCode} on ${journeyDate}...`);
 
             const response = await rapidApiClient.get('/api/v3/trainBetweenStations', {
                 params: {
@@ -257,8 +258,8 @@ class TrainAPIService {
             // API returned no data, try cached
             return this.getCachedResult(fromStation, toStation, fromCode, toCode);
         } catch (error: any) {
-            console.error('RapidAPI Error:', error.response?.data || error.message);
-            console.log('Falling back to cached train data...');
+            logger.error('RapidAPI Error:', error.response?.data || error.message);
+            logger.info('Falling back to cached train data...');
             // Return cached data on error
             return this.getCachedResult(fromStation, toStation, fromCode, toCode);
         }
@@ -288,7 +289,7 @@ class TrainAPIService {
 
             return [];
         } catch (error: any) {
-            console.error('Live Station Error:', error.response?.data || error.message);
+            logger.error('Live Station Error:', error.response?.data || error.message);
             return [];
         }
     }
@@ -306,7 +307,7 @@ class TrainAPIService {
 
             return null;
         } catch (error: any) {
-            console.error('PNR Status Error:', error.response?.data || error.message);
+            logger.error('PNR Status Error:', error.response?.data || error.message);
             return null;
         }
     }
@@ -324,7 +325,7 @@ class TrainAPIService {
 
             return null;
         } catch (error: any) {
-            console.error('Train Schedule Error:', error.response?.data || error.message);
+            logger.error('Train Schedule Error:', error.response?.data || error.message);
             return null;
         }
     }
@@ -363,7 +364,7 @@ class TrainAPIService {
 
             return this.getUnavailableStatus(trainNumber);
         } catch (error: any) {
-            console.error('Train Live Status Error:', error.response?.data || error.message);
+            logger.error('Train Live Status Error:', error.response?.data || error.message);
             return this.getUnavailableStatus(trainNumber);
         }
     }
@@ -434,7 +435,7 @@ class TrainAPIService {
 
             return [];
         } catch (error: any) {
-            console.error('Search Station Error:', error.response?.data || error.message);
+            logger.error('Search Station Error:', error.response?.data || error.message);
             return [];
         }
     }
@@ -466,7 +467,7 @@ class TrainAPIService {
 
             return null;
         } catch (error: any) {
-            console.error('Seat Availability Error:', error.response?.data || error.message);
+            logger.error('Seat Availability Error:', error.response?.data || error.message);
             return null;
         }
     }
@@ -488,7 +489,7 @@ class TrainAPIService {
 
             return null;
         } catch (error: any) {
-            console.error('Fare Error:', error.response?.data || error.message);
+            logger.error('Fare Error:', error.response?.data || error.message);
             return null;
         }
     }
@@ -552,7 +553,7 @@ class TrainAPIService {
         }
 
         if (cachedTrains && cachedTrains.length > 0) {
-            console.log(`Returning ${cachedTrains.length} cached trains for ${fromCode}-${toCode}`);
+            logger.info(`Returning ${cachedTrains.length} cached trains for ${fromCode}-${toCode}`);
             return {
                 fromStation,
                 toStation,

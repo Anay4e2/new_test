@@ -1,4 +1,5 @@
 import { FC, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Download, Loader2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import clsx from 'clsx';
@@ -82,7 +83,7 @@ export const TripStatsCard: FC<TripStatsCardProps> = ({ result }) => {
             link.download = 'trip-stats.png';
             link.href = dataUrl;
             link.click();
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to download image.'); }
         finally { setDownloading(false); }
     };
 

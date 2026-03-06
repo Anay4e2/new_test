@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 // The Logic Core: Generates the itinerary
 import { CITIES as MOCK_CITIES, PLACES as MOCK_PLACES, HOTELS as MOCK_HOTELS, RESTAURANTS as MOCK_RESTAURANTS, FESTIVALS } from './mockData';
 import CityModel from '../models/City';
@@ -291,7 +292,7 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       }));
     }
   } catch (error) {
-    console.log('Database query failed, trying mock data:', error);
+    logger.info('Database query failed, trying mock data:', error);
   }
 
   // Fall back to mock data if database returned nothing

@@ -1,8 +1,9 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Clock, IndianRupee, MapPin, Tag, Sun, Plus } from 'lucide-react';
+import { X, Star, Clock, IndianRupee, MapPin, Tag, Sun, Plus, Loader2 } from 'lucide-react';
 import { PhotoGallery } from '../../common/PhotoGallery';
 import { ReviewsSection } from './ReviewsSection';
+import { getPlacePhotos } from '../../../services/api';
 import clsx from 'clsx';
 
 interface PlaceDetailModalProps {
@@ -37,15 +38,44 @@ export const PlaceDetailModal: FC<PlaceDetailModalProps> = ({
     onAddToTrip,
     showAddButton = false,
 }) => {
+    const [googlePhotos, setGooglePhotos] = useState<string[]>([]);
+    const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen || !place?.name) {
+            setGooglePhotos([]);
+            return;
+        }
+
+        let cancelled = false;
+        setLoadingPhotos(true);
+
+        getPlacePhotos(place.name, place.cityName || place.city)
+            .then((data) => {
+                if (!cancelled && data.photos.length > 0) {
+                    setGooglePhotos(data.photos);
+                }
+            })
+            .catch(() => { /* fallback to existing images */ })
+            .finally(() => {
+                if (!cancelled) setLoadingPhotos(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [isOpen, place?.name, place?.cityName, place?.city]);
+
     if (!place) return null;
 
-    const images = place.images && place.images.length > 0
+    // Prefer Google Places photos, fall back to existing images
+    const fallbackImages = place.images && place.images.length > 0
         ? place.images
         : place.thumbnailUrl
             ? [place.thumbnailUrl]
             : place.imageUrl
                 ? [place.imageUrl]
                 : [];
+
+    const images = googlePhotos.length > 0 ? googlePhotos : fallbackImages;
 
     return (
         <AnimatePresence>
@@ -94,9 +124,14 @@ export const PlaceDetailModal: FC<PlaceDetailModalProps> = ({
                             {/* Scrollable content */}
                             <div className="overflow-y-auto max-h-[calc(85vh-80px)] p-4 space-y-4">
                                 {/* Photo Gallery */}
-                                {images.length > 0 && (
+                                {loadingPhotos && images.length === 0 ? (
+                                    <div className="h-48 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded-xl">
+                                        <Loader2 size={24} className="animate-spin text-blue-500" />
+                                        <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading photos...</span>
+                                    </div>
+                                ) : images.length > 0 ? (
                                     <PhotoGallery images={images} alt={place.name} className="h-48" />
-                                )}
+                                ) : null}
 
                                 {/* Rating & Quick Info */}
                                 <div className="flex flex-wrap gap-3">

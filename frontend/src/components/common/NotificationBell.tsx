@@ -80,6 +80,7 @@ export const NotificationBell: FC = () => {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}
             >
                 <Bell size={20} className="text-gray-600 dark:text-gray-300" />
                 {unreadCount > 0 && (

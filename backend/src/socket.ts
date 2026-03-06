@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from './config/auth';
 import TripGroup from './models/TripGroup';
 import User from './models/User';
+import logger from './lib/logger';
 
 let io: Server | null = null;
 

@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import Postcard from '../models/Postcard';
@@ -103,7 +104,7 @@ export const sendPostcard = async (req: AuthRequest, res: Response): Promise<voi
         await postcard.save();
 
         // Log for now — real email integration uses emailService
-        console.log(`[Postcard] Would send postcard ${postcard._id} to ${recipientEmail}`);
+        logger.info(`[Postcard] Would send postcard ${postcard._id} to ${recipientEmail}`);
 
         res.json({ success: true, message: 'Postcard sent!' });
     } catch (error) {

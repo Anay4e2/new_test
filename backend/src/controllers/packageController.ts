@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import Package from '../models/Package';
 import Place from '../models/Place';
@@ -8,7 +9,7 @@ export const getPackages = async (req: Request, res: Response): Promise<void> =>
         const packages = await Package.find({ isActive: true }).sort({ createdAt: -1 });
         res.json({ success: true, data: packages });
     } catch (error) {
-        console.error('Error fetching packages:', error);
+        logger.error('Error fetching packages:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch packages' });
     }
 };
@@ -35,7 +36,7 @@ export const getPackageById = async (req: Request, res: Response): Promise<void>
             }
         });
     } catch (error) {
-        console.error('Error fetching package:', error);
+        logger.error('Error fetching package:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch package' });
     }
 };
@@ -46,7 +47,7 @@ export const getAllPackagesAdmin = async (req: Request, res: Response): Promise<
         const packages = await Package.find().sort({ createdAt: -1 });
         res.json({ success: true, data: packages });
     } catch (error) {
-        console.error('Error fetching packages:', error);
+        logger.error('Error fetching packages:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch packages' });
     }
 };
@@ -80,7 +81,7 @@ export const createPackage = async (req: Request, res: Response): Promise<void> 
         await newPackage.save();
         res.status(201).json({ success: true, data: newPackage });
     } catch (error) {
-        console.error('Error creating package:', error);
+        logger.error('Error creating package:', error);
         res.status(500).json({ success: false, message: 'Failed to create package' });
     }
 };
@@ -104,7 +105,7 @@ export const updatePackage = async (req: Request, res: Response): Promise<void> 
 
         res.json({ success: true, data: pkg });
     } catch (error) {
-        console.error('Error updating package:', error);
+        logger.error('Error updating package:', error);
         res.status(500).json({ success: false, message: 'Failed to update package' });
     }
 };
@@ -123,7 +124,7 @@ export const deletePackage = async (req: Request, res: Response): Promise<void> 
 
         res.json({ success: true, message: 'Package deleted successfully' });
     } catch (error) {
-        console.error('Error deleting package:', error);
+        logger.error('Error deleting package:', error);
         res.status(500).json({ success: false, message: 'Failed to delete package' });
     }
 };

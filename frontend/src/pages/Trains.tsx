@@ -432,7 +432,7 @@ const LiveStationBoard: FC = () => {
         try {
             const data = await searchStation(query);
             setSuggestions(data.stations?.slice(0, 8) || []);
-        } catch { /* ignore */ }
+        } catch { console.warn('Station search failed'); }
     };
 
     const selectStation = (code: string, name: string) => {

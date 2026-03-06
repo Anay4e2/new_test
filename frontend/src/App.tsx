@@ -8,7 +8,10 @@ import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { SkipToContent } from './components/common/SkipToContent';
+import { Navbar } from './components/common/Navbar';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useNotificationSocket } from './hooks/useNotificationSocket';
+import { useAuthStore } from './stores/authStore';
 import { NotFound } from './pages/NotFound';
 import { Toaster } from 'react-hot-toast';
 
@@ -26,9 +29,13 @@ const Packages = lazy(() => import('./pages/Packages').then(m => ({ default: m.P
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
 const Trains = lazy(() => import('./pages/Trains').then(m => ({ default: m.Trains })));
+const About = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
 const MyReviews = lazy(() => import('./pages/MyReviews').then(m => ({ default: m.MyReviews })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const TravelChecklist = lazy(() => import('./pages/TravelChecklist').then(m => ({ default: m.TravelChecklist })));
+const Weather = lazy(() => import('./pages/Weather').then(m => ({ default: m.Weather })));
+const Safety = lazy(() => import('./pages/Safety').then(m => ({ default: m.Safety })));
+const Restaurants = lazy(() => import('./pages/Restaurants').then(m => ({ default: m.Restaurants })));
 
 const KeyboardNav: FC = () => {
   const navigate = useNavigate();
@@ -37,6 +44,9 @@ const KeyboardNav: FC = () => {
 };
 
 const App: FC = () => {
+  const token = useAuthStore(s => s.token);
+  useNotificationSocket(token);
+
   return (
     <>
       <Toaster position="top-right" />
@@ -44,6 +54,7 @@ const App: FC = () => {
       <ErrorBoundary>
       <Router>
         <SkipToContent />
+        <Navbar />
         <KeyboardNav />
         <main id="main-content">
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>}>
@@ -60,6 +71,10 @@ const App: FC = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/trains" element={<Trains />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/weather" element={<Weather />} />
+          <Route path="/safety" element={<Safety />} />
+          <Route path="/restaurants" element={<Restaurants />} />
 
           {/* Protected routes — require authentication */}
           <Route path="/plan" element={<ProtectedRoute><Planner /></ProtectedRoute>} />

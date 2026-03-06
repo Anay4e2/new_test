@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
@@ -77,7 +78,7 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
             },
         });
     } catch (error) {
-        console.error('Google auth error:', error);
+        logger.error('Google auth error:', error);
         res.status(500).json({ success: false, message: 'Server error during Google authentication' });
     }
 };

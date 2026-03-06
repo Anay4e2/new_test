@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 // Distance API Service
 // Uses RapidAPI Distances for road distances with Haversine fallback
 
@@ -9,7 +10,7 @@ const RAPIDAPI_HOST = 'distances1.p.rapidapi.com';
 const BASE_URL = 'https://distances1.p.rapidapi.com';
 
 if (!RAPIDAPI_KEY) {
-    console.warn('RAPIDAPI_KEY not set — distance API calls will use Haversine fallback only');
+    logger.warn('RAPIDAPI_KEY not set — distance API calls will use Haversine fallback only');
 }
 
 export interface DistanceResult {
@@ -96,7 +97,7 @@ class DistanceService {
                     source = 'api';
                 }
             } catch (error: any) {
-                console.log('Distance API fallback to Haversine:', error.message);
+                logger.info('Distance API fallback to Haversine:', error.message);
             }
         }
 

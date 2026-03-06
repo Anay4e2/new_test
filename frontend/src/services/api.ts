@@ -27,6 +27,22 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Auto-logout on 401 (stale / invalid token)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Clear the persisted auth state so the user is redirected to login
+            localStorage.removeItem('auth-storage');
+            // Redirect to login (avoid redirect loop if already on /login)
+            if (!window.location.pathname.startsWith('/login')) {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 // Auth API
 export interface AuthResponse {
     success: boolean;
@@ -134,6 +150,13 @@ export const getPlacesByState = async (stateCode: string): Promise<Place[]> => {
     return response.data;
 };
 
+export const getPlacePhotos = async (placeName: string, city?: string): Promise<{ photos: string[]; source: string }> => {
+    const response = await api.get(`/places/${encodeURIComponent(placeName)}/photos`, {
+        params: city ? { city } : undefined,
+    });
+    return response.data;
+};
+
 // Cities API
 export const getCities = async (): Promise<City[]> => {
     const response = await api.get('/cities');
@@ -149,6 +172,11 @@ export const generateTrip = async (request: TripRequest): Promise<TripResult> =>
 // Routes API
 export const getRoutes = async () => {
     const response = await api.get('/routes');
+    return response.data;
+};
+
+export const getTransportOptions = async (from: string, to: string) => {
+    const response = await api.get('/routes/transport', { params: { from, to } });
     return response.data;
 };
 
@@ -438,6 +466,11 @@ export const markReviewHelpful = async (reviewId: string): Promise<{ success: bo
 
 export const deleteReview = async (reviewId: string): Promise<{ success: boolean }> => {
     const response = await api.delete(`/reviews/${reviewId}`);
+    return response.data;
+};
+
+export const updateReviewApi = async (reviewId: string, data: { rating?: number; title?: string; comment?: string; visitDate?: string }): Promise<{ success: boolean; review: Review }> => {
+    const response = await api.put(`/reviews/${reviewId}`, data);
     return response.data;
 };
 

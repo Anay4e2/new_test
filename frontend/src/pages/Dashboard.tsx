@@ -7,6 +7,7 @@ import type { SavedTrip, FavoritePlace, ExpenseSummary, TripGroup } from '@/type
 import { Star, Trash2, MapPin, Clock, ArrowLeft, Loader2, Heart, Calendar, IndianRupee, Wallet, Users, Plus, Globe, BookOpen, Copy } from 'lucide-react';
 import clsx from 'clsx';
 import { ExpenseTracker } from '@/components/planner/Trip/ExpenseTracker';
+import { DashboardTripSkeleton } from '@/components/common/Skeleton';
 
 type Tab = 'trips' | 'favorites' | 'groups';
 
@@ -20,6 +21,7 @@ export const Dashboard: FC = () => {
     const [groups, setGroups] = useState<TripGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [creatingGroup, setCreatingGroup] = useState<string | null>(null);
     const [expandedExpenseTrip, setExpandedExpenseTrip] = useState<string | null>(null);
     const [budgetSummaries, setBudgetSummaries] = useState<Record<string, ExpenseSummary>>({});
@@ -40,9 +42,12 @@ export const Dashboard: FC = () => {
             if (activeTab === 'trips') {
                 const res = await getMyTrips();
                 if (res.success) setTrips(res.trips);
-            } else {
+            } else if (activeTab === 'favorites') {
                 const res = await getMyFavorites();
                 if (res.success) setFavorites(res.favorites);
+            } else if (activeTab === 'groups') {
+                const res = await getMyGroups();
+                if (res.success) setGroups(res.groups);
             }
         } catch {
             toast.error('Failed to load data. Please try again.');
@@ -59,7 +64,7 @@ export const Dashboard: FC = () => {
                 try {
                     const res = await getExpenseSummary(trip._id);
                     if (res.success) summaries[trip._id] = res;
-                } catch { /* ignore */ }
+                } catch { toast.error('Failed to load budget summary.'); }
             })
         );
         setBudgetSummaries(summaries);
@@ -83,7 +88,7 @@ export const Dashboard: FC = () => {
                 try {
                     const res = await getJournalEntryCount(trip._id);
                     if (res.success) setJournalCounts(prev => ({ ...prev, [trip._id]: res.count }));
-                } catch { /* ignore */ }
+                } catch { toast.error('Failed to load journal data.'); }
             });
         }
     }, [trips]);
@@ -99,12 +104,19 @@ export const Dashboard: FC = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        setDeletingId(id);
+    const handleDelete = (id: string) => {
+        setConfirmDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!confirmDeleteId) return;
+        setDeletingId(confirmDeleteId);
+        setConfirmDeleteId(null);
         try {
-            const res = await deleteTripApi(id);
+            const res = await deleteTripApi(confirmDeleteId);
             if (res.success) {
-                setTrips(prev => prev.filter(t => t._id !== id));
+                setTrips(prev => prev.filter(t => t._id !== confirmDeleteId));
+                toast.success('Trip deleted.');
             }
         } catch {
             toast.error('Failed to delete trip.');
@@ -246,8 +258,8 @@ export const Dashboard: FC = () => {
             {/* Content */}
             <div className="max-w-6xl mx-auto px-6 py-8">
                 {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Loader2 size={32} className="animate-spin text-blue-500" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {Array.from({ length: 6 }).map((_, i) => <DashboardTripSkeleton key={i} />)}
                     </div>
                 ) : activeTab === 'trips' ? (
                     trips.length === 0 ? (
@@ -532,6 +544,32 @@ export const Dashboard: FC = () => {
                     )
                 ) : null}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {confirmDeleteId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmDeleteId(null)}>
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete Trip?</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+                            Are you sure you want to delete <span className="font-medium text-gray-700 dark:text-gray-300">{trips.find(t => t._id === confirmDeleteId)?.title}</span>? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

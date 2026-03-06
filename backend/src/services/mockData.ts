@@ -1,4 +1,4 @@
-// This file provides curated data for the MVP (Rajasthan)
+﻿// This file provides curated data for the MVP (Rajasthan)
 // It mimics the database queries for the sandbox environment where MongoDB is not available.
 
 export const STATES = [
@@ -39,7 +39,8 @@ export const STATES = [
     center: { lat: 31.1048, lng: 77.1734 },
     zoom: 7,
     description: "A mountain lover's paradise with snow-capped peaks and scenic valleys.",
-    imageUrl: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&h=800&fit=crop',
+    // Shimla aerial view, Himachal Pradesh
+    imageUrl: 'https://images.unsplash.com/photo-1609232530947-0aeb23338a43?w=600&h=800&fit=crop',
   },
   {
     _id: 'UP',
@@ -57,7 +58,8 @@ export const STATES = [
     center: { lat: 23.4733, lng: 77.9479 },
     zoom: 7,
     description: 'The Heart of India, with ancient temples, wildlife, and medieval cities.',
-    imageUrl: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=600&h=800&fit=crop',
+    // Gwalior Fort, Madhya Pradesh
+    imageUrl: 'https://images.unsplash.com/photo-1643269877099-ea5393b80320?w=600&h=800&fit=crop',
   },
   {
     _id: 'MH',
@@ -75,7 +77,8 @@ export const STATES = [
     center: { lat: 11.1271, lng: 78.6569 },
     zoom: 7,
     description: 'Land of temples, classical dance, and rich Dravidian heritage.',
-    imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=600&h=800&fit=crop',
+    // Meenakshi Amman Temple, Madurai, Tamil Nadu
+    imageUrl: 'https://images.unsplash.com/photo-1572146462570-2129a547e6dd?w=600&h=800&fit=crop',
   },
   {
     _id: 'WB',
@@ -84,7 +87,8 @@ export const STATES = [
     center: { lat: 22.5726, lng: 88.3639 },
     zoom: 7,
     description: 'Cultural capital of India with colonial architecture and the Sundarbans.',
-    imageUrl: 'https://images.unsplash.com/photo-1558431382-27e303142255?w=600&h=800&fit=crop',
+    // Victoria Memorial, Kolkata, West Bengal
+    imageUrl: 'https://images.unsplash.com/photo-1558431382-9b06d0507edc?w=600&h=800&fit=crop',
   },
   {
     _id: 'KA',
@@ -93,7 +97,8 @@ export const STATES = [
     center: { lat: 15.3173, lng: 75.7139 },
     zoom: 7,
     description: 'From Bangalore tech hub to Hampi ruins and Coorg coffee plantations.',
-    imageUrl: 'https://images.unsplash.com/photo-1600100397608-93ea4e0b5822?w=600&h=800&fit=crop',
+    // Hampi ruins, Karnataka
+    imageUrl: 'https://images.unsplash.com/photo-1572461274864-191affced839?w=600&h=800&fit=crop',
   },
   {
     _id: 'GJ',
@@ -102,7 +107,8 @@ export const STATES = [
     center: { lat: 22.2587, lng: 71.1924 },
     zoom: 7,
     description: 'Vibrant culture, Rann of Kutch, Gir lions, and Somnath temple.',
-    imageUrl: 'https://images.unsplash.com/photo-1609948543911-7e88613b7734?w=600&h=800&fit=crop',
+    // White Rann of Kutch, Gujarat
+    imageUrl: 'https://images.unsplash.com/photo-1670923331633-be262e035a9a?w=600&h=800&fit=crop',
   }
 ];
 
@@ -176,7 +182,7 @@ export const CITIES = [
     description: 'The Blue City, dominated by the massive Mehrangarh Fort.',
     idealDays: 2,
     // Blue City with Mehrangarh Fort
-    imageUrl: 'https://images.unsplash.com/photo-1590449911964-b04b6b64731c?w=400&h=400&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop',
   },
   {
     _id: 'jaisalmer',
@@ -198,7 +204,7 @@ export const CITIES = [
     tier: 'tier2',
     description: 'A hill station famous for its tea estates and misty mountains.',
     idealDays: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1596323674681-424d86b856b3?auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1585506942812-e72b29cef752?auto=format&fit=crop&q=80',
   },
   {
     _id: 'alleppey',
@@ -293,7 +299,7 @@ export const CITIES = [
     tier: 'tier2',
     description: 'City of Palaces, known for its royal heritage.',
     idealDays: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1600100397608-6c5f54b32ea7?auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80',
   },
   {
     _id: 'hampi_city',
@@ -303,7 +309,7 @@ export const CITIES = [
     tier: 'tier2',
     description: 'UNESCO World Heritage Site with ancient Vijayanagara ruins.',
     idealDays: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1600100397608-6c5f54b32ea7?auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&q=80',
   },
   // GUJARAT
   {
@@ -448,6 +454,49 @@ export const CITIES = [
     description: 'Queen of the Arabian Sea, a cosmopolitan port city with colonial history.',
     idealDays: 2,
     imageUrl: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&q=80',
+  },
+  // KARNATAKA (additional)
+  {
+    _id: 'bangalore',
+    name: 'Bangalore',
+    stateCode: 'KA',
+    coordinates: { lat: 12.9716, lng: 77.5946 },
+    tier: 'tier1',
+    description: 'The Silicon Valley of India with beautiful gardens and vibrant culture.',
+    idealDays: 2,
+    imageUrl: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80',
+  },
+  // TELANGANA
+  {
+    _id: 'hyderabad',
+    name: 'Hyderabad',
+    stateCode: 'TS',
+    coordinates: { lat: 17.385, lng: 78.4867 },
+    tier: 'tier1',
+    description: 'City of Pearls, known for Charminar, biryani, and tech culture.',
+    idealDays: 2,
+    imageUrl: 'https://images.unsplash.com/photo-1572435555646-7ad9a149ad91?auto=format&fit=crop&q=80',
+  },
+  // PUNJAB
+  {
+    _id: 'amritsar',
+    name: 'Amritsar',
+    stateCode: 'PB',
+    coordinates: { lat: 31.634, lng: 74.8723 },
+    tier: 'tier1',
+    description: 'Home of the Golden Temple, a spiritual and cultural heart of Punjab.',
+    idealDays: 2,
+    imageUrl: 'https://images.unsplash.com/photo-1609866138210-84bb689f3c61?auto=format&fit=crop&q=80',
+  },
+  {
+    _id: 'chandigarh',
+    name: 'Chandigarh',
+    stateCode: 'CH',
+    coordinates: { lat: 30.7333, lng: 76.7794 },
+    tier: 'tier1',
+    description: 'The City Beautiful, planned by Le Corbusier with Rock Garden and Sukhna Lake.',
+    idealDays: 1,
+    imageUrl: 'https://images.unsplash.com/photo-1590579491624-f98f36d4c763?auto=format&fit=crop&q=80',
   }
 ];
 
@@ -471,7 +520,7 @@ export const PLACES = [
       'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&h=600&fit=crop',
       'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&h=600&fit=crop',
       'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1602508451687-5765c3c82c57?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1609866138210-84bb689f3c61?w=800&h=600&fit=crop',
     ],
   },
   {
@@ -621,12 +670,11 @@ export const PLACES = [
     rating: 4.9,
     tags: ['history', 'views', 'must-visit'],
     priceTier: 'medium',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1590449911964-b04b6b64731c?w=400&h=300&fit=crop',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
     images: [
-      'https://images.unsplash.com/photo-1590449911964-b04b6b64731c?w=800&h=600&fit=crop',
       'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop',
       'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1602508451687-5765c3c82c57?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1609866138210-84bb689f3c61?w=800&h=600&fit=crop',
     ],
   },
   {
@@ -672,10 +720,10 @@ export const PLACES = [
     rating: 4.7,
     tags: ['history', 'walking', 'living_fort'],
     priceTier: 'free',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1598521868685-eb06c8b2e3c0?w=400&h=300&fit=crop',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1624806992066-5ffcf7ca186b?w=400&h=300&fit=crop',
     images: [
-      'https://images.unsplash.com/photo-1598521868685-eb06c8b2e3c0?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1602508451687-5765c3c82c57?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1624806992066-5ffcf7ca186b?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1609866138210-84bb689f3c61?w=800&h=600&fit=crop',
       'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&h=600&fit=crop',
     ],
   },
@@ -1034,7 +1082,7 @@ export const HOTELS = [
     imageUrl: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=400&h=300&fit=crop',
     contactPhone: '+91-141-2211919',
     bookingUrl: 'https://www.tajhotels.com/rambagh-palace',
-    description: 'The jewel of Jaipur â€” a former royal residence turned ultra-luxury Taj hotel with impeccable grandeur.'
+    description: 'The jewel of Jaipur Ã¢â‚¬â€ a former royal residence turned ultra-luxury Taj hotel with impeccable grandeur.'
   },
 
   // UDAIPUR
@@ -1176,7 +1224,7 @@ export const HOTELS = [
   { _id: 'hotel_hyatt_ahmedabad', name: 'Hyatt Regency Ahmedabad', cityName: 'Ahmedabad', stateCode: 'GJ', coordinates: { lat: 23.0300, lng: 72.5700 }, tier: 'premium' as const, pricePerNight: 6500, rating: 4.7, amenities: ['WiFi', 'AC', 'Pool', 'Spa', 'Gym', 'Restaurant'], description: 'Modern luxury hotel with skyline views and world-class amenities.' },
   { _id: 'hotel_lemon_tree_ahd', name: 'Lemon Tree Premier', cityName: 'Ahmedabad', stateCode: 'GJ', coordinates: { lat: 23.0350, lng: 72.5650 }, tier: 'budget' as const, pricePerNight: 1800, rating: 4.1, amenities: ['WiFi', 'AC', 'Restaurant'], description: 'Cheerful budget hotel with reliable service near SG Highway.' },
   // AGRA
-  { _id: 'hotel_oberoi_amarvilas', name: 'The Oberoi Amarvilas', cityName: 'Agra', stateCode: 'UP', coordinates: { lat: 27.1720, lng: 78.0400 }, tier: 'premium' as const, pricePerNight: 25000, rating: 4.9, amenities: ['WiFi', 'AC', 'Pool', 'Spa', 'Taj View', 'Fine Dining', 'Butler'], description: 'Every room offers uninterrupted Taj Mahal views â€” the ultimate luxury.' },
+  { _id: 'hotel_oberoi_amarvilas', name: 'The Oberoi Amarvilas', cityName: 'Agra', stateCode: 'UP', coordinates: { lat: 27.1720, lng: 78.0400 }, tier: 'premium' as const, pricePerNight: 25000, rating: 4.9, amenities: ['WiFi', 'AC', 'Pool', 'Spa', 'Taj View', 'Fine Dining', 'Butler'], description: 'Every room offers uninterrupted Taj Mahal views Ã¢â‚¬â€ the ultimate luxury.' },
   { _id: 'hotel_crystal_sarovar', name: 'Crystal Sarovar Premiere', cityName: 'Agra', stateCode: 'UP', coordinates: { lat: 27.1800, lng: 78.0200 }, tier: 'standard' as const, pricePerNight: 3200, rating: 4.3, amenities: ['WiFi', 'AC', 'Pool', 'Restaurant'], description: 'Comfortable mid-range hotel close to Agra Fort with rooftop dining.' },
   { _id: 'hotel_zostel_agra', name: 'Zostel Agra', cityName: 'Agra', stateCode: 'UP', coordinates: { lat: 27.1750, lng: 78.0450 }, tier: 'budget' as const, pricePerNight: 600, rating: 4.0, amenities: ['WiFi', 'Common Kitchen', 'Rooftop'], description: 'Backpacker hostel with Taj views from the rooftop and vibrant community.' },
   // VARANASI
@@ -1231,7 +1279,7 @@ export const RESTAURANTS = [
     openingTime: '06:30',
     closingTime: '22:30',
     vegetarian: true,
-    description: 'The most famous kachori spot in Jaipur â€” the pyaz kachori is a must-eat for every visitor.'
+    description: 'The most famous kachori spot in Jaipur Ã¢â‚¬â€ the pyaz kachori is a must-eat for every visitor.'
   },
   {
     _id: 'handi_jaipur',
@@ -1295,7 +1343,7 @@ export const RESTAURANTS = [
     openingTime: '12:00',
     closingTime: '22:30',
     vegetarian: false,
-    description: 'Fine dining inside Amber Fort â€” named after the year of its construction, with royal Rajput cuisine.'
+    description: 'Fine dining inside Amber Fort Ã¢â‚¬â€ named after the year of its construction, with royal Rajput cuisine.'
   },
 
   // UDAIPUR (6)
@@ -1345,7 +1393,7 @@ export const RESTAURANTS = [
     openingTime: '12:30',
     closingTime: '22:30',
     vegetarian: false,
-    description: 'Udaipur\'s most romantic dining spot â€” lakeside at Amet Haveli with City Palace lit up across the water.'
+    description: 'Udaipur\'s most romantic dining spot Ã¢â‚¬â€ lakeside at Amet Haveli with City Palace lit up across the water.'
   },
   {
     _id: 'millets_of_mewar_udaipur',
@@ -1381,7 +1429,7 @@ export const RESTAURANTS = [
   },
   {
     _id: 'upre_udaipur',
-    name: 'UprÃ© by 1559 AD',
+    name: 'UprÃƒÂ© by 1559 AD',
     cityName: 'Udaipur',
     cuisine: ['Indian', 'Continental', 'Mediterranean'],
     type: 'fine-dining' as const,
@@ -1411,7 +1459,7 @@ export const RESTAURANTS = [
     openingTime: '07:00',
     closingTime: '21:00',
     vegetarian: true,
-    description: 'Jodhpur\'s legendary street-side stall near the clock tower â€” the Makhania Lassi is unmissable.'
+    description: 'Jodhpur\'s legendary street-side stall near the clock tower Ã¢â‚¬â€ the Makhania Lassi is unmissable.'
   },
   {
     _id: 'jhankar_jodhpur',
@@ -1459,7 +1507,7 @@ export const RESTAURANTS = [
     openingTime: '12:00',
     closingTime: '23:00',
     vegetarian: false,
-    description: 'Rooftop fine dining with a jaw-dropping view of Mehrangarh Fort â€” arguably the best dinner view in Jodhpur.'
+    description: 'Rooftop fine dining with a jaw-dropping view of Mehrangarh Fort Ã¢â‚¬â€ arguably the best dinner view in Jodhpur.'
   },
   {
     _id: 'omelette_shop_jodhpur',
@@ -1475,7 +1523,7 @@ export const RESTAURANTS = [
     openingTime: '06:00',
     closingTime: '14:00',
     vegetarian: false,
-    description: 'Early morning staple near Sardar Market â€” crispy samosas and fluffy omelettes since decades.'
+    description: 'Early morning staple near Sardar Market Ã¢â‚¬â€ crispy samosas and fluffy omelettes since decades.'
   },
   {
     _id: 'stepwell_cafe_jodhpur',
@@ -1491,7 +1539,7 @@ export const RESTAURANTS = [
     openingTime: '08:00',
     closingTime: '22:00',
     vegetarian: true,
-    description: 'A stunning cafe built around the restored Toorji Ka Jhalra stepwell â€” Instagram-famous and delicious.'
+    description: 'A stunning cafe built around the restored Toorji Ka Jhalra stepwell Ã¢â‚¬â€ Instagram-famous and delicious.'
   },
 
   // JAISALMER (6)
@@ -1557,7 +1605,7 @@ export const RESTAURANTS = [
     openingTime: '08:00',
     closingTime: '20:00',
     vegetarian: true,
-    description: 'A quirky government-authorized shop near the fort â€” famous for its legendary bhang lassi.'
+    description: 'A quirky government-authorized shop near the fort Ã¢â‚¬â€ famous for its legendary bhang lassi.'
   },
   {
     _id: 'suryagarh_dining_jaisalmer',
@@ -1600,26 +1648,26 @@ export const RESTAURANTS = [
   { _id: 'mama_chicken_agra', name: 'Mama Chicken', cityName: 'Agra', cuisine: ['Mughlai', 'Street Food'], type: 'street-food' as const, priceRange: 'budget' as const, averageCost: 150, rating: 4.3, mustTry: ['Chicken Shawarma', 'Biryani', 'Seekh Kebab'], coordinates: { lat: 27.1780, lng: 78.0200 }, openingTime: '11:00', closingTime: '23:00', vegetarian: false, description: 'Popular local joint for no-nonsense Mughlai street food near Sadar Bazaar.' },
   { _id: 'pinch_of_spice_agra', name: 'Pinch of Spice', cityName: 'Agra', cuisine: ['North Indian', 'Chinese', 'Continental'], type: 'casual' as const, priceRange: 'moderate' as const, averageCost: 600, rating: 4.4, mustTry: ['Paneer Tikka', 'Butter Chicken', 'Galouti Kebab'], coordinates: { lat: 27.1810, lng: 78.0180 }, openingTime: '11:00', closingTime: '23:00', vegetarian: false, description: 'Agra\'s go-to multi-cuisine restaurant with consistent quality and rooftop seating.' },
   // VARANASI
-  { _id: 'kashi_chat_bhandar', name: 'Kashi Chat Bhandar', cityName: 'Varanasi', cuisine: ['Street Food', 'Chaat'], type: 'street-food' as const, priceRange: 'budget' as const, averageCost: 80, rating: 4.4, mustTry: ['Tamatar Chaat', 'Palak Chaat', 'Tikki'], coordinates: { lat: 25.3100, lng: 83.0100 }, openingTime: '10:00', closingTime: '22:00', vegetarian: true, description: 'Legendary chaat shop near Dashashwamedh Ghat â€” the tamatar chaat is a Varanasi institution.' },
+  { _id: 'kashi_chat_bhandar', name: 'Kashi Chat Bhandar', cityName: 'Varanasi', cuisine: ['Street Food', 'Chaat'], type: 'street-food' as const, priceRange: 'budget' as const, averageCost: 80, rating: 4.4, mustTry: ['Tamatar Chaat', 'Palak Chaat', 'Tikki'], coordinates: { lat: 25.3100, lng: 83.0100 }, openingTime: '10:00', closingTime: '22:00', vegetarian: true, description: 'Legendary chaat shop near Dashashwamedh Ghat Ã¢â‚¬â€ the tamatar chaat is a Varanasi institution.' },
   { _id: 'baati_chokha_varanasi', name: 'Baati Chokha', cityName: 'Varanasi', cuisine: ['North Indian', 'Bihari'], type: 'casual' as const, priceRange: 'moderate' as const, averageCost: 400, rating: 4.5, mustTry: ['Litti Chokha', 'Sattu Paratha', 'Lassi'], coordinates: { lat: 25.3000, lng: 83.0050 }, openingTime: '11:00', closingTime: '22:30', vegetarian: true, description: 'Rustic restaurant specializing in regional cuisine from Bihar and UP.' },
   { _id: 'brijwasi_varanasi', name: 'Brijwasi', cityName: 'Varanasi', cuisine: ['Sweets', 'North Indian'], type: 'casual' as const, priceRange: 'budget' as const, averageCost: 200, rating: 4.2, mustTry: ['Malaiyo', 'Rabri', 'Kachori'], coordinates: { lat: 25.3120, lng: 83.0090 }, openingTime: '07:00', closingTime: '22:00', vegetarian: true, description: 'Famous for seasonal Malaiyo (winter only) and traditional sweets near the ghats.' },
   // LUCKNOW
-  { _id: 'tunday_kababi', name: 'Tunday Kababi', cityName: 'Lucknow', cuisine: ['Mughlai', 'Kebab'], type: 'street-food' as const, priceRange: 'budget' as const, averageCost: 150, rating: 4.6, mustTry: ['Galouti Kebab', 'Rumali Roti', 'Biryani'], coordinates: { lat: 26.8600, lng: 80.9100 }, openingTime: '10:00', closingTime: '23:00', vegetarian: false, description: 'Lucknow\'s most iconic kebab shop since 1905 â€” the galouti kebabs are transcendent.' },
+  { _id: 'tunday_kababi', name: 'Tunday Kababi', cityName: 'Lucknow', cuisine: ['Mughlai', 'Kebab'], type: 'street-food' as const, priceRange: 'budget' as const, averageCost: 150, rating: 4.6, mustTry: ['Galouti Kebab', 'Rumali Roti', 'Biryani'], coordinates: { lat: 26.8600, lng: 80.9100 }, openingTime: '10:00', closingTime: '23:00', vegetarian: false, description: 'Lucknow\'s most iconic kebab shop since 1905 Ã¢â‚¬â€ the galouti kebabs are transcendent.' },
   { _id: 'idris_biryani', name: 'Idris Biryani', cityName: 'Lucknow', cuisine: ['Mughlai', 'Biryani', 'Awadhi'], type: 'casual' as const, priceRange: 'moderate' as const, averageCost: 350, rating: 4.5, mustTry: ['Lucknowi Biryani', 'Nihari', 'Korma'], coordinates: { lat: 26.8650, lng: 80.9150 }, openingTime: '11:00', closingTime: '23:00', vegetarian: false, description: 'Popular biryani spot in Old Lucknow with authentic Awadhi flavors.' },
   { _id: 'oudhyana_lucknow', name: 'Oudhyana (Taj)', cityName: 'Lucknow', cuisine: ['Awadhi', 'Fine Dining'], type: 'fine-dining' as const, priceRange: 'expensive' as const, averageCost: 2500, rating: 4.7, mustTry: ['Raan-e-Lucknowi', 'Awadhi Thali', 'Sheermal'], coordinates: { lat: 26.8500, lng: 80.9500 }, openingTime: '12:30', closingTime: '23:00', vegetarian: false, description: 'Fine dining at Taj Lucknow celebrating royal Awadhi cuisine.' },
   // BHOPAL
-  { _id: 'chappan_dukan', name: 'Chappan Dukan', cityName: 'Bhopal', cuisine: ['Street Food', 'Snacks'], type: 'street-food' as const, priceRange: 'budget' as const, averageCost: 100, rating: 4.3, mustTry: ['Poha Jalebi', 'Bhutte Ka Kees', 'Samosa'], coordinates: { lat: 23.2400, lng: 77.4100 }, openingTime: '08:00', closingTime: '22:00', vegetarian: true, description: '56 shops in a famous food lane â€” Bhopal\'s street food capital.' },
-  { _id: 'manohar_dairy', name: 'Manohar Dairy & Restaurant', cityName: 'Bhopal', cuisine: ['North Indian', 'Sweets'], type: 'casual' as const, priceRange: 'moderate' as const, averageCost: 250, rating: 4.4, mustTry: ['Samosa', 'Khopra Patties', 'Thali'], coordinates: { lat: 23.2550, lng: 77.4050 }, openingTime: '08:00', closingTime: '22:30', vegetarian: true, description: 'Bhopal institution since 1957 â€” the samosas and khopra patties are legendary.' },
+  { _id: 'chappan_dukan', name: 'Chappan Dukan', cityName: 'Bhopal', cuisine: ['Street Food', 'Snacks'], type: 'street-food' as const, priceRange: 'budget' as const, averageCost: 100, rating: 4.3, mustTry: ['Poha Jalebi', 'Bhutte Ka Kees', 'Samosa'], coordinates: { lat: 23.2400, lng: 77.4100 }, openingTime: '08:00', closingTime: '22:00', vegetarian: true, description: '56 shops in a famous food lane Ã¢â‚¬â€ Bhopal\'s street food capital.' },
+  { _id: 'manohar_dairy', name: 'Manohar Dairy & Restaurant', cityName: 'Bhopal', cuisine: ['North Indian', 'Sweets'], type: 'casual' as const, priceRange: 'moderate' as const, averageCost: 250, rating: 4.4, mustTry: ['Samosa', 'Khopra Patties', 'Thali'], coordinates: { lat: 23.2550, lng: 77.4050 }, openingTime: '08:00', closingTime: '22:30', vegetarian: true, description: 'Bhopal institution since 1957 Ã¢â‚¬â€ the samosas and khopra patties are legendary.' },
   { _id: 'jehan_numa_dining', name: 'Under The Mango Tree', cityName: 'Bhopal', cuisine: ['Continental', 'Indian'], type: 'fine-dining' as const, priceRange: 'expensive' as const, averageCost: 1800, rating: 4.6, mustTry: ['Grilled Lamb', 'Paneer Tikka', 'Wood-fired Pizza'], coordinates: { lat: 23.2400, lng: 77.4000 }, openingTime: '12:00', closingTime: '23:00', vegetarian: false, description: 'Al-fresco fine dining at Jehan Numa Palace under century-old mango trees.' },
   // KOCHI
   { _id: 'dal_roti_kochi', name: 'Dal Roti', cityName: 'Kochi', cuisine: ['North Indian', 'Punjabi'], type: 'casual' as const, priceRange: 'moderate' as const, averageCost: 350, rating: 4.5, mustTry: ['Dal Makhani', 'Butter Naan', 'Paneer'], coordinates: { lat: 9.9640, lng: 76.2420 }, openingTime: '11:00', closingTime: '22:30', vegetarian: false, description: 'Tucked in Fort Kochi lanes, this tiny gem serves soulful North Indian food.' },
-  { _id: 'kayees_kochi', name: 'Kayees Biryani', cityName: 'Kochi', cuisine: ['Kerala', 'Biryani'], type: 'casual' as const, priceRange: 'budget' as const, averageCost: 200, rating: 4.4, mustTry: ['Malabar Biryani', 'Fish Fry', 'Pathiri'], coordinates: { lat: 9.9700, lng: 76.2850 }, openingTime: '11:30', closingTime: '22:00', vegetarian: false, description: 'Kochi\'s oldest biryani joint â€” fragrant Malabar biryani since 1948.' },
+  { _id: 'kayees_kochi', name: 'Kayees Biryani', cityName: 'Kochi', cuisine: ['Kerala', 'Biryani'], type: 'casual' as const, priceRange: 'budget' as const, averageCost: 200, rating: 4.4, mustTry: ['Malabar Biryani', 'Fish Fry', 'Pathiri'], coordinates: { lat: 9.9700, lng: 76.2850 }, openingTime: '11:30', closingTime: '22:00', vegetarian: false, description: 'Kochi\'s oldest biryani joint Ã¢â‚¬â€ fragrant Malabar biryani since 1948.' },
   { _id: 'old_harbour_dining', name: 'Malabar Junction', cityName: 'Kochi', cuisine: ['Kerala', 'Continental', 'Seafood'], type: 'fine-dining' as const, priceRange: 'expensive' as const, averageCost: 1500, rating: 4.6, mustTry: ['Karimeen Pollichathu', 'Kerala Prawn Curry', 'Appam'], coordinates: { lat: 9.9645, lng: 76.2435 }, openingTime: '12:00', closingTime: '22:30', vegetarian: false, description: 'Elegant restaurant at Malabar House with creative Kerala-European fusion.' }
 ];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // FESTIVALS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export interface Festival {
   _id: string;
@@ -1639,7 +1687,7 @@ export interface Festival {
 }
 
 export const FESTIVALS: Festival[] = [
-  // â”€â”€ RAJASTHAN â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ RAJASTHAN Ã¢â€â‚¬Ã¢â€â‚¬
   {
     _id: 'pushkar_camel_fair',
     name: 'Pushkar Camel Fair',
@@ -1649,12 +1697,12 @@ export const FESTIVALS: Festival[] = [
     approximateDate: 'November 10-18',
     duration: 8,
     type: 'fair',
-    description: 'One of the world\'s largest camel fairs â€” over 50,000 camels, horses, and cattle converge at this spectacular event that blends livestock trading with folk music, dance, and spiritual rituals at Pushkar Lake.',
+    description: 'One of the world\'s largest camel fairs Ã¢â‚¬â€ over 50,000 camels, horses, and cattle converge at this spectacular event that blends livestock trading with folk music, dance, and spiritual rituals at Pushkar Lake.',
     highlights: ['Camel trading & races', 'Hot air balloon rides', 'Folk music & dance', 'Longest moustache competition', 'Pushkar Lake aarti'],
     impact: 'must-see',
     crowdLevel: 'extreme',
     travelAdvisory: 'Book hotels at least 2 months in advance. Tent accommodations fill up fast. Expect inflated prices during the fair.',
-    imageUrl: 'https://images.unsplash.com/photo-1586608816225-a4be0c0a0e13?w=600&h=400&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1604948501466-4e9c339b9c24?w=600&h=400&fit=crop',
   },
   {
     _id: 'jaipur_lit_fest',
@@ -1685,7 +1733,7 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Camel polo matches', 'Mr. Desert competition', 'Folk music under stars', 'Turban tying contest', 'Sand dune performances'],
     impact: 'must-see',
     crowdLevel: 'high',
-    travelAdvisory: 'Book desert camps 3-4 weeks in advance. February nights are cold â€” carry warm clothes.',
+    travelAdvisory: 'Book desert camps 3-4 weeks in advance. February nights are cold Ã¢â‚¬â€ carry warm clothes.',
     imageUrl: 'https://images.unsplash.com/photo-1624806992066-5ffcf7ca186b?w=600&h=400&fit=crop',
   },
   {
@@ -1716,7 +1764,7 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Grand procession with decorated elephant', 'Traditional swings (jhoola)', 'Henna art', 'Ghevar sweets'],
     impact: 'worth-attending',
     crowdLevel: 'high',
-    travelAdvisory: 'The main procession winds through the old city â€” traffic congestion expected. August is monsoon â€” carry rain gear.',
+    travelAdvisory: 'The main procession winds through the old city Ã¢â‚¬â€ traffic congestion expected. August is monsoon Ã¢â‚¬â€ carry rain gear.',
     imageUrl: 'https://images.unsplash.com/photo-1604948501466-4e9c339b9c24?w=600&h=400&fit=crop',
   },
   {
@@ -1765,7 +1813,7 @@ export const FESTIVALS: Festival[] = [
     imageUrl: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop',
   },
 
-  // â”€â”€ UTTAR PRADESH â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ UTTAR PRADESH Ã¢â€â‚¬Ã¢â€â‚¬
   {
     _id: 'holi_mathura',
     name: 'Holi (Lathmar Holi)',
@@ -1779,7 +1827,7 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Lathmar Holi in Barsana', 'Phoolon ki Holi (flower Holi)', 'Holika Dahan bonfire', 'Colors at Banke Bihari Temple', 'Widows\' Holi at Vrindavan'],
     impact: 'must-see',
     crowdLevel: 'extreme',
-    travelAdvisory: 'Extremely crowded â€” wear old clothes. Keep valuables in waterproof bags. Book accommodation in Mathura well in advance. Women should stay in groups.',
+    travelAdvisory: 'Extremely crowded Ã¢â‚¬â€ wear old clothes. Keep valuables in waterproof bags. Book accommodation in Mathura well in advance. Women should stay in groups.',
     imageUrl: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?w=600&h=400&fit=crop',
   },
   {
@@ -1807,11 +1855,11 @@ export const FESTIVALS: Festival[] = [
     approximateDate: 'November 15',
     duration: 1,
     type: 'religious',
-    description: 'The "Diwali of the Gods" â€” celebrated 15 days after Diwali when all 84 ghats of Varanasi are lit with over a million earthen lamps. A breathtaking spiritual spectacle.',
+    description: 'The "Diwali of the Gods" Ã¢â‚¬â€ celebrated 15 days after Diwali when all 84 ghats of Varanasi are lit with over a million earthen lamps. A breathtaking spiritual spectacle.',
     highlights: ['Million diyas on 84 ghats', 'Ganga Aarti at Dashashwamedh', 'Fireworks display', 'Boat rides on lit Ganga'],
     impact: 'must-see',
     crowdLevel: 'extreme',
-    travelAdvisory: 'Book ghat-facing hotels months in advance. Arrive early to secure a viewing spot. Boat rides book out â€” arrange in advance.',
+    travelAdvisory: 'Book ghat-facing hotels months in advance. Arrive early to secure a viewing spot. Boat rides book out Ã¢â‚¬â€ arrange in advance.',
     imageUrl: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=600&h=400&fit=crop',
   },
   {
@@ -1845,7 +1893,7 @@ export const FESTIVALS: Festival[] = [
     imageUrl: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=600&h=400&fit=crop',
   },
 
-  // â”€â”€ GUJARAT â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ GUJARAT Ã¢â€â‚¬Ã¢â€â‚¬
   {
     _id: 'navratri_gujarat',
     name: 'Navratri',
@@ -1871,7 +1919,7 @@ export const FESTIVALS: Festival[] = [
     approximateDate: 'November-February',
     duration: 120,
     type: 'cultural',
-    description: 'A 4-month festival at the White Rann of Kutch â€” a surreal white salt desert that glows under the full moon. Includes luxury tent cities, folk performances, and adventure sports.',
+    description: 'A 4-month festival at the White Rann of Kutch Ã¢â‚¬â€ a surreal white salt desert that glows under the full moon. Includes luxury tent cities, folk performances, and adventure sports.',
     highlights: ['Full moon night on white desert', 'Luxury tent city', 'Kutchi folk music & dance', 'Camel cart rides', 'Artisan village visits'],
     impact: 'must-see',
     crowdLevel: 'high',
@@ -1891,7 +1939,7 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Sky filled with millions of kites', 'International kite competition', 'Rooftop kite battles', 'Undhiyu & Jalebi feast', 'Night kite flying with LEDs'],
     impact: 'must-see',
     crowdLevel: 'extreme',
-    travelAdvisory: 'Best experienced from a rooftop â€” ask hotels for terrace access. Carry sunscreen. Beware of sharp manja (kite string).',
+    travelAdvisory: 'Best experienced from a rooftop Ã¢â‚¬â€ ask hotels for terrace access. Carry sunscreen. Beware of sharp manja (kite string).',
     imageUrl: 'https://images.unsplash.com/photo-1534710961216-75c88202f43e?w=600&h=400&fit=crop',
   },
   {
@@ -1907,10 +1955,10 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Open-air stage at Sun Temple', 'Classical dance forms', 'Temple light-and-sound show', 'Heritage walk'],
     impact: 'worth-attending',
     crowdLevel: 'moderate',
-    imageUrl: 'https://images.unsplash.com/photo-1547153760-18fc86c09492?w=600&h=400&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=600&h=400&fit=crop',
   },
 
-  // â”€â”€ KERALA â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ KERALA Ã¢â€â‚¬Ã¢â€â‚¬
   {
     _id: 'onam',
     name: 'Onam',
@@ -1936,11 +1984,11 @@ export const FESTIVALS: Festival[] = [
     approximateDate: 'August 10 (Second Saturday of August)',
     duration: 1,
     type: 'cultural',
-    description: 'The most famous snake boat race in Kerala â€” massive "chundan vallam" boats with 100+ rowers race on Punnamada Lake while thousands cheer from the banks.',
+    description: 'The most famous snake boat race in Kerala Ã¢â‚¬â€ massive "chundan vallam" boats with 100+ rowers race on Punnamada Lake while thousands cheer from the banks.',
     highlights: ['100-rower snake boats', 'Punnamada Lake spectacle', 'Synchronized rowing', 'Water carnival atmosphere'],
     impact: 'must-see',
     crowdLevel: 'extreme',
-    travelAdvisory: 'Book viewing gallery tickets in advance from District Tourism office. Arrive early for good spots. Expect heavy rain â€” carry umbrellas.',
+    travelAdvisory: 'Book viewing gallery tickets in advance from District Tourism office. Arrive early for good spots. Expect heavy rain Ã¢â‚¬â€ carry umbrellas.',
     imageUrl: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&h=400&fit=crop',
   },
   {
@@ -1956,7 +2004,7 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Pappanji effigy burning', 'Beach music festival', 'Food stalls at Fort Beach', 'Decorated boat parade', 'New Year fireworks'],
     impact: 'worth-attending',
     crowdLevel: 'high',
-    travelAdvisory: 'Fort Kochi hotels fill up for Christmas-New Year week. Book at least a month ahead. The area is walkable â€” skip taxis.',
+    travelAdvisory: 'Fort Kochi hotels fill up for Christmas-New Year week. Book at least a month ahead. The area is walkable Ã¢â‚¬â€ skip taxis.',
     imageUrl: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=600&h=400&fit=crop',
   },
   {
@@ -1972,11 +2020,11 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Elaborately costumed performers', 'Fire-walking rituals', 'Temple courtyard settings', 'Late night performances'],
     impact: 'must-see',
     crowdLevel: 'moderate',
-    travelAdvisory: 'Check local temple schedules for Theyyam dates. Performances often start late at night (10 PM onwards). Photography etiquette â€” ask before clicking.',
+    travelAdvisory: 'Check local temple schedules for Theyyam dates. Performances often start late at night (10 PM onwards). Photography etiquette Ã¢â‚¬â€ ask before clicking.',
     imageUrl: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&h=400&fit=crop',
   },
 
-  // â”€â”€ MADHYA PRADESH â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MADHYA PRADESH Ã¢â€â‚¬Ã¢â€â‚¬
   {
     _id: 'khajuraho_dance_festival',
     name: 'Khajuraho Dance Festival',
@@ -1990,7 +2038,7 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Open-air stage at Western Group temples', 'India\'s top classical dancers', 'Temple light show', 'Craft bazaar'],
     impact: 'must-see',
     crowdLevel: 'high',
-    travelAdvisory: 'Limited hotels in Khajuraho â€” book early. Festival passes available online. Evening performances can get chilly â€” carry a shawl.',
+    travelAdvisory: 'Limited hotels in Khajuraho Ã¢â‚¬â€ book early. Festival passes available online. Evening performances can get chilly Ã¢â‚¬â€ carry a shawl.',
     imageUrl: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=600&h=400&fit=crop',
   },
   {
@@ -2021,7 +2069,7 @@ export const FESTIVALS: Festival[] = [
     highlights: ['Hindustani classical concerts', 'Tansen\'s tomb setting', 'Gwalior Fort backdrop', 'Dhrupad & Khayal performances'],
     impact: 'worth-attending',
     crowdLevel: 'moderate',
-    travelAdvisory: 'Combined well with Gwalior Fort visit. December evenings are cold â€” dress warm.',
+    travelAdvisory: 'Combined well with Gwalior Fort visit. December evenings are cold Ã¢â‚¬â€ dress warm.',
     imageUrl: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=400&fit=crop',
   },
   {
@@ -2040,7 +2088,7 @@ export const FESTIVALS: Festival[] = [
     imageUrl: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=600&h=400&fit=crop',
   },
 
-  // â”€â”€ PAN-INDIA / MULTI-STATE â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ PAN-INDIA / MULTI-STATE Ã¢â€â‚¬Ã¢â€â‚¬
   {
     _id: 'diwali_all',
     name: 'Diwali',
@@ -2055,7 +2103,7 @@ export const FESTIVALS: Festival[] = [
     impact: 'must-see',
     crowdLevel: 'extreme',
     travelAdvisory: 'Transportation may be disrupted. Book flights/trains 2-3 months in advance. Hotels charge peak-season premiums.',
-    imageUrl: 'https://images.unsplash.com/photo-1575359199241-12e31cbcb0f7?w=600&h=400&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&h=400&fit=crop',
   },
   {
     _id: 'holi_all',
@@ -2097,7 +2145,7 @@ export const FESTIVALS: Festival[] = [
     approximateDate: 'April (varies with lunar calendar)',
     duration: 3,
     type: 'religious',
-    description: 'Lucknow\'s Eid celebrations are legendary â€” the city\'s Nawabi heritage shines with grand feasts of Awadhi cuisine, elaborately illuminated mosques, and the aroma of kebabs and biryani in every lane.',
+    description: 'Lucknow\'s Eid celebrations are legendary Ã¢â‚¬â€ the city\'s Nawabi heritage shines with grand feasts of Awadhi cuisine, elaborately illuminated mosques, and the aroma of kebabs and biryani in every lane.',
     highlights: ['Tunday Kababi feast', 'Illuminated Bara Imambara', 'Sheermal & seviyan', 'Old Lucknow night market'],
     impact: 'worth-attending',
     crowdLevel: 'high',
@@ -2113,7 +2161,7 @@ export const FESTIVALS: Festival[] = [
     approximateDate: 'April 14-15',
     duration: 2,
     type: 'religious',
-    description: 'Kerala\'s New Year celebration â€” families set up "Vishukkani" (auspicious arrangement of fruits, flowers, and gold coins) and burst crackers at dawn to welcome the new year.',
+    description: 'Kerala\'s New Year celebration Ã¢â‚¬â€ families set up "Vishukkani" (auspicious arrangement of fruits, flowers, and gold coins) and burst crackers at dawn to welcome the new year.',
     highlights: ['Vishukkani morning ritual', 'Vishu Kaineettam (gift of money)', 'Vishu Sadya feast', 'Temple visits'],
     impact: 'worth-attending',
     crowdLevel: 'moderate',
@@ -2128,18 +2176,18 @@ export const FESTIVALS: Festival[] = [
     approximateDate: 'April-May',
     duration: 1,
     type: 'religious',
-    description: 'The "mother of all poorams" â€” a dazzling temple festival featuring 30+ caparisoned elephants, thunderous Panchavadyam percussion, and a spectacular fireworks display that lights up the entire sky.',
+    description: 'The "mother of all poorams" Ã¢â‚¬â€ a dazzling temple festival featuring 30+ caparisoned elephants, thunderous Panchavadyam percussion, and a spectacular fireworks display that lights up the entire sky.',
     highlights: ['30 caparisoned elephants', 'Kudamattam (umbrella ceremony)', 'Panchavadyam percussion', 'Midnight fireworks'],
     impact: 'must-see',
     crowdLevel: 'extreme',
-    travelAdvisory: 'Incredibly crowded â€” arrive early. The fireworks (5 AM) are the highlight. Book stays in Thrissur town center. Keep valuables secure.',
+    travelAdvisory: 'Incredibly crowded Ã¢â‚¬â€ arrive early. The fireworks (5 AM) are the highlight. Book stays in Thrissur town center. Keep valuables secure.',
     imageUrl: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&h=400&fit=crop',
   },
 ];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // EMERGENCY & SAFETY INFORMATION
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export interface EmergencyInfo {
   cityName: string;
@@ -2158,7 +2206,7 @@ export interface EmergencyInfo {
 }
 
 export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
-  // â”€â”€ RAJASTHAN â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ RAJASTHAN Ã¢â€â‚¬Ã¢â€â‚¬
   Jaipur: {
     cityName: 'Jaipur',
     police: { number: '100', station: 'Jaipur Commissionerate', address: 'Lal Kothi, Tonk Road, Jaipur 302015' },
@@ -2179,17 +2227,17 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     localTips: [
       'Carry a government-issued ID when visiting heritage sites',
       'Use prepaid auto-rickshaws available at key tourist points',
-      'Drink only bottled or filtered water â€” avoid street water',
+      'Drink only bottled or filtered water Ã¢â‚¬â€ avoid street water',
       'Cover your head when visiting religious sites like Birla Mandir',
       'Keep photocopies of your passport and visa separately',
       'Pre-negotiate auto/taxi fares or insist on using the meter',
     ],
     scamWarnings: [
-      'Gem scam: "Invest in gems and export them" â€” never buy gems from random strangers',
+      'Gem scam: "Invest in gems and export them" Ã¢â‚¬â€ never buy gems from random strangers',
       'Commission tricks: Auto drivers take you to shops for commission instead of your destination',
-      'Fake guides at forts claim to be official but charge inflated prices â€” buy tickets at the counter',
-      'Overpriced block-printing workshops near Amber Fort â€” compare prices before buying',
-      'Tea/drink spiking near tourist areas â€” never accept food/drinks from strangers',
+      'Fake guides at forts claim to be official but charge inflated prices Ã¢â‚¬â€ buy tickets at the counter',
+      'Overpriced block-printing workshops near Amber Fort Ã¢â‚¬â€ compare prices before buying',
+      'Tea/drink spiking near tourist areas Ã¢â‚¬â€ never accept food/drinks from strangers',
     ],
     safeAreas: ['C-Scheme', 'MI Road', 'Malviya Nagar', 'Vaishali Nagar', 'Mansarovar'],
     areasToAvoidAtNight: ['Sindhi Camp bus stand area', 'Sanganer outskirts', 'Isolated fort trails after dark'],
@@ -2208,17 +2256,17 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     fire: '101',
     nearestAirport: { name: 'Maharana Pratap Airport', code: 'UDR', distanceKm: 22 },
     localTips: [
-      'Lake Pichola boat rides are best at sunset â€” book official RTDC boats',
+      'Lake Pichola boat rides are best at sunset Ã¢â‚¬â€ book official RTDC boats',
       'Carry cash as many old-city shops don\'t accept cards',
       'Walk the old city streets during daytime for the best experience',
       'Be cautious on narrow lakeside paths during monsoon season',
-      'Official guides are available at City Palace â€” look for RTDC badges',
+      'Official guides are available at City Palace Ã¢â‚¬â€ look for RTDC badges',
     ],
     scamWarnings: [
       'Touts near City Palace offer "secret rooms" tours at inflated prices',
-      'Painting shops in old city may overcharge tourists â€” bargain firmly',
-      'Auto-rickshaws quoting â‚¹500+ for rides within the city â€” actual fare is â‚¹50-100',
-      'Avoid "free" boat ride offers near Gangaur Ghat â€” they have hidden charges',
+      'Painting shops in old city may overcharge tourists Ã¢â‚¬â€ bargain firmly',
+      'Auto-rickshaws quoting Ã¢â€šÂ¹500+ for rides within the city Ã¢â‚¬â€ actual fare is Ã¢â€šÂ¹50-100',
+      'Avoid "free" boat ride offers near Gangaur Ghat Ã¢â‚¬â€ they have hidden charges',
     ],
     safeAreas: ['Fateh Sagar lakeside', 'City Palace area', 'Hathi Pol', 'Ambamata'],
     areasToAvoidAtNight: ['Isolated lake areas', 'Sajjangarh road after dark', 'Rural outskirts'],
@@ -2238,14 +2286,14 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     nearestAirport: { name: 'Jodhpur Airport', code: 'JDH', distanceKm: 5 },
     localTips: [
       'Mehrangarh Fort is best visited early morning to avoid crowds and heat',
-      'The blue-painted houses are in the old city â€” accessible on foot only',
+      'The blue-painted houses are in the old city Ã¢â‚¬â€ accessible on foot only',
       'Try Mirchi Bada from Shahi Samosa near Clock Tower for authentic local food',
       'Carry a scarf to cover your head in temples around the fort',
-      'Summer temperatures can exceed 45Â°C â€” carry water and sunscreen',
+      'Summer temperatures can exceed 45Ã‚Â°C Ã¢â‚¬â€ carry water and sunscreen',
     ],
     scamWarnings: [
-      'Spice shop scams near Clock Tower â€” check quality and weight carefully',
-      'Self-proclaimed "hereditary owners" of houses near the fort charge for photos â€” it\'s public area',
+      'Spice shop scams near Clock Tower Ã¢â‚¬â€ check quality and weight carefully',
+      'Self-proclaimed "hereditary owners" of houses near the fort charge for photos Ã¢â‚¬â€ it\'s public area',
       'Commission-based auto-rickshaw drivers may take detours via shops',
     ],
     safeAreas: ['Ratanada', 'Pal Road', 'Sardarpura', 'Paota'],
@@ -2264,23 +2312,23 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     fire: '101',
     nearestAirport: { name: 'Jaisalmer Airport', code: 'JSA', distanceKm: 17 },
     localTips: [
-      'Carry warm clothes for desert camping â€” temperatures drop drastically at night',
+      'Carry warm clothes for desert camping Ã¢â‚¬â€ temperatures drop drastically at night',
       'Book desert safaris only through verified agencies, not street touts',
-      'Keep hydrated â€” it\'s extremely dry year-round',
-      'Jaisalmer Fort is a living fort with residents â€” be respectful of their homes',
+      'Keep hydrated Ã¢â‚¬â€ it\'s extremely dry year-round',
+      'Jaisalmer Fort is a living fort with residents Ã¢â‚¬â€ be respectful of their homes',
       'Nearest ATMs are inside the fort and near Gadisar Lake',
     ],
     scamWarnings: [
-      'Desert safari scam: Cheap quotes but poor services and hidden costs â€” verify inclusions',
-      'Fake fossil sellers near the fort â€” real fossils are protected and illegal to sell',
-      'Some shops sell "handmade" items that are factory-made â€” buy from verified artisans',
-      'Camel safari operators may change routes or cut short â€” agree on details in writing',
+      'Desert safari scam: Cheap quotes but poor services and hidden costs Ã¢â‚¬â€ verify inclusions',
+      'Fake fossil sellers near the fort Ã¢â‚¬â€ real fossils are protected and illegal to sell',
+      'Some shops sell "handmade" items that are factory-made Ã¢â‚¬â€ buy from verified artisans',
+      'Camel safari operators may change routes or cut short Ã¢â‚¬â€ agree on details in writing',
     ],
     safeAreas: ['Fort interior', 'Gadisar Lake area', 'Patwon Ki Haveli area'],
     areasToAvoidAtNight: ['Desert areas without a guide', 'Outskirts beyond Sam Sand Dunes', 'Longewala border road'],
   },
 
-  // â”€â”€ UTTAR PRADESH â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ UTTAR PRADESH Ã¢â€â‚¬Ã¢â€â‚¬
   Agra: {
     cityName: 'Agra',
     police: { number: '100', station: 'Agra SSP Office', address: 'Vibhav Nagar, Agra 282004' },
@@ -2295,14 +2343,14 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     nearestAirport: { name: 'Agra Airport (Kheria)', code: 'AGR', distanceKm: 12 },
     localTips: [
       'Visit the Taj Mahal at sunrise for fewer crowds and the best light',
-      'Taj Mahal is closed on Fridays â€” plan accordingly',
+      'Taj Mahal is closed on Fridays Ã¢â‚¬â€ plan accordingly',
       'Use only government-approved guides at the Taj Mahal',
-      'Agra Petha is the famous local sweet â€” buy from Panchhi Petha shop',
+      'Agra Petha is the famous local sweet Ã¢â‚¬â€ buy from Panchhi Petha shop',
     ],
     scamWarnings: [
-      'Fake marble inlay workers near Taj selling overpriced items â€” compare prices first',
-      'Horse carriage operators near Taj quote very high prices â€” negotiate firmly',
-      'Avoid "free" photography offers near monuments â€” they demand money later',
+      'Fake marble inlay workers near Taj selling overpriced items Ã¢â‚¬â€ compare prices first',
+      'Horse carriage operators near Taj quote very high prices Ã¢â‚¬â€ negotiate firmly',
+      'Avoid "free" photography offers near monuments Ã¢â‚¬â€ they demand money later',
     ],
     safeAreas: ['Taj Ganj', 'Fatehabad Road', 'Sanjay Place'],
     areasToAvoidAtNight: ['Behind Taj Mahal (Yamuna bank)', 'Agra Fort area back lanes', 'Mantola'],
@@ -2320,15 +2368,15 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     fire: '101',
     nearestAirport: { name: 'Lal Bahadur Shastri Airport', code: 'VNS', distanceKm: 26 },
     localTips: [
-      'The Ganga Aarti at Dashashwamedh Ghat starts at sunset â€” arrive 30 mins early',
-      'Wear comfortable shoes â€” ghat steps can be slippery, especially during monsoon',
-      'Best to explore ghats on foot or by boat â€” vehicles can\'t access most ghats',
-      'Respect cremation rituals at Manikarnika Ghat â€” do not photograph the pyres',
+      'The Ganga Aarti at Dashashwamedh Ghat starts at sunset Ã¢â‚¬â€ arrive 30 mins early',
+      'Wear comfortable shoes Ã¢â‚¬â€ ghat steps can be slippery, especially during monsoon',
+      'Best to explore ghats on foot or by boat Ã¢â‚¬â€ vehicles can\'t access most ghats',
+      'Respect cremation rituals at Manikarnika Ghat Ã¢â‚¬â€ do not photograph the pyres',
     ],
     scamWarnings: [
-      'Boat operators may quote â‚¹2000+ per hour â€” actual rate is â‚¹200-400/hour',
-      'Self-proclaimed priests at ghats demand donations â€” only give if you wish',
-      'Silk shop commission scams â€” ask your hotel directly for genuine silk stores',
+      'Boat operators may quote Ã¢â€šÂ¹2000+ per hour Ã¢â‚¬â€ actual rate is Ã¢â€šÂ¹200-400/hour',
+      'Self-proclaimed priests at ghats demand donations Ã¢â‚¬â€ only give if you wish',
+      'Silk shop commission scams Ã¢â‚¬â€ ask your hotel directly for genuine silk stores',
     ],
     safeAreas: ['Assi Ghat', 'Lanka (BHU area)', 'Sigra', 'Cantonment'],
     areasToAvoidAtNight: ['Narrow ghat lanes', 'Godowlia market after 10 PM', 'Isolated ghat steps'],
@@ -2349,10 +2397,10 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
       'Try Tunday Kababi in Aminabad for the legendary galouti kebab',
       'Bara Imambara is best visited in morning hours for cooler weather',
       'Lucknow Metro is an efficient way to travel between key areas',
-      'Hazratganj is the upscale market area â€” safe for evening shopping',
+      'Hazratganj is the upscale market area Ã¢â‚¬â€ safe for evening shopping',
     ],
     scamWarnings: [
-      'Aminabad market vendors may overcharge tourists â€” bargain confidently',
+      'Aminabad market vendors may overcharge tourists Ã¢â‚¬â€ bargain confidently',
       'Beware of fake chikankari (embroidery) products sold as handmade',
     ],
     safeAreas: ['Hazratganj', 'Gomti Nagar', 'Aliganj', 'Indira Nagar'],
@@ -2371,18 +2419,18 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     nearestAirport: { name: 'Agra Airport', code: 'AGR', distanceKm: 55 },
     localTips: [
       'During Holi, wear old clothes and protect your phone in a ziplock bag',
-      'Krishna Janmabhoomi temple has strict security â€” carry minimal items',
+      'Krishna Janmabhoomi temple has strict security Ã¢â‚¬â€ carry minimal items',
       'Vrindavan is 15 km away and worth a combined visit',
     ],
     scamWarnings: [
-      'Donation scams at temples â€” donate only at official counters',
-      'Auto-rickshaws overcharge to Vrindavan â€” agree on price beforehand',
+      'Donation scams at temples Ã¢â‚¬â€ donate only at official counters',
+      'Auto-rickshaws overcharge to Vrindavan Ã¢â‚¬â€ agree on price beforehand',
     ],
     safeAreas: ['Dampier Nagar', 'Krishna Janmabhoomi area', 'Highway Road'],
     areasToAvoidAtNight: ['Yamuna bank areas', 'Crowded lanes during festivals'],
   },
 
-  // â”€â”€ GUJARAT â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ GUJARAT Ã¢â€â‚¬Ã¢â€â‚¬
   Ahmedabad: {
     cityName: 'Ahmedabad',
     police: { number: '100', station: 'Ahmedabad Police Commissionerate', address: 'Shahibaug, Ahmedabad 380004' },
@@ -2396,13 +2444,13 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     fire: '101',
     nearestAirport: { name: 'Sardar Vallabhbhai Patel Airport', code: 'AMD', distanceKm: 9 },
     localTips: [
-      'Sabarmati Ashram opens early â€” visit before 9 AM for a peaceful experience',
+      'Sabarmati Ashram opens early Ã¢â‚¬â€ visit before 9 AM for a peaceful experience',
       'The heritage walk in the old city starts at 7:30 AM from Swaminarayan Temple',
-      'Try Manek Chowk night market for street food â€” open 9 PM onwards',
+      'Try Manek Chowk night market for street food Ã¢â‚¬â€ open 9 PM onwards',
       'BRTS bus system is the cheapest way to travel across the city',
     ],
     scamWarnings: [
-      'Overpriced auto rides from the airport â€” use prepaid taxi counter',
+      'Overpriced auto rides from the airport Ã¢â‚¬â€ use prepaid taxi counter',
       'Check textile quality carefully in Rani no Hajiro market',
     ],
     safeAreas: ['Navrangpura', 'CG Road', 'SG Highway', 'Prahlad Nagar'],
@@ -2420,20 +2468,20 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     fire: '101',
     nearestAirport: { name: 'Bhuj Airport', code: 'BHJ', distanceKm: 5 },
     localTips: [
-      'White Rann permit is required â€” obtain from Bhuj or online before visiting',
+      'White Rann permit is required Ã¢â‚¬â€ obtain from Bhuj or online before visiting',
       'Full moon nights offer the most magical desert experience',
-      'Carry extra fuel if driving â€” petrol pumps are sparse in desert areas',
+      'Carry extra fuel if driving Ã¢â‚¬â€ petrol pumps are sparse in desert areas',
       'Artisan villages like Ajrakhpur are open only during daytime',
     ],
     scamWarnings: [
-      'Some unofficial tour operators sell Rann Utsav packages at inflated rates â€” book via Gujarat Tourism',
-      'Check handcraft authenticity â€” mass-produced items labeled as handmade',
+      'Some unofficial tour operators sell Rann Utsav packages at inflated rates Ã¢â‚¬â€ book via Gujarat Tourism',
+      'Check handcraft authenticity Ã¢â‚¬â€ mass-produced items labeled as handmade',
     ],
     safeAreas: ['Bhuj city center', 'Tent City area', 'Mandvi Beach'],
     areasToAvoidAtNight: ['Border areas near Pakistan', 'Unlit desert roads', 'Rural Banni region without escort'],
   },
 
-  // â”€â”€ KERALA â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ KERALA Ã¢â€â‚¬Ã¢â€â‚¬
   Kochi: {
     cityName: 'Kochi',
     police: { number: '100', station: 'Kochi City Police', address: 'Marine Drive, Kochi 682031' },
@@ -2449,12 +2497,12 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     localTips: [
       'Fort Kochi is best explored on foot or rented bicycle',
       'Chinese fishing nets are best seen and photographed at sunset',
-      'Kochi Metro runs from Aluva to Pettah â€” convenient for sightseeing',
-      'Monsoon (June-Aug) brings very heavy rains â€” carry proper rain gear',
+      'Kochi Metro runs from Aluva to Pettah Ã¢â‚¬â€ convenient for sightseeing',
+      'Monsoon (June-Aug) brings very heavy rains Ã¢â‚¬â€ carry proper rain gear',
     ],
     scamWarnings: [
-      'Auto-rickshaws may refuse to use meters â€” insist on metered fare or use app-based rides',
-      'Spice market vendors in Mattancherry may overcharge â€” compare prices at multiple shops',
+      'Auto-rickshaws may refuse to use meters Ã¢â‚¬â€ insist on metered fare or use app-based rides',
+      'Spice market vendors in Mattancherry may overcharge Ã¢â‚¬â€ compare prices at multiple shops',
     ],
     safeAreas: ['Fort Kochi', 'Marine Drive', 'MG Road', 'Palarivattom'],
     areasToAvoidAtNight: ['Fishing harbour area', 'Island outskirts', 'Willingdon Island back roads'],
@@ -2471,14 +2519,14 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     fire: '101',
     nearestAirport: { name: 'Cochin International Airport', code: 'COK', distanceKm: 110 },
     localTips: [
-      'Roads are winding mountain roads â€” take breaks to avoid motion sickness',
-      'Carry warm layers â€” temperatures drop to 5-10Â°C at night in winter',
-      'Leeches are common during monsoon on trekking trails â€” wear full shoes and socks',
+      'Roads are winding mountain roads Ã¢â‚¬â€ take breaks to avoid motion sickness',
+      'Carry warm layers Ã¢â‚¬â€ temperatures drop to 5-10Ã‚Â°C at night in winter',
+      'Leeches are common during monsoon on trekking trails Ã¢â‚¬â€ wear full shoes and socks',
       'KDHP Tea Museum is a must-visit for tea enthusiasts',
     ],
     scamWarnings: [
-      'Some jeep drivers to Eravikulam National Park overcharge â€” official rate is fixed',
-      'Spice garden tours may push expensive products â€” no obligation to buy',
+      'Some jeep drivers to Eravikulam National Park overcharge Ã¢â‚¬â€ official rate is fixed',
+      'Spice garden tours may push expensive products Ã¢â‚¬â€ no obligation to buy',
     ],
     safeAreas: ['Munnar town center', 'Tea estate roads', 'KTDC area'],
     areasToAvoidAtNight: ['Forest roads after dark', 'Remote trek trails', 'Mattupetty Dam road'],
@@ -2496,18 +2544,18 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     nearestAirport: { name: 'Cochin International Airport', code: 'COK', distanceKm: 85 },
     localTips: [
       'Book houseboats only from Kerala Tourism-approved operators',
-      'Houseboat prices are higher during Christmas/New Year â€” book early',
-      'Carry mosquito repellent â€” backwater areas have mosquitoes after sunset',
+      'Houseboat prices are higher during Christmas/New Year Ã¢â‚¬â€ book early',
+      'Carry mosquito repellent Ã¢â‚¬â€ backwater areas have mosquitoes after sunset',
     ],
     scamWarnings: [
-      'Non-certified houseboats may lack basic safety equipment â€” verify certification',
-      'Hidden charges on houseboats for AC, meals, and stops â€” clarify everything beforehand',
+      'Non-certified houseboats may lack basic safety equipment Ã¢â‚¬â€ verify certification',
+      'Hidden charges on houseboats for AC, meals, and stops Ã¢â‚¬â€ clarify everything beforehand',
     ],
     safeAreas: ['Alappuzha Beach area', 'Finishing Point', 'Nehru Trophy area'],
     areasToAvoidAtNight: ['Isolated backwater banks', 'Canal-side areas after dark'],
   },
 
-  // â”€â”€ MADHYA PRADESH â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MADHYA PRADESH Ã¢â€â‚¬Ã¢â€â‚¬
   Bhopal: {
     cityName: 'Bhopal',
     police: { number: '100', station: 'Bhopal Police Control Room', address: 'TT Nagar, Bhopal 462003' },
@@ -2522,11 +2570,11 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     nearestAirport: { name: 'Raja Bhoj Airport', code: 'BHO', distanceKm: 12 },
     localTips: [
       'Upper Lake (Bada Talab) is great for evening walks and boat rides',
-      'Visit the Tribal Museum (Manav Sangrahalaya) â€” one of India\'s best',
+      'Visit the Tribal Museum (Manav Sangrahalaya) Ã¢â‚¬â€ one of India\'s best',
       'Bhopali biryani and gosht korma are must-try local specialties',
     ],
     scamWarnings: [
-      'Overcharging for boat rides at Upper Lake â€” use official counters',
+      'Overcharging for boat rides at Upper Lake Ã¢â‚¬â€ use official counters',
     ],
     safeAreas: ['MP Nagar', 'New Market', 'Arera Colony', 'Shahpura'],
     areasToAvoidAtNight: ['Old Bhopal lanes', 'Peer Gate area', 'Industrial areas'],
@@ -2544,18 +2592,18 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     nearestAirport: { name: 'Khajuraho Airport', code: 'HJR', distanceKm: 5 },
     localTips: [
       'The Sound & Light show at the Western Group temples is worth attending',
-      'Official ASI guides are available at the main entrance â€” ask for rates',
-      'Best visited from October to March â€” summers can be extremely hot',
+      'Official ASI guides are available at the main entrance Ã¢â‚¬â€ ask for rates',
+      'Best visited from October to March Ã¢â‚¬â€ summers can be extremely hot',
     ],
     scamWarnings: [
-      'Unofficial guides who "appear" at temples charge very high fees â€” use ASI guides',
-      'Some cycle-shop operators overcharge for bicycle rentals â€” agree on price first',
+      'Unofficial guides who "appear" at temples charge very high fees Ã¢â‚¬â€ use ASI guides',
+      'Some cycle-shop operators overcharge for bicycle rentals Ã¢â‚¬â€ agree on price first',
     ],
     safeAreas: ['Temple complex area', 'Main Bazaar', 'Airport Road hotels'],
     areasToAvoidAtNight: ['Rural surrounds', 'Raneh Falls road after sunset'],
   },
 
-  // â”€â”€ GOA â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ GOA Ã¢â€â‚¬Ã¢â€â‚¬
   'North Goa': {
     cityName: 'North Goa',
     police: { number: '100', station: 'Calangute Police Station', address: 'Calangute, North Goa 403516' },
@@ -2569,21 +2617,21 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     fire: '101',
     nearestAirport: { name: 'Manohar International Airport', code: 'GOX', distanceKm: 35 },
     localTips: [
-      'Always swim at lifeguard-patrolled beaches â€” currents can be strong',
-      'Rent a scooter for â‚¹300-400/day â€” it\'s the best way to explore Goa',
-      'Keep an eye on your belongings at beaches â€” petty theft can occur',
+      'Always swim at lifeguard-patrolled beaches Ã¢â‚¬â€ currents can be strong',
+      'Rent a scooter for Ã¢â€šÂ¹300-400/day Ã¢â‚¬â€ it\'s the best way to explore Goa',
+      'Keep an eye on your belongings at beaches Ã¢â‚¬â€ petty theft can occur',
       'Carry a light waterproof jacket during monsoon (June-September)',
     ],
     scamWarnings: [
-      'Beach shack bills may have hidden charges â€” check prices before ordering',
-      'Jet ski operators may overcharge or not follow safety protocols â€” use licensed vendors',
-      'Taxi mafia charges very high rates â€” use apps or pre-negotiate',
+      'Beach shack bills may have hidden charges Ã¢â‚¬â€ check prices before ordering',
+      'Jet ski operators may overcharge or not follow safety protocols Ã¢â‚¬â€ use licensed vendors',
+      'Taxi mafia charges very high rates Ã¢â‚¬â€ use apps or pre-negotiate',
     ],
     safeAreas: ['Baga Beach', 'Calangute main road', 'Candolim', 'Panjim city center'],
     areasToAvoidAtNight: ['Isolated stretches of Anjuna Beach', 'Arambol cliff trails', 'Dark inner roads'],
   },
 
-  // â”€â”€ MAHARASHTRA â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MAHARASHTRA Ã¢â€â‚¬Ã¢â€â‚¬
   Mumbai: {
     cityName: 'Mumbai',
     police: { number: '100', station: 'Mumbai Police Headquarters', address: 'Crawford Market, DN Road, Mumbai 400001' },
@@ -2600,15 +2648,16 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     localTips: [
       'Mumbai local trains are the fastest way to travel but can be very crowded during rush hours',
       'Use the Ladies\' compartment if traveling as a woman for a safer experience',
-      'Carry a raincoat/umbrella from June to September â€” monsoon is intense',
+      'Carry a raincoat/umbrella from June to September Ã¢â‚¬â€ monsoon is intense',
       'Colaba Causeway is great for street shopping but bargain hard',
     ],
     scamWarnings: [
-      'Taxi drivers at the airport might refuse meters â€” insist on the meter or use app-based cabs',
-      'Avoid unlicensed money changers â€” use banks or authorized outlets',
+      'Taxi drivers at the airport might refuse meters Ã¢â‚¬â€ insist on the meter or use app-based cabs',
+      'Avoid unlicensed money changers Ã¢â‚¬â€ use banks or authorized outlets',
       'Street vendors at tourist spots charge 3-5x the normal price for trinkets',
     ],
     safeAreas: ['Colaba', 'Bandra', 'Juhu', 'Nariman Point', 'Powai'],
     areasToAvoidAtNight: ['Dharavi interior lanes', 'Kamathipura', 'Isolated roads near docks'],
   },
 };
+

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import FavoritePlace from '../models/FavoritePlace';
+import { isDbConnected } from '../lib/dbStatus';
 
 export const toggleFavoritePlace = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -33,6 +34,11 @@ export const toggleFavoritePlace = async (req: AuthRequest, res: Response): Prom
 
 export const getMyFavorites = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!isDbConnected()) {
+            res.json({ success: true, favorites: [] });
+            return;
+        }
+
         const favorites = await FavoritePlace.find({ userId: req.userId }).sort({ addedAt: -1 });
         res.json({ success: true, favorites });
     } catch (error: any) {

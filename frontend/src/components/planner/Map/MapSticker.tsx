@@ -1,4 +1,5 @@
 import { FC, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Download, Loader2, Circle, Square } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import clsx from 'clsx';
@@ -154,7 +155,7 @@ export const MapSticker: FC<MapStickerProps> = ({ result }) => {
             link.download = `trip-map-sticker.png`;
             link.href = dataUrl;
             link.click();
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to download sticker.'); }
         finally { setDownloading(false); }
     };
 

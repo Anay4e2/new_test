@@ -1,29 +1,13 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
-import ThemeToggle from '../common/ThemeToggle';
-import { NotificationBell } from '../common/NotificationBell';
-import { LanguageSelector } from '../common/LanguageSelector';
-import { CurrencySelector } from '../common/CurrencySelector';
-import { useAuthStore } from '@/stores/authStore';
 
-// Accurate Rajasthan state map SVG based on geographic outline
+// Accurate Rajasthan state map SVG derived from GeoJSON boundary data
 const RajasthanMapSVG: FC = () => (
   <svg
-    viewBox="0 0 400 380"
-    className="w-full h-full max-w-md mx-auto"
+    viewBox="0 0 400 400"
+    className="w-full h-auto max-w-md mx-auto"
     xmlns="http://www.w3.org/2000/svg"
   >
-    {/* Rajasthan state outline - accurate geographic shape */}
-    <path
-      d="M85,35 L130,15 L175,8 L220,12 L260,25 L295,45 L320,70 L340,100 L355,135 L365,170 L368,210 L360,250 L345,285 L320,315 L285,340 L245,355 L200,362 L155,355 L115,335 L80,305 L55,270 L40,230 L35,190 L38,150 L50,110 L65,75 L85,35
-             M35,190 L20,210 L12,240 L18,270 L35,290 L55,270
-             M295,45 L310,35 L330,32 L350,40 L360,55 L355,75 L340,100"
-      fill="url(#rajasthanGradient)"
-      stroke="#94A3B8"
-      strokeWidth="2"
-    />
-
-    {/* Gradient for terrain effect */}
     <defs>
       <linearGradient id="rajasthanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#E8F5E9" />
@@ -32,79 +16,88 @@ const RajasthanMapSVG: FC = () => (
       </linearGradient>
     </defs>
 
+    {/* Rajasthan state outline — accurate geographic boundary */}
+    <path
+      d="M201,26 L225,34 L231,48 L236,56 L251,62 L264,63 L268,79 L277,98 L290,110 L289,119 L289,123 L293,129 L297,126 L302,121 L302,115 L310,117 L312,123 L319,116 L327,113 L329,131 L328,139 L335,136 L337,133 L342,133 L346,139 L350,149 L357,155 L360,163 L354,167 L360,169 L361,173 L350,181 L357,180 L365,175 L375,176 L378,175 L384,177 L379,184 L366,192 L352,201 L338,209 L325,219 L314,227 L313,246 L326,254 L338,254 L346,251 L349,261 L339,264 L326,269 L328,278 L331,284 L332,295 L324,293 L326,305 L322,311 L316,306 L309,308 L298,306 L295,313 L289,322 L279,325 L277,328 L271,328 L270,317 L276,319 L282,315 L282,307 L280,297 L286,292 L283,286 L257,283 L256,275 L265,277 L259,272 L262,268 L253,271 L248,276 L242,273 L242,279 L246,285 L242,285 L240,285 L236,293 L241,297 L242,306 L247,318 L244,333 L237,342 L228,352 L236,357 L223,363 L212,360 L205,350 L192,346 L184,336 L180,323 L174,318 L167,308 L167,299 L163,301 L144,294 L135,292 L131,288 L119,288 L113,286 L98,287 L82,284 L67,253 L65,236 L44,230 L44,196 L15,181 L50,124 L69,137 L104,129 L125,109 L146,80 L164,65 L174,47 L196,21 Z"
+      fill="url(#rajasthanGradient)"
+      stroke="#94A3B8"
+      strokeWidth="1.5"
+    />
+
     {/* Desert/Thar region shading (western) */}
-    <ellipse cx="100" cy="180" rx="60" ry="80" fill="#FEF3C7" opacity="0.5" />
+    <ellipse cx="90" cy="190" rx="55" ry="70" fill="#FEF3C7" opacity="0.4" />
 
-    {/* Aravalli Hills region (diagonal across center) */}
+    {/* Aravalli Hills region (NE to SW diagonal) */}
     <path
-      d="M320,70 Q280,150 240,220 Q200,290 155,355"
+      d="M290,110 Q240,180 200,250 Q180,290 193,290"
       stroke="#A7F3D0"
-      strokeWidth="20"
+      strokeWidth="18"
       fill="none"
-      opacity="0.4"
+      opacity="0.35"
       strokeLinecap="round"
     />
 
-    {/* Route line: Jaipur -> Udaipur -> Jodhpur */}
+    {/* Route line: Jaipur -> Udaipur */}
     <path
-      d="M285,120 C260,180 220,260 195,295"
+      d="M281,176 C265,210 230,260 193,290"
       stroke="#2563EB"
-      strokeWidth="3"
+      strokeWidth="2.5"
       strokeDasharray="8 5"
       fill="none"
       strokeLinecap="round"
     />
+    {/* Route line: Udaipur -> Jodhpur */}
     <path
-      d="M195,295 C150,260 110,200 95,165"
+      d="M193,290 C175,260 165,235 164,209"
       stroke="#2563EB"
-      strokeWidth="3"
+      strokeWidth="2.5"
       strokeDasharray="8 5"
       fill="none"
       strokeLinecap="round"
     />
+    {/* Route line: Jodhpur -> Jaipur */}
     <path
-      d="M95,165 C150,130 220,110 285,120"
+      d="M164,209 C190,190 235,178 281,176"
       stroke="#2563EB"
-      strokeWidth="3"
+      strokeWidth="2.5"
       strokeDasharray="8 5"
       fill="none"
       strokeLinecap="round"
     />
 
     {/* Jaipur - capital, eastern side */}
-    <circle cx="285" cy="120" r="14" fill="#2563EB" />
-    <circle cx="285" cy="120" r="6" fill="white" />
-    <text x="300" y="115" fontSize="14" fill="#1E293B" fontWeight="600">Jaipur</text>
-    <text x="300" y="130" fontSize="10" fill="#64748B">Capital</text>
+    <circle cx="281" cy="176" r="13" fill="#2563EB" />
+    <circle cx="281" cy="176" r="5.5" fill="white" />
+    <text x="298" y="172" fontSize="14" fill="#1E293B" fontWeight="600">Jaipur</text>
+    <text x="298" y="186" fontSize="10" fill="#64748B">Capital</text>
 
-    {/* Udaipur - southern side */}
-    <circle cx="195" cy="295" r="12" fill="#2563EB" />
-    <circle cx="195" cy="295" r="5" fill="white" />
-    <text x="210" y="300" fontSize="14" fill="#1E293B" fontWeight="600">Udaipur</text>
+    {/* Udaipur - southern */}
+    <circle cx="193" cy="290" r="11" fill="#2563EB" />
+    <circle cx="193" cy="290" r="4.5" fill="white" />
+    <text x="205" y="285" fontSize="14" fill="#1E293B" fontWeight="600">Udaipur</text>
 
-    {/* Jodhpur - western side */}
-    <circle cx="95" cy="165" r="12" fill="#2563EB" />
-    <circle cx="95" cy="165" r="5" fill="white" />
-    <text x="50" y="150" fontSize="14" fill="#1E293B" fontWeight="600">Jodhpur</text>
+    {/* Jodhpur - western */}
+    <circle cx="164" cy="209" r="11" fill="#2563EB" />
+    <circle cx="164" cy="209" r="4.5" fill="white" />
+    <text x="110" y="200" fontSize="14" fill="#1E293B" fontWeight="600">Jodhpur</text>
 
-    {/* Jaisalmer - far west (desert) */}
-    <circle cx="55" cy="120" r="6" fill="#64748B" />
-    <text x="25" y="108" fontSize="11" fill="#64748B">Jaisalmer</text>
+    {/* Jaisalmer - far west */}
+    <circle cx="75" cy="176" r="5" fill="#64748B" />
+    <text x="30" y="170" fontSize="11" fill="#64748B">Jaisalmer</text>
 
-    {/* Bikaner - northwest */}
-    <circle cx="140" cy="65" r="6" fill="#64748B" />
-    <text x="148" y="60" fontSize="11" fill="#64748B">Bikaner</text>
+    {/* Bikaner - north */}
+    <circle cx="176" cy="122" r="5" fill="#64748B" />
+    <text x="184" y="117" fontSize="11" fill="#64748B">Bikaner</text>
 
-    {/* Neighboring state labels */}
-    <text x="5" y="25" fontSize="10" fill="#94A3B8" fontWeight="500">PAKISTAN</text>
-    <text x="175" y="8" fontSize="10" fill="#94A3B8" fontWeight="500">PUNJAB</text>
-    <text x="320" y="25" fontSize="10" fill="#94A3B8" fontWeight="500">HARYANA</text>
-    <text x="355" y="180" fontSize="10" fill="#94A3B8" fontWeight="500">UTTAR PRADESH</text>
-    <text x="290" y="360" fontSize="10" fill="#94A3B8" fontWeight="500">MADHYA PRADESH</text>
-    <text x="25" y="320" fontSize="10" fill="#94A3B8" fontWeight="500">GUJARAT</text>
+    {/* Neighboring state/country labels */}
+    <text x="5" y="140" fontSize="10" fill="#94A3B8" fontWeight="500">PAKISTAN</text>
+    <text x="190" y="18" fontSize="10" fill="#94A3B8" fontWeight="500">PUNJAB</text>
+    <text x="320" y="100" fontSize="10" fill="#94A3B8" fontWeight="500">HARYANA</text>
+    <text x="340" y="220" fontSize="9" fill="#94A3B8" fontWeight="500">UTTAR PR.</text>
+    <text x="40" y="310" fontSize="10" fill="#94A3B8" fontWeight="500">GUJARAT</text>
 
     {/* "RAJASTHAN" title */}
-    <text x="130" y="200" fontSize="22" fill="#1E3A5F" fontWeight="700" letterSpacing="3">RAJASTHAN</text>
+    <text x="115" y="245" fontSize="20" fill="#1E3A5F" fontWeight="700" letterSpacing="4" opacity="0.7">RAJASTHAN</text>
   </svg>
 );
 
@@ -128,56 +121,12 @@ const RouteIcon: FC = () => (
 );
 
 export const Hero: FC = () => {
-  const { isAuthenticated, user, logout } = useAuthStore();
-
   return (
     <div className="min-h-[85vh] bg-white dark:bg-slate-900 transition-colors duration-200">
-      {/* Navigation */}
-      <nav className="flex items-center justify-between px-10 py-4 border-b border-slate-100 dark:border-slate-800" role="navigation" aria-label="Main navigation">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">T</span>
-          </div>
-          <span className="font-semibold text-slate-800 dark:text-white text-lg">TripPlanner</span>
-        </div>
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium">Home</Link>
-          <Link to="/explore" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium">Explore</Link>
-          <Link to="/plan" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm">Plan Trip</Link>
-          <Link to="/plan" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm">Packages</Link>
-          <Link to="/plan" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm">About</Link>
-          {isAuthenticated() && (
-            <Link to="/dashboard" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium">My Trips</Link>
-          )}
-          <NotificationBell />
-          <CurrencySelector />
-          <LanguageSelector />
-          <ThemeToggle />
-          {isAuthenticated() ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">{user?.name}</span>
-              <button
-                onClick={logout}
-                className="text-red-500 border border-red-300 dark:border-red-500/40 px-4 py-1.5 rounded-md text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <Link
-              to="/login"
-              className="text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 px-4 py-1.5 rounded-md text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-            >
-              Sign In
-            </Link>
-          )}
-        </div>
-      </nav>
-
       {/* Hero Content */}
-      <div className="flex items-center max-w-7xl mx-auto px-10 py-12 gap-8">
+      <div className="flex items-start max-w-7xl mx-auto px-10 py-8 gap-8">
         {/* Left Column - Content */}
-        <div className="w-1/2">
+        <div className="w-1/2 pt-8">
           <h1 className="text-5xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight mb-6">
             Plan Smarter Trips Across India
           </h1>
@@ -220,11 +169,11 @@ export const Hero: FC = () => {
 
         {/* Right Column - Rajasthan Map */}
         <div className="w-1/2 relative">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
             <RajasthanMapSVG />
 
             {/* Floating Route Card */}
-            <div className="absolute bottom-8 right-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-lg max-w-[220px]">
+            <div className="absolute -bottom-2 right-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-lg max-w-[220px]">
               <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium mb-2">
                 <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />

@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import trainService from '../services/trainService';
 
@@ -14,7 +15,7 @@ export const getTrainsBetweenStations = async (req: Request, res: Response): Pro
 
         res.json(result);
     } catch (error) {
-        console.error('Error fetching trains:', error);
+        logger.error('Error fetching trains:', error);
         res.status(500).json({ error: 'Failed to fetch train information' });
     }
 };
@@ -31,7 +32,7 @@ export const getLiveStation = async (req: Request, res: Response): Promise<void>
         const trains = await trainService.getLiveStation(stationCode, hours);
         res.json({ stationCode, trains, totalTrains: trains.length });
     } catch (error) {
-        console.error('Error fetching live station:', error);
+        logger.error('Error fetching live station:', error);
         res.status(500).json({ error: 'Failed to fetch live station data' });
     }
 };
@@ -42,7 +43,7 @@ export const getTrainSchedule = async (req: Request, res: Response): Promise<voi
         const schedule = await trainService.getTrainSchedule(trainNumber);
         res.json({ trainNumber, schedule });
     } catch (error) {
-        console.error('Error fetching train schedule:', error);
+        logger.error('Error fetching train schedule:', error);
         res.status(500).json({ error: 'Failed to fetch train schedule' });
     }
 };
@@ -54,7 +55,7 @@ export const getTrainStatus = async (req: Request, res: Response): Promise<void>
         const status = await trainService.getTrainLiveStatus(trainNumber, date);
         res.json(status);
     } catch (error) {
-        console.error('Error fetching train status:', error);
+        logger.error('Error fetching train status:', error);
         res.status(500).json({ error: 'Failed to fetch train status' });
     }
 };
@@ -65,7 +66,7 @@ export const checkPNRStatus = async (req: Request, res: Response): Promise<void>
         const pnrStatus = await trainService.checkPNRStatus(pnrNumber);
         res.json({ pnrNumber, status: pnrStatus });
     } catch (error) {
-        console.error('Error checking PNR status:', error);
+        logger.error('Error checking PNR status:', error);
         res.status(500).json({ error: 'Failed to check PNR status' });
     }
 };
@@ -80,7 +81,7 @@ export const searchStation = async (req: Request, res: Response): Promise<void> 
         const stations = await trainService.searchStation(query as string);
         res.json({ query, stations });
     } catch (error) {
-        console.error('Error searching station:', error);
+        logger.error('Error searching station:', error);
         res.status(500).json({ error: 'Failed to search station' });
     }
 };
@@ -106,7 +107,7 @@ export const checkSeatAvailability = async (req: Request, res: Response): Promis
 
         res.json({ trainNumber, from, to, classType, date, availability });
     } catch (error) {
-        console.error('Error checking seat availability:', error);
+        logger.error('Error checking seat availability:', error);
         res.status(500).json({ error: 'Failed to check seat availability' });
     }
 };
@@ -124,7 +125,7 @@ export const getFare = async (req: Request, res: Response): Promise<void> => {
         const fare = await trainService.getFare(trainNumber, from as string, to as string);
         res.json({ trainNumber, from, to, fare });
     } catch (error) {
-        console.error('Error fetching fare:', error);
+        logger.error('Error fetching fare:', error);
         res.status(500).json({ error: 'Failed to fetch fare' });
     }
 };

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { generateTrip, TripRequest } from '../services/planner';
 import { optimizeRoute as optimizeRouteService } from '../services/routeOptimizer';
+import logger from '../lib/logger';
 
 export const createTrip = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -32,7 +33,7 @@ export const createTrip = async (req: Request, res: Response): Promise<void> => 
         const result = await generateTrip(tripRequest);
         res.json(result);
     } catch (error: any) {
-        console.error('Error generating trip:', error);
+        logger.error('Error generating trip:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -49,7 +50,7 @@ export const optimizeRoute = async (req: Request, res: Response): Promise<void> 
         const result = await optimizeRouteService({ placeIds, startCityName });
         res.json(result);
     } catch (error: any) {
-        console.error('Error optimizing route:', error);
+        logger.error('Error optimizing route:', error);
         res.status(500).json({ error: 'Failed to optimize route' });
     }
 };
@@ -86,7 +87,7 @@ export const compareTrips = async (req: Request, res: Response): Promise<void> =
             ],
         });
     } catch (error: any) {
-        console.error('Error comparing trips:', error);
+        logger.error('Error comparing trips:', error);
         res.status(500).json({ error: 'Failed to compare trips' });
     }
 };

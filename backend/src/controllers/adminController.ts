@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import Place from '../models/Place';
 import SavedTrip from '../models/SavedTrip';
@@ -45,7 +46,7 @@ export const getAllPlacesAdmin = async (req: Request, res: Response) => {
             }
         });
     } catch (error) {
-        console.error('Error in getAllPlacesAdmin:', error);
+        logger.error('Error in getAllPlacesAdmin:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -56,7 +57,7 @@ export const createPlace = async (req: Request, res: Response) => {
         await newPlace.save();
         res.status(201).json({ success: true, place: newPlace });
     } catch (error) {
-        console.error('Error in createPlace:', error);
+        logger.error('Error in createPlace:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -70,7 +71,7 @@ export const updatePlace = async (req: Request, res: Response) => {
         }
         res.json({ success: true, place: updatedPlace });
     } catch (error) {
-        console.error('Error in updatePlace:', error);
+        logger.error('Error in updatePlace:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -81,7 +82,7 @@ export const deletePlace = async (req: Request, res: Response) => {
         await Place.findByIdAndDelete(id);
         res.json({ success: true, message: 'Place deleted successfully' });
     } catch (error) {
-        console.error('Error in deletePlace:', error);
+        logger.error('Error in deletePlace:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -117,7 +118,7 @@ export const getAllTripsAdmin = async (req: Request, res: Response) => {
             }
         });
     } catch (error) {
-        console.error('Error in getAllTripsAdmin:', error);
+        logger.error('Error in getAllTripsAdmin:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -128,7 +129,7 @@ export const deleteTripAdmin = async (req: Request, res: Response) => {
         await SavedTrip.findByIdAndDelete(id);
         res.json({ success: true, message: 'Trip deleted successfully' });
     } catch (error) {
-        console.error('Error in deleteTripAdmin:', error);
+        logger.error('Error in deleteTripAdmin:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

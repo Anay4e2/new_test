@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 
@@ -10,7 +11,7 @@ if (isConfigured) {
         api_secret: process.env.CLOUDINARY_API_SECRET,
     });
 } else {
-    console.warn('CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET not set — photo uploads will use base64 fallback');
+    logger.warn('CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET not set — photo uploads will use base64 fallback');
 }
 
 export function isCloudinaryConfigured(): boolean {
@@ -49,6 +50,6 @@ export async function deleteFromCloudinary(publicId: string): Promise<void> {
     try {
         await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-        console.error('Failed to delete from Cloudinary:', error);
+        logger.error('Failed to delete from Cloudinary:', error);
     }
 }

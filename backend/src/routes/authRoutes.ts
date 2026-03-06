@@ -3,6 +3,8 @@ import rateLimit from 'express-rate-limit';
 import { register, login, getMe, adminLogin, forgotPassword, resetPassword, updateProfile, changePassword } from '../controllers/authController';
 import { googleAuth } from '../controllers/oauthController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { validate } from '../middleware/validate';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, updateProfileSchema, changePasswordSchema } from '../lib/validationSchemas';
 
 const router = Router();
 
@@ -14,17 +16,17 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Public routes (rate-limited)
-router.post('/register', authLimiter, register);
-router.post('/login', authLimiter, login);
-router.post('/admin-login', authLimiter, adminLogin);
-router.post('/forgot-password', authLimiter, forgotPassword);
-router.post('/reset-password/:token', authLimiter, resetPassword);
+// Public routes (rate-limited + validated)
+router.post('/register', authLimiter, validate(registerSchema), register);
+router.post('/login', authLimiter, validate(loginSchema), login);
+router.post('/admin-login', authLimiter, validate(loginSchema), adminLogin);
+router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post('/reset-password/:token', authLimiter, validate(resetPasswordSchema), resetPassword);
 router.post('/google', authLimiter, googleAuth);
 
-// Protected routes
+// Protected routes (validated)
 router.get('/me', authMiddleware, getMe);
-router.put('/profile', authMiddleware, updateProfile);
-router.put('/password', authMiddleware, changePassword);
+router.put('/profile', authMiddleware, validate(updateProfileSchema), updateProfile);
+router.put('/password', authMiddleware, validate(changePasswordSchema), changePassword);
 
 export default router;

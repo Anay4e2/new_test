@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { generateItineraryPDF } from '../services/pdfService';
@@ -112,7 +113,7 @@ router.post('/validate', async (req, res) => {
             },
         });
     } catch (error: any) {
-        console.error('Validate itinerary error:', error);
+        logger.error('Validate itinerary error:', error);
         res.status(500).json({ error: 'Validation failed' });
     }
 });
@@ -135,7 +136,7 @@ router.post('/pdf', async (req, res) => {
         res.setHeader('Content-Length', pdfBuffer.length);
         res.send(pdfBuffer);
     } catch (error: any) {
-        console.error('Error generating PDF:', error);
+        logger.error('Error generating PDF:', error);
         res.status(500).json({ error: 'Failed to generate PDF' });
     }
 });
@@ -155,7 +156,7 @@ router.post('/packing-list', async (req, res) => {
         const packingList = generatePackingList(tripResult, currentMonth, constraints, budget);
         res.json(packingList);
     } catch (error: any) {
-        console.error('Error generating packing list:', error);
+        logger.error('Error generating packing list:', error);
         res.status(500).json({ error: 'Failed to generate packing list' });
     }
 });
@@ -176,7 +177,7 @@ router.post('/whatsapp-text', async (req, res) => {
 
         res.json({ text, whatsappUrl });
     } catch (error: any) {
-        console.error('Error generating WhatsApp text:', error);
+        logger.error('Error generating WhatsApp text:', error);
         res.status(500).json({ error: 'Failed to generate WhatsApp text' });
     }
 });
@@ -195,7 +196,7 @@ router.post('/send-email', authMiddleware, emailLimiter, async (req, res) => {
         const result = await sendItineraryEmail(email, tripResult, attachPdf);
         res.json(result);
     } catch (error: any) {
-        console.error('Error sending email:', error);
+        logger.error('Error sending email:', error);
         res.status(500).json({ error: 'Failed to send email' });
     }
 });
@@ -218,7 +219,7 @@ router.get('/booking-links', (req, res) => {
         const links = generateBookingLinks(from as string, to as string, travelDate, travelMode, dist);
         res.json({ links, disclaimer: 'Prices are estimates. Check booking site for current fares.' });
     } catch (error: any) {
-        console.error('Error generating booking links:', error);
+        logger.error('Error generating booking links:', error);
         res.status(500).json({ error: 'Failed to generate booking links' });
     }
 });
@@ -242,7 +243,7 @@ router.post('/calendar/ical', (req, res) => {
         res.setHeader('Content-Length', buffer.length);
         res.send(buffer);
     } catch (error: any) {
-        console.error('Error generating iCal:', error);
+        logger.error('Error generating iCal:', error);
         res.status(500).json({ error: 'Failed to generate iCal file' });
     }
 });
@@ -261,7 +262,7 @@ router.post('/calendar/google-urls', (req, res) => {
         const urls = generateGoogleCalendarUrls(tripResult, startDate);
         res.json({ urls });
     } catch (error: any) {
-        console.error('Error generating Google Calendar URLs:', error);
+        logger.error('Error generating Google Calendar URLs:', error);
         res.status(500).json({ error: 'Failed to generate Calendar URLs' });
     }
 });

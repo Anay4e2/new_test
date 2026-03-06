@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Analytics from '../models/Analytics';
+import logger from '../lib/logger';
 
 // Determine the type of analytics event based on endpoint
 const getEventType = (endpoint: string, method: string): 'pageview' | 'search' | 'trip_generation' | 'api_call' => {
@@ -53,7 +54,7 @@ export const analyticsMiddleware = async (
                     timestamp: new Date()
                 });
             } catch (error) {
-                console.error('Analytics logging error:', error);
+                logger.error('Analytics logging error:', error);
             }
         });
 

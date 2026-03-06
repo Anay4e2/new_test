@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import Review from '../models/Review';
 import Place from '../models/Place';
@@ -88,7 +89,7 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
 
         res.status(201).json({ success: true, review });
     } catch (error: any) {
-        console.error('Error creating review:', error);
+        logger.error('Error creating review:', error);
         if (error.code === 11000) {
             res.status(409).json({ success: false, message: 'You have already reviewed this place' });
             return;
@@ -137,7 +138,7 @@ export const getReviewsForPlace = async (req: Request, res: Response): Promise<v
             hasMore: offset + limit < totalCount,
         });
     } catch (error) {
-        console.error('Error fetching reviews:', error);
+        logger.error('Error fetching reviews:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch reviews' });
     }
 };
@@ -157,7 +158,7 @@ export const getMyReviews = async (req: AuthRequest, res: Response): Promise<voi
 
         res.json({ success: true, reviews });
     } catch (error) {
-        console.error('Error fetching my reviews:', error);
+        logger.error('Error fetching my reviews:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch reviews' });
     }
 };
@@ -189,12 +190,51 @@ export const markHelpful = async (req: AuthRequest, res: Response): Promise<void
 
         res.json({ success: true, helpfulCount: review.helpfulCount });
     } catch (error) {
-        console.error('Error marking helpful:', error);
+        logger.error('Error marking helpful:', error);
         res.status(500).json({ success: false, message: 'Failed to mark review as helpful' });
     }
 };
 
-// DELETE /api/reviews/:id â€” delete own review
+// PUT /api/reviews/:id — update own review
+export const updateReview = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ success: false, message: 'Authentication required' });
+            return;
+        }
+
+        const { id } = req.params;
+        const review = await Review.findById(id);
+
+        if (!review) {
+            res.status(404).json({ success: false, message: 'Review not found' });
+            return;
+        }
+
+        if (review.userId.toString() !== userId) {
+            res.status(403).json({ success: false, message: 'You can only edit your own reviews' });
+            return;
+        }
+
+        const { rating, title, comment, visitDate } = req.body;
+
+        if (rating !== undefined) review.rating = rating;
+        if (title !== undefined) review.title = sanitize(title);
+        if (comment !== undefined) review.comment = sanitize(comment);
+        if (visitDate !== undefined) review.visitDate = visitDate;
+
+        await review.save();
+        await recalculateRating(review.placeId);
+
+        res.json({ success: true, review });
+    } catch (error) {
+        logger.error('Error updating review:', error);
+        res.status(500).json({ success: false, message: 'Failed to update review' });
+    }
+};
+
+// DELETE /api/reviews/:id — delete own review
 export const deleteReview = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
@@ -224,7 +264,7 @@ export const deleteReview = async (req: AuthRequest, res: Response): Promise<voi
 
         res.json({ success: true, message: 'Review deleted' });
     } catch (error) {
-        console.error('Error deleting review:', error);
+        logger.error('Error deleting review:', error);
         res.status(500).json({ success: false, message: 'Failed to delete review' });
     }
 };

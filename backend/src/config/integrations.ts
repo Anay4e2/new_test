@@ -54,6 +54,11 @@ export function getIntegrationStatus(): IntegrationStatus[] {
       provider: process.env.GOOGLE_MAPS_API_KEY ? 'Google Maps' : 'Haversine Calculation',
     },
     {
+      name: 'Place Photos',
+      enabled: !!process.env.GOOGLE_MAPS_API_KEY,
+      provider: process.env.GOOGLE_MAPS_API_KEY ? 'Google Places API' : 'Static Unsplash Images',
+    },
+    {
       name: 'OAuth',
       enabled: !!process.env.GOOGLE_CLIENT_ID,
       provider: process.env.GOOGLE_CLIENT_ID ? 'Google OAuth' : 'Disabled',
@@ -74,6 +79,7 @@ export function isFeatureEnabled(feature: string): boolean {
     case 'currency':
       return !!process.env.EXCHANGE_RATE_API_KEY;
     case 'maps':
+    case 'placePhotos':
       return !!process.env.GOOGLE_MAPS_API_KEY;
     case 'oauth':
       return !!process.env.GOOGLE_CLIENT_ID;

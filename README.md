@@ -1,33 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# India TripPlanner
 
-## Getting Started
+A full-stack travel package builder for India, featuring interactive itinerary planning, real-time collaboration, and booking integrations.
 
-First, run the development server:
+## Architecture
+
+| Layer | Stack |
+|-------|-------|
+| **Frontend** | React 19, Vite, TypeScript, TailwindCSS, Zustand, Framer Motion, Leaflet/Google Maps |
+| **Backend** | Express 5, TypeScript, Mongoose/MongoDB, Socket.IO, Zod validation, Winston logging |
+| **Infrastructure** | Docker Compose (frontend + backend + MongoDB) |
+
+## Features
+
+- **Trip Planner** — Multi-city itinerary generator with day-wise activities, hotels, meals, and transport
+- **Interactive Maps** — Route visualization with polylines, flight arcs, and place markers
+- **Transport Variants** — Compare train/bus/flight/car options with costs, duration, and booking links
+- **Weather & Safety** — Seasonal weather data and city-wise emergency/safety information
+- **Restaurants** — Discover restaurants by city, type, and cuisine
+- **Festivals** — Browse festivals by state, month, and type
+- **Train Search** — PNR status, live tracking, station info via Indian Railways integration
+- **Journal** — Day-by-day travel journaling with photos, moods, and markdown
+- **Expense Tracking** — Per-trip budget and spending management
+- **Group Trips** — Real-time collaborative planning with chat and polls via WebSocket
+- **Postcards** — Generate shareable travel postcards from trip photos
+- **Reviews** — Rate and review places with inline editing
+- **Packages** — Curated travel packages with booking
+- **Admin Panel** — Place/trip/package management and analytics dashboard
+- **i18n** — English and Hindi translations
+- **Dark Mode** — Full dark theme support
+
+## Quick Start
 
 ```bash
+# Clone and install
+npm install
+cd frontend && npm install
+cd ../backend && npm install
+
+# Start backend (port 3001)
+cd backend
+cp .env.example .env   # edit with your MongoDB URI and JWT secret
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Start frontend (port 5173)
+cd frontend
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Docker
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+docker compose up --build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Services: `frontend` (:80), `backend` (:3001), `mongo` (:27017)
 
-## Learn More
+## Testing
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cd backend && npm test   # 71 tests (Vitest)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+frontend/       React SPA (Vite)
+  src/pages/    22 page components
+  src/components/  63+ UI components (planner, common, home, admin)
+  src/services/ API client (60+ endpoints)
+  src/stores/   Zustand state (auth, trip, notification, currency, theme)
+  src/hooks/    Custom hooks (keyboard, sockets, notifications)
+
+backend/        Express API
+  src/controllers/  29 controllers
+  src/models/       16 Mongoose models
+  src/routes/       Route definitions with Zod validation
+  src/services/     Business logic (planner, route optimizer, booking links)
+  src/middleware/    Auth, admin, analytics, rate limiting
+  src/lib/          Shared utilities (errors, pagination, logger)
+```
 
 ## Deploy on Vercel
 

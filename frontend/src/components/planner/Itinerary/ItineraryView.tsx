@@ -1,4 +1,5 @@
 import { FC, useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { TripResult, TripRequest, NightStayInfo, Hotel, MealRecommendation, Restaurant } from '@/types';
 import { Car, Moon, ArrowLeft, Loader2, Star, Building2, ChevronDown, X, Coffee, UtensilsCrossed, RefreshCw, Save, Heart, Thermometer, CloudRain, Sun, AlertTriangle, Train, Plane, Pencil, Check, Download, Plus } from 'lucide-react';
 import { ExportButtons } from './ExportButtons';
@@ -19,6 +20,7 @@ import { SafetyInfo } from './SafetyInfo';
 import TrainStatusComponent from '../Transport/TrainStatus';
 import { SOSButton } from '../../common/SOSButton';
 import { BookingLinks } from '../Transport/BookingLinks';
+import { RouteVariantSelector } from '../Transport/RouteVariantSelector';
 import { AddActivityModal } from './AddActivityModal';
 
 interface ItineraryViewProps {
@@ -146,7 +148,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
           return next;
         });
       }
-    } catch { /* silently fail */ }
+    } catch { toast.error('Failed to update favorite.'); }
   };
 
   const isHotelInfo = (ns: string | NightStayInfo): ns is NightStayInfo => {
@@ -535,6 +537,18 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
                       distance={day.travel.distance}
                       startDate={startDate}
                     />
+                  )}
+
+                  {/* Transport variant selector */}
+                  {day.travel && (
+                    <div className="mt-3">
+                      <RouteVariantSelector
+                        from={day.travel.from}
+                        to={day.travel.to}
+                        selectedMode={day.travel.mode?.toLowerCase()}
+                        onSelect={() => {}}
+                      />
+                    </div>
                   )}
 
                   {/* Activities */}

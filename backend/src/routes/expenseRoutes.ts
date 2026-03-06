@@ -7,6 +7,8 @@ import {
     deleteExpense,
     getExpenseSummary,
 } from '../controllers/expenseController';
+import { validate, validateParams } from '../middleware/validate';
+import { addExpenseSchema, updateExpenseSchema, objectIdParam } from '../lib/validationSchemas';
 
 const router = Router();
 
@@ -14,7 +16,7 @@ const router = Router();
 router.use(authMiddleware);
 
 // POST /api/expenses — add expense
-router.post('/', addExpense);
+router.post('/', validate(addExpenseSchema), addExpense);
 
 // GET /api/expenses/trip/:tripId — list expenses for a trip
 router.get('/trip/:tripId', getExpensesByTrip);
@@ -23,9 +25,9 @@ router.get('/trip/:tripId', getExpensesByTrip);
 router.get('/trip/:tripId/summary', getExpenseSummary);
 
 // PUT /api/expenses/:id — update
-router.put('/:id', updateExpense);
+router.put('/:id', validateParams(objectIdParam), validate(updateExpenseSchema), updateExpense);
 
 // DELETE /api/expenses/:id — delete
-router.delete('/:id', deleteExpense);
+router.delete('/:id', validateParams(objectIdParam), deleteExpense);
 
 export default router;

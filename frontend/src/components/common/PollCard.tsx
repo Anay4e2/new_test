@@ -1,4 +1,5 @@
 import { FC, useState } from 'react';
+import toast from 'react-hot-toast';
 import type { GroupPoll } from '@/types';
 import { votePoll as votePollApi, closePoll as closePollApi } from '@/services/api';
 import { Lock, CheckCircle2 } from 'lucide-react';
@@ -28,7 +29,7 @@ export const PollCard: FC<PollCardProps> = ({ groupId, poll, currentUserId, isOw
         try {
             await votePollApi(groupId, poll._id, index);
             onUpdated();
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to submit vote.'); }
         finally { setVoting(false); }
     };
 
@@ -38,7 +39,7 @@ export const PollCard: FC<PollCardProps> = ({ groupId, poll, currentUserId, isOw
         try {
             await closePollApi(groupId, poll._id);
             onUpdated();
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to close poll.'); }
         finally { setClosing(false); }
     };
 

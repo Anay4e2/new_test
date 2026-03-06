@@ -1,17 +1,28 @@
-# React + TypeScript + Vite
+# TripPlanner Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 SPA built with Vite, TypeScript, and TailwindCSS.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+cp .env.example .env   # set VITE_API_URL if backend is not localhost:3001
+npm run dev             # http://localhost:5173
+```
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server with HMR |
+| `npm run build` | Production build |
+| `npm run preview` | Preview production build |
+| `npm run lint` | ESLint check |
+| `npm test` | Run Vitest tests |
 
-## Expanding the ESLint configuration
+## Key Dependencies
+
+React 19, React Router, Zustand (state), TailwindCSS 4, Framer Motion (animations), Leaflet + Google Maps, Socket.IO Client, i18next, react-hot-toast, DOMPurify, Zod.
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 

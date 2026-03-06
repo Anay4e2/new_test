@@ -9,7 +9,7 @@ import { getJournalEntries, createJournalEntry, updateJournalEntry, deleteJourna
 import type { JournalEntry, JournalMood, SavedTrip } from '@/types';
 import { JournalEditor } from '@/components/planner/Trip/JournalEditor';
 import { JournalView } from '@/components/planner/Trip/JournalView';
-import ThemeToggle from '@/components/common/ThemeToggle';
+
 
 export const Journal: FC = () => {
     const { tripId } = useParams<{ tripId: string }>();
@@ -123,8 +123,8 @@ export const Journal: FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
-            {/* Navigation */}
-            <nav className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800">
+            {/* Page Header */}
+            <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800">
                 <div className="max-w-4xl mx-auto px-6 flex items-center justify-between h-14">
                     <div className="flex items-center gap-3">
                         <button onClick={() => navigate(isOwner ? '/dashboard' : '/')} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg">
@@ -138,24 +138,21 @@ export const Journal: FC = () => {
                             <p className="text-[10px] text-gray-400">{isOwner ? 'Your journal' : 'Public journal'}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <ThemeToggle />
-                        {isOwner && (
-                            <button
-                                onClick={handleShare}
-                                className={clsx(
-                                    'text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-all',
-                                    copied
-                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
-                                        : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
-                                )}
-                            >
-                                {copied ? '✅ Copied!' : <><Share2 size={12} /> Share</>}
-                            </button>
-                        )}
-                    </div>
+                    {isOwner && (
+                        <button
+                            onClick={handleShare}
+                            className={clsx(
+                                'text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-all',
+                                copied
+                                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                                    : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                            )}
+                        >
+                            {copied ? '✅ Copied!' : <><Share2 size={12} /> Share</>}
+                        </button>
+                    )}
                 </div>
-            </nav>
+            </div>
 
             {/* Hero */}
             <section className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 py-10 px-6 text-center">

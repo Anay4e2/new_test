@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 // Email Service for Itineraries
 import nodemailer from 'nodemailer';
 import { generateItineraryPDF } from './pdfService';
@@ -194,7 +195,7 @@ export async function sendItineraryEmail(
         await transporter.sendMail(mailOptions);
         return { success: true, message: 'Itinerary sent successfully!' };
     } catch (error: any) {
-        console.error('Email send error:', error);
+        logger.error('Email send error:', error);
         return {
             success: false,
             message: error.message || 'Failed to send email',
@@ -208,7 +209,7 @@ export async function sendResetPasswordEmail(
     resetUrl: string
 ): Promise<void> {
     if (!isSmtpConfigured()) {
-        console.log(`[DEV] Password reset link for ${to}: ${resetUrl}`);
+        logger.info(`[DEV] Password reset link for ${to}: ${resetUrl}`);
         return;
     }
 

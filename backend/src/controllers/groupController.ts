@@ -1,9 +1,11 @@
+import logger from '../lib/logger';
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import TripGroup from '../models/TripGroup';
 import SavedTrip from '../models/SavedTrip';
 import User from '../models/User';
 import nodemailer from 'nodemailer';
+import { isDbConnected } from '../lib/dbStatus';
 
 // Reuse email config from emailService pattern
 function isSmtpConfigured(): boolean {
@@ -64,7 +66,7 @@ export const createGroup = async (req: AuthRequest, res: Response): Promise<void
 
         res.status(201).json({ success: true, group });
     } catch (error: any) {
-        console.error('Error creating group:', error);
+        logger.error('Error creating group:', error);
         res.status(500).json({ success: false, message: 'Failed to create group' });
     }
 };
@@ -153,7 +155,7 @@ export const inviteMembers = async (req: AuthRequest, res: Response): Promise<vo
 
         res.json({ success: true, added, group });
     } catch (error: any) {
-        console.error('Error inviting members:', error);
+        logger.error('Error inviting members:', error);
         res.status(500).json({ success: false, message: 'Failed to invite' });
     }
 };
@@ -201,7 +203,7 @@ export const respondToInvite = async (req: AuthRequest, res: Response): Promise<
         await group.save();
         res.json({ success: true, group });
     } catch (error: any) {
-        console.error('Error responding to invite:', error);
+        logger.error('Error responding to invite:', error);
         res.status(500).json({ success: false, message: 'Failed to respond' });
     }
 };
@@ -209,6 +211,11 @@ export const respondToInvite = async (req: AuthRequest, res: Response): Promise<
 // GET /api/groups â€” groups the user belongs to
 export const getMyGroups = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!isDbConnected()) {
+            res.json({ success: true, groups: [] });
+            return;
+        }
+
         const user = await User.findById(req.userId);
         const groups = await TripGroup.find({
             $or: [
@@ -222,7 +229,7 @@ export const getMyGroups = async (req: AuthRequest, res: Response): Promise<void
 
         res.json({ success: true, groups });
     } catch (error: any) {
-        console.error('Error getting groups:', error);
+        logger.error('Error getting groups:', error);
         res.status(500).json({ success: false, message: 'Failed to get groups' });
     }
 };
@@ -255,7 +262,7 @@ export const getGroup = async (req: AuthRequest, res: Response): Promise<void> =
 
         res.json({ success: true, group });
     } catch (error: any) {
-        console.error('Error getting group:', error);
+        logger.error('Error getting group:', error);
         res.status(500).json({ success: false, message: 'Failed to get group' });
     }
 };
@@ -302,7 +309,7 @@ export const addChatMessage = async (req: AuthRequest, res: Response): Promise<v
         await group.save();
         res.json({ success: true, message: group.chat[group.chat.length - 1] });
     } catch (error: any) {
-        console.error('Error adding chat message:', error);
+        logger.error('Error adding chat message:', error);
         res.status(500).json({ success: false, message: 'Failed to send message' });
     }
 };
@@ -322,7 +329,7 @@ export const getChatHistory = async (req: AuthRequest, res: Response): Promise<v
         const messages = group.chat.slice(-100);
         res.json({ success: true, messages });
     } catch (error: any) {
-        console.error('Error getting chat:', error);
+        logger.error('Error getting chat:', error);
         res.status(500).json({ success: false, message: 'Failed to get chat' });
     }
 };
@@ -355,7 +362,7 @@ export const createPoll = async (req: AuthRequest, res: Response): Promise<void>
         await group.save();
         res.status(201).json({ success: true, poll: group.polls[group.polls.length - 1] });
     } catch (error: any) {
-        console.error('Error creating poll:', error);
+        logger.error('Error creating poll:', error);
         res.status(500).json({ success: false, message: 'Failed to create poll' });
     }
 };
@@ -405,7 +412,7 @@ export const votePoll = async (req: AuthRequest, res: Response): Promise<void> =
         await group.save();
         res.json({ success: true, poll });
     } catch (error: any) {
-        console.error('Error voting on poll:', error);
+        logger.error('Error voting on poll:', error);
         res.status(500).json({ success: false, message: 'Failed to vote' });
     }
 };
@@ -437,7 +444,7 @@ export const removeMember = async (req: AuthRequest, res: Response): Promise<voi
         await group.save();
         res.json({ success: true, group });
     } catch (error: any) {
-        console.error('Error removing member:', error);
+        logger.error('Error removing member:', error);
         res.status(500).json({ success: false, message: 'Failed to remove member' });
     }
 };
@@ -471,7 +478,7 @@ export const closePoll = async (req: AuthRequest, res: Response): Promise<void> 
         await group.save();
         res.json({ success: true, poll });
     } catch (error: any) {
-        console.error('Error closing poll:', error);
+        logger.error('Error closing poll:', error);
         res.status(500).json({ success: false, message: 'Failed to close poll' });
     }
 };

@@ -188,7 +188,7 @@ export const PostcardGenerator: FC<PostcardGeneratorProps> = ({
                 ctx.textAlign = 'center';
                 ctx.fillText('Scan to view trip', W - 105 * scale, H - 40 * scale);
                 ctx.textAlign = 'left';
-            } catch { /* QR generation failed silently */ }
+            } catch { console.warn('QR code generation failed'); }
         }
 
         // Footer
@@ -286,7 +286,7 @@ export const PostcardGenerator: FC<PostcardGeneratorProps> = ({
                 const qrImg = new Image();
                 await new Promise<void>((resolve) => { qrImg.onload = () => resolve(); qrImg.src = qrDataUrl; });
                 ctx.drawImage(qrImg, W - 150 * scale, H - 150 * scale, 100 * scale, 100 * scale);
-            } catch { /* ignore */ }
+            } catch { console.warn('QR code generation failed'); }
         }
 
         // Footer
@@ -389,7 +389,7 @@ export const PostcardGenerator: FC<PostcardGeneratorProps> = ({
                 const qrImg = new Image();
                 await new Promise<void>((resolve) => { qrImg.onload = () => resolve(); qrImg.src = qrDataUrl; });
                 ctx.drawImage(qrImg, W - 140 * scale, H - 140 * scale, 90 * scale, 90 * scale);
-            } catch { /* ignore */ }
+            } catch { console.warn('QR code generation failed'); }
         }
 
         // Footer

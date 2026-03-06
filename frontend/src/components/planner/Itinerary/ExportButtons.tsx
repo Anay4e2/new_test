@@ -1,9 +1,7 @@
 import { FC, useState } from 'react';
 import { TripResult } from '@/types';
 import { FileText, MessageCircle, Mail, Loader2, Check, X, AlertCircle, Calendar, Download, ExternalLink, Palette } from 'lucide-react';
-import { getWhatsAppText, sendItineraryEmail, downloadICalFile, getGoogleCalendarUrls } from '@/services/api';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import api, { getWhatsAppText, sendItineraryEmail, downloadICalFile, getGoogleCalendarUrls } from '@/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { PostcardEditor } from '../Trip/PostcardEditor';
@@ -45,15 +43,11 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
     const handleDownloadPDF = async () => {
         setIsGeneratingPDF(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/itinerary/pdf`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(result),
+            const response = await api.post('/itinerary/pdf', result, {
+                responseType: 'blob',
             });
 
-            if (!response.ok) throw new Error('Failed to generate PDF');
-
-            const blob = await response.blob();
+            const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;

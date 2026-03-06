@@ -1,3 +1,4 @@
+import logger from '../lib/logger';
 import { Request, Response } from 'express';
 import Analytics from '../models/Analytics';
 
@@ -65,7 +66,7 @@ export const getSummary = async (req: Request, res: Response): Promise<void> => 
             }
         });
     } catch (error) {
-        console.error('Analytics summary error:', error);
+        logger.error('Analytics summary error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch analytics' });
     }
 };
@@ -121,7 +122,7 @@ export const getTraffic = async (req: Request, res: Response): Promise<void> => 
             data: Object.values(chartData)
         });
     } catch (error) {
-        console.error('Analytics traffic error:', error);
+        logger.error('Analytics traffic error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch traffic data' });
     }
 };
@@ -162,7 +163,7 @@ export const getSearches = async (req: Request, res: Response): Promise<void> =>
             }))
         });
     } catch (error) {
-        console.error('Analytics searches error:', error);
+        logger.error('Analytics searches error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch search data' });
     }
 };
@@ -184,7 +185,7 @@ export const getRecentActivity = async (req: Request, res: Response): Promise<vo
             data: recent
         });
     } catch (error) {
-        console.error('Analytics recent error:', error);
+        logger.error('Analytics recent error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch recent activity' });
     }
 };

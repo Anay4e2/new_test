@@ -6,5 +6,6 @@ export { TripSidebar } from './Trip/TripSidebar';
 export { TripComparison } from './Trip/TripComparison';
 export { ItineraryView } from './Itinerary/ItineraryView';
 export { TrainSearch } from './Transport/TrainSearch';
+export { RouteVariantSelector } from './Transport/RouteVariantSelector';
 export { PackagesSection } from './Package/PackagesSection';
 

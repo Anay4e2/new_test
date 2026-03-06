@@ -1,4 +1,5 @@
 import { FC, useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { getPackages, createPackage, updatePackage, deletePackage } from '../../services/api';
 import type { Package } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,7 +47,7 @@ const PackageManager: FC = () => {
         try {
             const response = await getPackages();
             if (response.success) setPackages(response.data);
-        } catch { /* ignore */ } finally {
+        } catch { toast.error('Failed to load packages.'); } finally {
             setLoading(false);
         }
     };
@@ -118,7 +119,7 @@ const PackageManager: FC = () => {
         try {
             await deletePackage(deleteTarget.id);
             setPackages(prev => prev.filter(p => p.id !== deleteTarget.id));
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to delete package.'); }
         setDeleteTarget(null);
     };
 
@@ -128,7 +129,7 @@ const PackageManager: FC = () => {
             if (res.success) {
                 setPackages(prev => prev.map(p => p.id === pkg.id ? res.data : p));
             }
-        } catch { /* ignore */ }
+        } catch { toast.error('Failed to update package.'); }
     };
 
     const filteredPackages = packages.filter(pkg => {

@@ -29,6 +29,14 @@ vi.mock('../../services/emailService', () => ({
   sendResetPasswordEmail: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('../../lib/dbStatus', () => ({
+  isDbConnected: vi.fn().mockReturnValue(true),
+}));
+
+vi.mock('../../lib/logger', () => ({
+  default: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+}));
+
 import User from '../../models/User';
 import { register, login } from '../authController';
 

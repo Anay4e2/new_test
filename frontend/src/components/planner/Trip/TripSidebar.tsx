@@ -1,8 +1,9 @@
 import { FC, useState, useEffect } from 'react';
 import { useTripStore, RouteSegment } from '../../../stores/tripStore';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { getTrainsBetweenCities, saveTrip } from '../../../services/api';
+import { useAuthStore } from '../../../stores/authStore';
+import { Save, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Train info interface
 interface TrainInfo {
@@ -46,10 +47,10 @@ const TransportCard: FC<{ segment: RouteSegment }> = ({ segment }) => {
         setLoadingTrains(true);
         setTrainError(null);
         try {
-            const res = await axios.get<TrainSearchResult>(`${API_BASE_URL}/trains/${encodeURIComponent(segment.from)}/${encodeURIComponent(segment.to)}`);
-            if (res.data.trains && res.data.trains.length > 0) {
-                setTrains(res.data.trains);
-                setStationInfo({ from: `${res.data.fromStation} (${res.data.fromCode})`, to: `${res.data.toStation} (${res.data.toCode})` });
+            const data = await getTrainsBetweenCities(segment.from, segment.to);
+            if (data.trains && data.trains.length > 0) {
+                setTrains(data.trains);
+                setStationInfo({ from: `${data.fromStation} (${data.fromCode})`, to: `${data.toStation} (${data.toCode})` });
             } else {
                 setTrainError(`No direct trains found between ${segment.from} and ${segment.to}`);
             }
@@ -203,6 +204,55 @@ export const TripSidebar: FC = () => {
         showRouteOnMap,
         setShowRouteOnMap
     } = useTripStore();
+
+    const { isAuthenticated } = useAuthStore();
+
+    // Save Trip state
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [savingTrip, setSavingTrip] = useState(false);
+    const [saveTitle, setSaveTitle] = useState('');
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+    const handleSaveTrip = async () => {
+        if (!saveTitle.trim()) return;
+        setSavingTrip(true);
+        try {
+            const tripRequest = {
+                selectedPlaces: selectedPlaces.map(p => ({ _id: p._id, name: p.name, cityName: p.cityName })),
+                daysPerCity,
+                cities: getSelectedCities(),
+            };
+            const places = optimizedRoute.length > 0 ? optimizedRoute : selectedPlaces;
+            const tripResult = {
+                itinerary: places.map((p, i) => ({
+                    day: i + 1,
+                    city: p.cityName,
+                    activities: [{ place: p.name, duration: p.visitDuration || '2 hours' }],
+                })),
+                summary: {
+                    totalDistance,
+                    estimatedTravelTime,
+                    totalDays: Object.values(daysPerCity).reduce((s, d) => s + d, 0) || places.length,
+                    cities: getSelectedCities(),
+                },
+                routeSegments,
+                optimizedRoute: places,
+            };
+            const res = await saveTrip(saveTitle.trim(), tripRequest, tripResult);
+            if (res.success) {
+                setSaveSuccess(true);
+                setTimeout(() => {
+                    setShowSaveModal(false);
+                    setSaveSuccess(false);
+                    setSaveTitle('');
+                }, 1500);
+            }
+        } catch {
+            alert('Failed to save trip. Please try again.');
+        } finally {
+            setSavingTrip(false);
+        }
+    };
 
     const cities = getSelectedCities();
 
@@ -413,7 +463,83 @@ export const TripSidebar: FC = () => {
                         Add at least 2 places to optimize your route
                     </p>
                 )}
+
+                {/* Save Trip Button – visible after optimization */}
+                {optimizedRoute.length > 0 && (
+                    <button
+                        onClick={() => {
+                            if (!isAuthenticated()) {
+                                alert('Please log in to save trips.');
+                                return;
+                            }
+                            setShowSaveModal(true);
+                        }}
+                        className="w-full py-3 rounded-lg font-bold text-white transition-all bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2"
+                    >
+                        <Save size={18} />
+                        Save Trip
+                    </button>
+                )}
             </div>
+
+            {/* Save Trip Modal */}
+            <AnimatePresence>
+                {showSaveModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                        onClick={() => !savingTrip && setShowSaveModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+                        >
+                            {saveSuccess ? (
+                                <div className="text-center py-4">
+                                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <Save size={24} className="text-green-600" />
+                                    </div>
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">Trip Saved!</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">View it in your Dashboard.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">Save Trip</h3>
+                                        <button onClick={() => setShowSaveModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+                                            <X size={20} className="text-gray-500" />
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={saveTitle}
+                                        onChange={e => setSaveTitle(e.target.value)}
+                                        placeholder="Give your trip a name..."
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                                        autoFocus
+                                        onKeyDown={e => e.key === 'Enter' && handleSaveTrip()}
+                                    />
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                        {optimizedRoute.length} places · {getSelectedCities().join(', ')} · {totalDistance} km
+                                    </div>
+                                    <button
+                                        onClick={handleSaveTrip}
+                                        disabled={savingTrip || !saveTitle.trim()}
+                                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {savingTrip ? 'Saving...' : 'Save'}
+                                    </button>
+                                </>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

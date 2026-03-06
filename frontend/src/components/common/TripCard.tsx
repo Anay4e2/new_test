@@ -61,7 +61,7 @@ export const TripCard: FC<TripCardProps> = ({ trip, onCreatorClick }) => {
             const res = await likeTripApi(trip._id);
             setLiked(res.liked);
             setLikes(res.likes);
-        } catch { /* ignore */ }
+        } catch { console.warn('Failed to like trip'); }
         setTimeout(() => setAnimating(false), 400);
     };
 

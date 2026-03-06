@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { JWT_SECRET } from '../config/auth';
+import logger from '../lib/logger';
 
 export interface AdminRequest extends Request {
     userId?: string;
@@ -45,7 +46,7 @@ export const adminMiddleware = async (
 
         next();
     } catch (error) {
-        console.error('Admin middleware error:', error);
+        logger.warn('Admin middleware: invalid token');
         res.status(401).json({ success: false, message: 'Token is not valid' });
     }
 };
