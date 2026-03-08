@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import ThemeToggle from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
 import { LanguageSelector } from './LanguageSelector';
+import { GlobalSearch } from './GlobalSearch';
 import { Menu, X, User, LogOut, LayoutDashboard, Star, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -83,6 +84,7 @@ export const Navbar: FC = () => {
 
                     {/* Right side controls */}
                     <div className="flex items-center gap-2">
+                        <GlobalSearch />
                         <NotificationBell />
                         <LanguageSelector />
                         <ThemeToggle />
@@ -93,8 +95,12 @@ export const Navbar: FC = () => {
                                     className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                     aria-label="User menu"
                                 >
-                                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
-                                        {getInitials(user?.name)}
+                                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
+                                        {user?.avatar ? (
+                                            <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            getInitials(user?.name)
+                                        )}
                                     </div>
                                     <span className="text-xs font-medium max-w-[80px] truncate text-slate-700 dark:text-slate-200">{user?.name?.split(' ')[0]}</span>
                                     <ChevronDown size={12} className={clsx('transition-transform text-slate-400', userMenuOpen && 'rotate-180')} />

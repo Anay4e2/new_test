@@ -1,0 +1,107 @@
+TRIPIFY - Key Gaps & Improvement Areas
+=======================================
+Audit Date: March 8, 2026
+
+STATS
+-----
+- Total Pages: 25 (11 public, 9 protected, 1 admin, 1 catch-all)
+- Backend API Families: 31 route modules at /api/
+- Mongoose Models: 23
+- Backend Services: 15
+- Overall: Nearly every feature has both frontend UI and backend API with graceful fallbacks.
+
+
+KEY GAPS
+--------
+
+1. Profile Avatar Not Persisted
+   - Avatar is local preview only, not saved to backend/Cloudinary.
+   - Impact: Medium | Effort: Low
+
+2. Travel Interests Stored in localStorage Only
+   - User travel preferences are not synced to the backend User model.
+   - Impact: Medium | Effort: Low
+
+3. Review Photo Upload Not Wired
+   - Review schema supports photos[] but the frontend upload flow is missing.
+   - Impact: Low | Effort: Medium
+
+4. No Global Search
+   - No cross-entity full-text search across cities, places, and packages.
+   - Each page has its own local filtering only.
+   - Impact: Medium | Effort: Medium
+
+5. i18n Coverage is Minimal
+   - react-i18next infrastructure exists but only Login and Checklist pages use translations.
+   - Impact: Low | Effort: High
+
+6. Expense PDF Export Missing
+   - Budget vs actual data is available via API but no dedicated PDF export for expenses.
+   - Impact: Low | Effort: Low
+
+7. Test Coverage Unknown
+   - __tests__/ directories exist in backend but actual test coverage is unclear/minimal.
+   - Impact: Medium | Effort: High
+
+8. Currency API Documentation Missing
+   - No clear guidance on obtaining EXCHANGE_RATE_API_KEY; defaults to static rates.
+   - Impact: Low | Effort: Low
+
+9. Train API Dependency
+   - Requires RAPIDAPI_KEY for live data; mock fallback completeness is unclear.
+   - Impact: Low | Effort: Low
+
+
+IMPROVEMENT SUGGESTIONS
+-----------------------
+
+Priority: HIGH
+  - Persist profile avatar to Cloudinary (already integrated) and sync to User model.
+  - Sync travel interests to backend so they survive across devices/sessions.
+  - Add a global search bar (cities + places + packages) for better discoverability.
+
+Priority: MEDIUM
+  - Wire review photo uploads using existing Cloudinary/FileUpload infrastructure.
+  - Add expense export to PDF using existing pdfService patterns.
+  - Improve test coverage for critical backend paths (auth, trip generation, planner).
+
+Priority: LOW
+  - Expand i18n to cover all user-facing pages.
+  - Document env vars for currency and train APIs in README or .env.example.
+  - Add Google OAuth setup instructions (requires GOOGLE_CLIENT_ID).
+
+
+FEATURE STATUS OVERVIEW
+-----------------------
+
+Working:
+  - Auth (register, login, forgot/reset password, admin login)
+  - Trip Planning (wizard, smart search, generation, comparison)
+  - Interactive Map (markers, routes, day view, playback)
+  - Itinerary (day-wise view, drag-drop editing, undo/redo, validation)
+  - Packages (listing, detail, add-to-trip, admin CRUD)
+  - Saved Trips / Dashboard (save, edit, delete, clone, publish)
+  - Trip Sharing (short URL, public view, view count)
+  - Community Feed / Explore (trending, filters, infinite scroll)
+  - Group Trips (create, invite, chat, polls, itinerary requests)
+  - Reviews (CRUD, helpful count, rating recalculation)
+  - Expense Tracking (add, list, charts, summary)
+  - Notifications (real-time via Socket.IO, bell badge, daily limit)
+  - Favorites
+  - Travel Journal (entries with mood/photos, public toggle)
+  - Postcards (generate, save to Cloudinary, delete)
+  - Weather (per-city seasonal, best-time-to-visit, day banner)
+  - Festivals (browse/filter, itinerary integration, admin CRUD)
+  - Safety (emergency numbers, hospitals, SOS button)
+  - Restaurants (browse/filter, meal recommendations in itinerary)
+  - Trains (search, PNR, live status, station board - mock fallback)
+  - Export (PDF, WhatsApp, Email, Calendar iCal, Booking links)
+  - Checklist (categories, custom items, context-aware packing list)
+  - Admin Panel (full CRUD, analytics, audit logs, sessions, settings)
+  - Dark Mode
+  - Offline Support (IndexedDB caching)
+
+Partial:
+  - Google OAuth (needs GOOGLE_CLIENT_ID env var)
+  - Currency Conversion (static rates without API key)
+  - i18n (infrastructure exists, minimal page coverage)

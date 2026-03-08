@@ -7,6 +7,8 @@ export interface IUser {
     email: string;
     password: string;
     role: 'user' | 'admin';
+    avatar?: string;
+    interests?: string[];
     provider?: string;
     providerId?: string;
     resetPasswordToken?: string;
@@ -54,6 +56,14 @@ const UserSchema = new Schema<IUser, mongoose.Model<IUser, {}, IUserMethods>, IU
         enum: ['user', 'admin'],
         default: 'user'
     },
+    avatar: {
+        type: String,
+        trim: true,
+    },
+    interests: [{
+        type: String,
+        trim: true,
+    }],
     resetPasswordToken: {
         type: String,
         select: false

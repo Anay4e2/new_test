@@ -28,6 +28,7 @@ import postcardRoutes from './postcardRoutes';
 import currencyRoutes from './currencyRoutes';
 import checklistRoutes from './checklistRoutes';
 import uploadRoutes from './uploadRoutes';
+import searchRoutes from './searchRoutes';
 
 const router = Router();
 
@@ -60,6 +61,7 @@ router.use('/postcards', postcardRoutes);
 router.use('/currency', currencyRoutes);
 router.use('/checklists', checklistRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/search', searchRoutes);
 
 
 // Trip routes are mounted at root level (e.g., /api/generate-trip)

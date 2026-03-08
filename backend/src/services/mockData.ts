@@ -1,7 +1,17 @@
-﻿// This file provides curated data for the MVP (Rajasthan)
+﻿// This file provides curated data for the MVP
 // It mimics the database queries for the sandbox environment where MongoDB is not available.
 
-export const STATES = [
+import {
+  EXPANSION_STATES,
+  EXPANSION_CITIES,
+  EXPANSION_PLACES,
+  EXPANSION_HOTELS,
+  EXPANSION_RESTAURANTS,
+  EXPANSION_FESTIVALS,
+  EXPANSION_EMERGENCY_INFO,
+} from './mockDataExpansion';
+
+const _BASE_STATES = [
   {
     _id: 'RJ',
     code: 'RJ',
@@ -112,6 +122,8 @@ export const STATES = [
   }
 ];
 
+export const STATES = [..._BASE_STATES, ...EXPANSION_STATES] as typeof _BASE_STATES;
+
 export const PACKAGES = [
   {
     id: 'royal-rajasthan',
@@ -149,7 +161,7 @@ export const PACKAGES = [
 ];
 
 
-export const CITIES = [
+const _BASE_CITIES = [
   // RAJASTHAN
   {
     _id: 'jaipur',
@@ -500,7 +512,9 @@ export const CITIES = [
   }
 ];
 
-export const PLACES = [
+export const CITIES = [..._BASE_CITIES, ...EXPANSION_CITIES] as typeof _BASE_CITIES;
+
+const _BASE_PLACES = [
   // JAIPUR
   {
     _id: 'amber_fort',
@@ -1039,7 +1053,9 @@ export const PLACES = [
   { _id: 'marine_drive_kochi', name: 'Marine Drive', cityName: 'Kochi', type: 'Promenade', coordinates: { lat: 9.9735, lng: 76.2799 }, timeRequired: 1.5, openingTime: '00:00', closingTime: '23:59', bestTimeOfDay: 'evening', rating: 4.4, tags: ['waterfront', 'walking', 'sunset'], priceTier: 'free' }
 ];
 
-export const HOTELS = [
+export const PLACES = [..._BASE_PLACES, ...EXPANSION_PLACES] as typeof _BASE_PLACES;
+
+const _BASE_HOTELS = [
   // JAIPUR
   {
     _id: 'hotel_pearl_palace',
@@ -1247,7 +1263,9 @@ export const HOTELS = [
   { _id: 'hotel_zostel_kochi', name: 'Zostel Kochi', cityName: 'Kochi', stateCode: 'KL', coordinates: { lat: 9.9650, lng: 76.2420 }, tier: 'budget' as const, pricePerNight: 500, rating: 4.0, amenities: ['WiFi', 'Common Area', 'Cafe'], description: 'Colorful hostel in Fort Kochi with bike rentals and community events.' }
 ];
 
-export const RESTAURANTS = [
+export const HOTELS = [..._BASE_HOTELS, ...EXPANSION_HOTELS] as typeof _BASE_HOTELS;
+
+const _BASE_RESTAURANTS = [
   // JAIPUR (6)
   {
     _id: 'lmb_jaipur',
@@ -1665,6 +1683,8 @@ export const RESTAURANTS = [
   { _id: 'old_harbour_dining', name: 'Malabar Junction', cityName: 'Kochi', cuisine: ['Kerala', 'Continental', 'Seafood'], type: 'fine-dining' as const, priceRange: 'expensive' as const, averageCost: 1500, rating: 4.6, mustTry: ['Karimeen Pollichathu', 'Kerala Prawn Curry', 'Appam'], coordinates: { lat: 9.9645, lng: 76.2435 }, openingTime: '12:00', closingTime: '22:30', vegetarian: false, description: 'Elegant restaurant at Malabar House with creative Kerala-European fusion.' }
 ];
 
+export const RESTAURANTS = [..._BASE_RESTAURANTS, ...EXPANSION_RESTAURANTS] as typeof _BASE_RESTAURANTS;
+
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // FESTIVALS
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -1686,7 +1706,7 @@ export interface Festival {
   imageUrl?: string;
 }
 
-export const FESTIVALS: Festival[] = [
+const _BASE_FESTIVALS: Festival[] = [
   // Ã¢â€â‚¬Ã¢â€â‚¬ RAJASTHAN Ã¢â€â‚¬Ã¢â€â‚¬
   {
     _id: 'pushkar_camel_fair',
@@ -2185,6 +2205,8 @@ export const FESTIVALS: Festival[] = [
   },
 ];
 
+export const FESTIVALS: Festival[] = [..._BASE_FESTIVALS, ...(EXPANSION_FESTIVALS as Festival[])];
+
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // EMERGENCY & SAFETY INFORMATION
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -2205,7 +2227,7 @@ export interface EmergencyInfo {
   areasToAvoidAtNight: string[];
 }
 
-export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
+const _BASE_EMERGENCY_INFO: Record<string, EmergencyInfo> = {
   // Ã¢â€â‚¬Ã¢â€â‚¬ RAJASTHAN Ã¢â€â‚¬Ã¢â€â‚¬
   Jaipur: {
     cityName: 'Jaipur',
@@ -2659,5 +2681,10 @@ export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
     safeAreas: ['Colaba', 'Bandra', 'Juhu', 'Nariman Point', 'Powai'],
     areasToAvoidAtNight: ['Dharavi interior lanes', 'Kamathipura', 'Isolated roads near docks'],
   },
+};
+
+export const EMERGENCY_INFO: Record<string, EmergencyInfo> = {
+  ..._BASE_EMERGENCY_INFO,
+  ...EXPANSION_EMERGENCY_INFO,
 };
 

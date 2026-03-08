@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from 'react';
 import type { Expense, ExpenseSummary } from '@/types';
-import { getExpensesByTrip, getExpenseSummary, deleteExpense as deleteExpenseApi } from '@/services/api';
-import { ChevronDown, ChevronUp, Trash2, Loader2, Plus, PieChart, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { getExpensesByTrip, getExpenseSummary, deleteExpense as deleteExpenseApi, exportExpensesPdfApi } from '@/services/api';
+import { ChevronDown, ChevronUp, Trash2, Loader2, Plus, PieChart, TrendingUp, TrendingDown, Minus, Download } from 'lucide-react';
 import clsx from 'clsx';
 import { AddExpenseForm } from './AddExpenseForm';
 import { ExpenseCharts } from './ExpenseCharts';
@@ -75,6 +75,18 @@ export const ExpenseTracker: FC<ExpenseTrackerProps> = ({ tripId, totalDays, cit
         fetchData();
     };
 
+    const handleExportPdf = async () => {
+        try {
+            const blob = await exportExpensesPdfApi(tripId);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `expense-report-${tripId}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch { /* ignore */ }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -108,6 +120,13 @@ export const ExpenseTracker: FC<ExpenseTrackerProps> = ({ tripId, totalDays, cit
                         title="View Charts"
                     >
                         <PieChart size={18} />
+                    </button>
+                    <button
+                        onClick={handleExportPdf}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-gray-500 dark:text-gray-400"
+                        title="Export PDF"
+                    >
+                        <Download size={18} />
                     </button>
                     <button
                         onClick={() => setShowAddForm(true)}

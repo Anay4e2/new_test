@@ -46,7 +46,7 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
             return;
         }
 
-        const { placeId, placeName, cityName, rating, title, comment, visitDate } = req.body;
+        const { placeId, placeName, cityName, rating, title, comment, visitDate, photos } = req.body;
 
         if (!placeId || !rating) {
             res.status(400).json({ success: false, message: 'placeId and rating are required' });
@@ -75,6 +75,7 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
             title: sanitize(title || ''),
             comment: sanitize(comment || ''),
             visitDate: visitDate ? new Date(visitDate) : undefined,
+            photos: Array.isArray(photos) ? photos.slice(0, 5) : undefined,
         };
 
         // Upsert: create or update
@@ -217,12 +218,13 @@ export const updateReview = async (req: AuthRequest, res: Response): Promise<voi
             return;
         }
 
-        const { rating, title, comment, visitDate } = req.body;
+        const { rating, title, comment, visitDate, photos } = req.body;
 
         if (rating !== undefined) review.rating = rating;
         if (title !== undefined) review.title = sanitize(title);
         if (comment !== undefined) review.comment = sanitize(comment);
         if (visitDate !== undefined) review.visitDate = visitDate;
+        if (photos !== undefined) review.photos = Array.isArray(photos) ? photos.slice(0, 5) : review.photos;
 
         await review.save();
         await recalculateRating(review.placeId);

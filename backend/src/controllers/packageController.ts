@@ -25,8 +25,15 @@ export const getPackageById = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        // Fetch the places included in the package
-        const places = await Place.find({ _id: { $in: pkg.places } });
+        // Fetch places: by explicit IDs if set, otherwise by city names
+        let places;
+        if (pkg.places && pkg.places.length > 0) {
+            places = await Place.find({ _id: { $in: pkg.places } });
+        } else if (pkg.cities && pkg.cities.length > 0) {
+            places = await Place.find({ cityName: { $in: pkg.cities } });
+        } else {
+            places = [];
+        }
 
         res.json({
             success: true,

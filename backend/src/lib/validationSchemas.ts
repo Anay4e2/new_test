@@ -36,8 +36,8 @@ export const resetPasswordSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).trim().optional(),
   email: z.string().trim().toLowerCase().email().max(255).optional(),
-}).refine(data => data.name !== undefined || data.email !== undefined, {
-  message: 'At least one field (name or email) must be provided',
+  avatar: z.string().max(500).trim().optional(),
+  interests: z.array(z.string().max(50).trim()).max(20).optional(),
 });
 
 export const changePasswordSchema = z.object({
@@ -140,6 +140,7 @@ export const createReviewSchema = z.object({
   title: z.string().max(200).trim().optional(),
   comment: z.string().max(2000).trim().optional(),
   visitDate: z.string().optional(),
+  photos: z.array(z.string().url()).max(5).optional(),
 });
 
 // ─── Journal Schemas ───

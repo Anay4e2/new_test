@@ -13,6 +13,8 @@ const DEMO_USER = {
     name: 'Demo User',
     email: 'demo@tripplanner.com',
     role: 'user' as const,
+    avatar: '',
+    interests: [] as string[],
     createdAt: new Date().toISOString(),
 };
 
@@ -57,6 +59,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                avatar: user.avatar || '',
+                interests: user.interests || [],
                 createdAt: user.createdAt
             }
         });
@@ -120,6 +124,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                avatar: user.avatar || '',
+                interests: user.interests || [],
                 createdAt: user.createdAt
             }
         });
@@ -155,6 +161,8 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                avatar: user.avatar || '',
+                interests: user.interests || [],
                 createdAt: user.createdAt
             }
         });
@@ -208,6 +216,8 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                avatar: user.avatar || '',
+                interests: user.interests || [],
                 createdAt: user.createdAt
             }
         });
@@ -303,6 +313,8 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                avatar: user.avatar || '',
+                interests: user.interests || [],
                 createdAt: user.createdAt
             },
             message: 'Password reset successful'
@@ -324,7 +336,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as any).userId;
-        const { name, email } = req.body;
+        const { name, email, avatar, interests } = req.body;
 
         const user = await User.findById(userId);
         if (!user) {
@@ -341,12 +353,14 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
             }
             user.email = email;
         }
+        if (avatar !== undefined) user.avatar = avatar;
+        if (interests !== undefined) user.interests = interests;
 
         await user.save();
 
         res.json({
             success: true,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt },
+            user: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar || '', interests: user.interests || [], createdAt: user.createdAt },
         });
     } catch (error: any) {
         if (error.name === 'ValidationError') {

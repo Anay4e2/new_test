@@ -1,8 +1,8 @@
 import { FC, useState } from 'react';
-import { Send, LogIn } from 'lucide-react';
+import { Send, LogIn, ImagePlus, X } from 'lucide-react';
 import { StarRating } from './StarRating';
 import { useAuthStore } from '../../stores/authStore';
-import { createReview } from '../../services/api';
+import { createReview, uploadFileApi } from '../../services/api';
 import clsx from 'clsx';
 
 interface ReviewFormProps {
@@ -26,6 +26,25 @@ export const ReviewForm: FC<ReviewFormProps> = ({
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [photos, setPhotos] = useState<string[]>([]);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (photos.length >= 5) { setError('Maximum 5 photos allowed'); return; }
+        if (file.size > 5 * 1024 * 1024) { setError('Photo must be under 5MB'); return; }
+        setUploadingPhoto(true);
+        setError(null);
+        try {
+            const res = await uploadFileApi(file, 'reviews');
+            if (res.success && res.url) setPhotos(prev => [...prev, res.url]);
+        } catch { setError('Failed to upload photo'); }
+        setUploadingPhoto(false);
+        e.target.value = '';
+    };
+
+    const removePhoto = (idx: number) => setPhotos(prev => prev.filter((_, i) => i !== idx));
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,12 +63,14 @@ export const ReviewForm: FC<ReviewFormProps> = ({
                 title: title.trim(),
                 comment: comment.trim(),
                 visitDate: visitDate || undefined,
+                photos: photos.length > 0 ? photos : undefined,
             });
             setSuccess(true);
             setRating(0);
             setTitle('');
             setComment('');
             setVisitDate('');
+            setPhotos([]);
             onReviewSubmitted();
             setTimeout(() => setSuccess(false), 3000);
         } catch (err: any) {
@@ -103,15 +124,36 @@ export const ReviewForm: FC<ReviewFormProps> = ({
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
             />
 
+            {/* Photo upload */}
+            {photos.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                    {photos.map((url, idx) => (
+                        <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-600">
+                            <img src={url} alt={`Review photo ${idx + 1}`} className="w-full h-full object-cover" />
+                            <button type="button" onClick={() => removePhoto(idx)} className="absolute top-0 right-0 bg-black/60 rounded-bl p-0.5">
+                                <X size={10} className="text-white" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+
             <div className="flex items-center justify-between gap-3">
-                <input
-                    type="date"
-                    value={visitDate}
-                    onChange={(e) => setVisitDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
-                    className="px-3 py-1.5 text-xs border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    title="Visit date (optional)"
-                />
+                <div className="flex items-center gap-2">
+                    <input
+                        type="date"
+                        value={visitDate}
+                        onChange={(e) => setVisitDate(e.target.value)}
+                        max={new Date().toISOString().split('T')[0]}
+                        className="px-3 py-1.5 text-xs border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        title="Visit date (optional)"
+                    />
+                    <label className={clsx("flex items-center gap-1 px-2 py-1.5 text-xs border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors", uploadingPhoto ? "opacity-50 cursor-wait" : "cursor-pointer hover:border-indigo-400")}>
+                        <ImagePlus size={14} />
+                        <span>{uploadingPhoto ? '...' : `${photos.length}/5`}</span>
+                        <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploadingPhoto || photos.length >= 5} />
+                    </label>
+                </div>
 
                 <button
                     type="submit"

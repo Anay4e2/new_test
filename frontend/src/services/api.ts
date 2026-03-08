@@ -89,7 +89,7 @@ export const resetPasswordApi = async (token: string, password: string): Promise
     return response.data;
 };
 
-export const updateProfileApi = async (data: { name?: string; email?: string }): Promise<AuthResponse> => {
+export const updateProfileApi = async (data: { name?: string; email?: string; avatar?: string; interests?: string[] }): Promise<AuthResponse> => {
     const response = await api.put('/auth/profile', data);
     return response.data;
 };
@@ -594,6 +594,20 @@ export const getTripIdeas = async (interests: string[]): Promise<TripSuggestion[
 
 export default api;
 
+// ========== Global Search API ==========
+export interface SearchResults {
+    cities: Array<{ _id: string; name: string; state: string; description?: string; image?: string }>;
+    places: Array<{ _id: string; name: string; cityName: string; type: string; rating?: number; imageUrl?: string }>;
+    packages: Array<{ _id: string; name: string; description?: string; cities: string[]; duration?: number; budget?: string }>;
+}
+
+export const globalSearchApi = async (q: string, limit?: number): Promise<{ success: boolean; results: SearchResults }> => {
+    const params: Record<string, string> = { q };
+    if (limit) params.limit = limit.toString();
+    const response = await api.get('/search', { params });
+    return response.data;
+};
+
 // ========== Review API ==========
 
 export const createReview = async (data: {
@@ -604,6 +618,7 @@ export const createReview = async (data: {
     title?: string;
     comment?: string;
     visitDate?: string;
+    photos?: string[];
 }): Promise<{ success: boolean; review: Review }> => {
     const response = await api.post('/reviews', data);
     return response.data;
@@ -730,6 +745,11 @@ export const getExpensesByTrip = async (tripId: string): Promise<{ success: bool
 
 export const getExpenseSummary = async (tripId: string): Promise<{ success: boolean } & ExpenseSummary> => {
     const response = await api.get(`/expenses/trip/${tripId}/summary`);
+    return response.data;
+};
+
+export const exportExpensesPdfApi = async (tripId: string): Promise<Blob> => {
+    const response = await api.get(`/expenses/trip/${tripId}/export-pdf`, { responseType: 'blob' });
     return response.data;
 };
 

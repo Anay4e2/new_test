@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
-import { updateProfileApi, changePasswordApi } from '@/services/api';
+import { updateProfileApi, changePasswordApi, uploadFileApi } from '@/services/api';
 import { ArrowLeft, User, Lock, Loader2, Check, Camera, Heart, Trash2, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -25,14 +25,12 @@ export const Profile: FC = () => {
     const [changingPassword, setChangingPassword] = useState(false);
 
     // Avatar
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-    // Travel interests (stored in localStorage for now since backend doesn't have this field yet)
-    const [interests, setInterests] = useState<string[]>(() => {
-        try {
-            return JSON.parse(localStorage.getItem('travel-interests') || '[]');
-        } catch { return []; }
-    });
+    // Travel interests (synced to backend)
+    const [interests, setInterests] = useState<string[]>(user?.interests || []);
+    const [savingInterests, setSavingInterests] = useState(false);
 
     // Delete account confirmation
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -45,28 +43,50 @@ export const Profile: FC = () => {
     const toggleInterest = (interest: string) => {
         setInterests(prev => {
             const next = prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest];
-            localStorage.setItem('travel-interests', JSON.stringify(next));
             return next;
         });
     };
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleSaveInterests = async () => {
+        setSavingInterests(true);
+        try {
+            const res = await updateProfileApi({ interests });
+            if (res.success && res.user) {
+                useAuthStore.setState({ user: res.user });
+                toast.success('Interests saved');
+            }
+        } catch {
+            toast.error('Failed to save interests');
+        } finally {
+            setSavingInterests(false);
+        }
+    };
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB'); return; }
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setAvatarPreview(reader.result as string);
-            localStorage.setItem('user-avatar', reader.result as string);
-            toast.success('Avatar updated');
-        };
-        reader.readAsDataURL(file);
+        setUploadingAvatar(true);
+        try {
+            const uploadRes = await uploadFileApi(file, 'avatars');
+            if (uploadRes.success && uploadRes.url) {
+                setAvatarPreview(uploadRes.url);
+                const res = await updateProfileApi({ avatar: uploadRes.url });
+                if (res.success && res.user) {
+                    useAuthStore.setState({ user: res.user });
+                    toast.success('Avatar updated');
+                }
+            }
+        } catch {
+            toast.error('Failed to upload avatar');
+        } finally {
+            setUploadingAvatar(false);
+        }
     };
 
     useEffect(() => {
-        const saved = localStorage.getItem('user-avatar');
-        if (saved) setAvatarPreview(saved);
-    }, []);
+        if (user?.avatar) setAvatarPreview(user.avatar);
+    }, [user?.avatar]);
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -106,11 +126,7 @@ export const Profile: FC = () => {
     };
 
     const handleDeleteAccount = () => {
-        // In a real app, this would call a DELETE /api/auth/account endpoint
-        // For now, clear all local data and log out
         localStorage.removeItem('auth-storage');
-        localStorage.removeItem('travel-interests');
-        localStorage.removeItem('user-avatar');
         logout();
         toast.success('Account data cleared');
         navigate('/');
@@ -135,9 +151,9 @@ export const Profile: FC = () => {
                                 (user?.name?.[0] || 'U').toUpperCase()
                             )}
                         </div>
-                        <label className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                            <Camera size={20} className="text-white" />
-                            <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label="Upload avatar" />
+                        <label className={clsx("absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity", uploadingAvatar ? "opacity-100 cursor-wait" : "cursor-pointer")}>
+                            {uploadingAvatar ? <Loader2 size={20} className="text-white animate-spin" /> : <Camera size={20} className="text-white" />}
+                            <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label="Upload avatar" disabled={uploadingAvatar} />
                         </label>
                     </div>
                 </div>
@@ -207,6 +223,15 @@ export const Profile: FC = () => {
                             </button>
                         ))}
                     </div>
+                    <button
+                        type="button"
+                        onClick={handleSaveInterests}
+                        disabled={savingInterests}
+                        className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                        {savingInterests ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                        {savingInterests ? 'Saving...' : 'Save Interests'}
+                    </button>
                 </div>
 
                 {/* Change Password */}
