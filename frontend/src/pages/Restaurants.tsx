@@ -77,7 +77,7 @@ export const Restaurants: FC = () => {
                     <div className="inline-flex items-center gap-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-4 py-1.5 rounded-full text-sm font-medium mb-3">
                         <UtensilsCrossed size={16} /> Restaurant Guide
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Discover Restaurants</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mb-2">Discover Restaurants</h1>
                     <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
                         Explore local eateries, street food & fine dining across Indian cities
                     </p>

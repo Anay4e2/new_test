@@ -89,6 +89,69 @@ function nearestNeighborTSP<T extends { lat: number; lng: number }>(
     return order;
 }
 
+// Calculate total route distance for a given order
+function totalRouteDistance<T extends { lat: number; lng: number }>(
+    points: T[],
+    order: number[]
+): number {
+    let total = 0;
+    for (let i = 0; i < order.length - 1; i++) {
+        total += haversineDistance(
+            points[order[i]].lat, points[order[i]].lng,
+            points[order[i + 1]].lat, points[order[i + 1]].lng
+        );
+    }
+    return total;
+}
+
+// 2-opt local search improvement on an existing route
+function twoOptImprove<T extends { lat: number; lng: number }>(
+    points: T[],
+    order: number[],
+    maxIterations: number = 100
+): number[] {
+    const n = order.length;
+    if (n < 4) return order;
+
+    let improved = [...order];
+    let bestDist = totalRouteDistance(points, improved);
+    let iteration = 0;
+    let foundImprovement = true;
+
+    while (foundImprovement && iteration < maxIterations) {
+        foundImprovement = false;
+        iteration++;
+
+        for (let i = 1; i < n - 1; i++) {
+            for (let j = i + 1; j < n; j++) {
+                // Reverse the segment between i and j
+                const newOrder = [
+                    ...improved.slice(0, i),
+                    ...improved.slice(i, j + 1).reverse(),
+                    ...improved.slice(j + 1)
+                ];
+                const newDist = totalRouteDistance(points, newOrder);
+                if (newDist < bestDist) {
+                    improved = newOrder;
+                    bestDist = newDist;
+                    foundImprovement = true;
+                }
+            }
+        }
+    }
+
+    return improved;
+}
+
+// Combined TSP: nearest-neighbor seed + 2-opt improvement
+function optimizedTSP<T extends { lat: number; lng: number }>(
+    points: T[],
+    startIndex: number = 0
+): number[] {
+    const nnOrder = nearestNeighborTSP(points, startIndex);
+    return twoOptImprove(points, nnOrder);
+}
+
 // Suggest best transport based on distance, budget, and time
 function suggestBestTransport(
     options: ITransportOption[],
@@ -193,8 +256,8 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
         if (idx !== -1) startIdx = idx;
     }
 
-    // 5. Optimize city order using TSP
-    const cityOrder = nearestNeighborTSP(cityCoords, startIdx);
+    // 5. Optimize city order using TSP (nearest-neighbor + 2-opt)
+    const cityOrder = optimizedTSP(cityCoords, startIdx);
     const orderedCityNames = cityOrder.map(i => cityCoords[i].name);
 
     // 6. Build ordered places list with Linked TSP (Chain cities together)
@@ -235,8 +298,8 @@ export async function optimizeRoute(request: OptimizeRouteRequest): Promise<Opti
         // Prepare points for TSP
         const points = cityPlacesList.map(p => p.coordinates);
 
-        // Run TSP within the city starting from the optimal entry point
-        const placeOrderIndices = nearestNeighborTSP(points, bestStartIdx);
+        // Run TSP within the city starting from the optimal entry point (with 2-opt)
+        const placeOrderIndices = optimizedTSP(points, bestStartIdx);
 
         // Add places to ordered list
         for (const idx of placeOrderIndices) {

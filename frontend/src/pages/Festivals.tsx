@@ -80,14 +80,14 @@ export const Festivals: FC = () => {
             {/* Hero Header */}
             <div className="relative overflow-hidden bg-gradient-to-r from-orange-600 via-pink-600 to-purple-700 text-white">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1575359199241-12e31cbcb0f7?w=1920&h=400&fit=crop')] bg-cover bg-center opacity-20" />
-                <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-20">
+                <div className="relative max-w-7xl mx-auto px-4 py-10 sm:py-16 md:py-20">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                         <div className="flex items-center gap-2 mb-3">
                             <Sparkles size={20} className="text-yellow-300" />
                             <span className="text-sm font-medium text-white/80 uppercase tracking-wider">Discover India's Vibrant</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-bold font-serif">Festivals & Events</h1>
-                        <p className="mt-3 text-lg text-white/80 max-w-2xl">Explore 30+ festivals across Rajasthan, Gujarat, Uttar Pradesh, Kerala & Madhya Pradesh. Plan your trip around India's most spectacular celebrations.</p>
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-serif">Festivals & Events</h1>
+                        <p className="mt-3 text-base sm:text-lg text-white/80 max-w-2xl">Explore 30+ festivals across Rajasthan, Gujarat, Uttar Pradesh, Kerala & Madhya Pradesh. Plan your trip around India's most spectacular celebrations.</p>
                     </motion.div>
                 </div>
             </div>
@@ -181,7 +181,7 @@ export const Festivals: FC = () => {
                                     {month === currentMonth && <span className="ml-2 px-2.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold rounded-full uppercase">This Month</span>}
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                                     {monthFestivals.map(festival => {
                                         const tc = TYPE_CONFIG[festival.type] || TYPE_CONFIG.cultural;
                                         const dots = CROWD_DOTS[festival.crowdLevel] || 2;
@@ -194,7 +194,7 @@ export const Festivals: FC = () => {
                                                 className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-lg transition-all group"
                                             >
                                                 {/* Image */}
-                                                <div className="relative h-40 overflow-hidden">
+                                                <div className="relative h-32 sm:h-40 overflow-hidden">
                                                     <img
                                                         src={festival.imageUrl || `https://picsum.photos/seed/${festival._id}/600/300`}
                                                         alt={festival.name}

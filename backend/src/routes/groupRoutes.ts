@@ -13,8 +13,18 @@ import {
     removeMember,
     closePoll,
 } from '../controllers/groupController';
+import {
+    createItineraryRequest,
+    getGroupRequests,
+    voteOnRequest,
+    resolveRequest,
+} from '../controllers/itineraryRequestController';
 import { validate, validateParams } from '../middleware/validate';
-import { createGroupSchema, inviteMembersSchema, respondInviteSchema, createPollSchema, votePollSchema, objectIdParam } from '../lib/validationSchemas';
+import {
+    createGroupSchema, inviteMembersSchema, respondInviteSchema,
+    createPollSchema, votePollSchema, objectIdParam,
+    createItineraryRequestSchema, voteRequestSchema, resolveRequestSchema,
+} from '../lib/validationSchemas';
 
 const router = Router();
 
@@ -39,5 +49,11 @@ router.get('/:id/chat', getChatHistory);
 router.post('/:id/polls', validate(createPollSchema), createPoll);
 router.post('/:id/polls/:pollId/vote', validate(votePollSchema), votePoll);
 router.post('/:id/polls/:pollId/close', closePoll);
+
+// Itinerary Requests
+router.post('/:id/requests', validateParams(objectIdParam), validate(createItineraryRequestSchema), createItineraryRequest);
+router.get('/:id/requests', validateParams(objectIdParam), getGroupRequests);
+router.post('/:id/requests/:requestId/vote', validate(voteRequestSchema), voteOnRequest);
+router.post('/:id/requests/:requestId/resolve', validate(resolveRequestSchema), resolveRequest);
 
 export default router;

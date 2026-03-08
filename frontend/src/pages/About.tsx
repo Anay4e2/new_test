@@ -5,9 +5,9 @@ export const About: FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-amber-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 py-20 px-6">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-amber-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 py-12 sm:py-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
             About <span className="text-blue-600">TripPlanner</span>
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
@@ -18,10 +18,10 @@ export const About: FC = () => {
       </section>
 
       {/* Mission */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+      <section className="py-10 sm:py-16 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Our Mission</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4">Our Mission</h2>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
               Travel planning in India can be overwhelming — hundreds of cities, thousands of
               heritage sites, temples, palaces, and experiences to choose from. We built TripPlanner
@@ -55,10 +55,10 @@ export const About: FC = () => {
       </section>
 
       {/* What We Offer */}
-      <section className="py-16 px-6 bg-slate-50 dark:bg-slate-900">
+      <section className="py-10 sm:py-16 px-4 sm:px-6 bg-slate-50 dark:bg-slate-900">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-10 text-center">What We Offer</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8 sm:mb-10 text-center">What We Offer</h2>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm">
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
@@ -91,9 +91,9 @@ export const About: FC = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-16 px-6">
+      <section className="py-10 sm:py-16 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Ready to Plan Your Trip?</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4">Ready to Plan Your Trip?</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8">
             Start exploring destinations and build your perfect itinerary today.
           </p>
@@ -107,7 +107,7 @@ export const About: FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-100 dark:border-slate-800 py-8 px-6">
+      <footer className="border-t border-slate-100 dark:border-slate-800 py-8 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-sm text-slate-500 dark:text-slate-500">© 2026 TripPlanner. All rights reserved.</span>
           <div className="flex items-center gap-6">

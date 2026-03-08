@@ -30,6 +30,8 @@ app.use(cors({
     origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
     credentials: true
 }));
+// Higher body limit for image upload route (base64 images can be large)
+app.use('/api/admin/upload-image', express.json({ limit: '10mb' }));
 app.use(express.json({ limit: '2mb' }));
 
 // Global rate limiter — 100 req/min per IP on all /api routes

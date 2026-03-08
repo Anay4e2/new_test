@@ -11,6 +11,17 @@ interface Activity {
     imageUrl?: string;
 }
 
+interface NightStayInfo {
+    city: string;
+    hotel: {
+        name: string;
+        tier: string;
+        pricePerNight: number;
+        rating: number;
+        amenities: string[];
+    };
+}
+
 interface DayItinerary {
     day: number;
     city: string;
@@ -22,7 +33,15 @@ interface DayItinerary {
         duration: number;
         mode?: string;
     };
-    nightStay: string;
+    nightStay: string | NightStayInfo;
+}
+
+function getNightStayLabel(nightStay: string | NightStayInfo): string {
+    if (typeof nightStay === 'object' && nightStay !== null && 'hotel' in nightStay) {
+        const h = nightStay.hotel;
+        return `${h.name} (${h.tier}) - Rs.${h.pricePerNight}/night`;
+    }
+    return nightStay as string;
 }
 
 interface TripSummary {
@@ -49,27 +68,27 @@ export const getClothingRecommendations = (month: number): { icon: string; item:
 
     if (month >= 10 || month <= 1) {
         // Winter (Nov-Feb)
-        recommendations.push({ icon: '🧥', item: 'Warm Jacket/Sweater' });
-        recommendations.push({ icon: '🧣', item: 'Scarf & Gloves' });
-        recommendations.push({ icon: '👖', item: 'Warm Trousers' });
+        recommendations.push({ icon: '*', item: 'Warm Jacket/Sweater' });
+        recommendations.push({ icon: '*', item: 'Scarf & Gloves' });
+        recommendations.push({ icon: '*', item: 'Warm Trousers' });
     } else if (month >= 2 && month <= 4) {
         // Summer (Mar-May)
-        recommendations.push({ icon: '👕', item: 'Light Cotton Clothes' });
-        recommendations.push({ icon: '🧢', item: 'Hat/Cap for Sun' });
-        recommendations.push({ icon: '🕶️', item: 'Sunglasses' });
+        recommendations.push({ icon: '*', item: 'Light Cotton Clothes' });
+        recommendations.push({ icon: '*', item: 'Hat/Cap for Sun' });
+        recommendations.push({ icon: '*', item: 'Sunglasses' });
     } else if (month >= 5 && month <= 8) {
         // Monsoon (Jun-Sep)
-        recommendations.push({ icon: '☔', item: 'Rain Jacket/Umbrella' });
-        recommendations.push({ icon: '👟', item: 'Waterproof Shoes' });
-        recommendations.push({ icon: '👕', item: 'Quick-dry Clothes' });
+        recommendations.push({ icon: '*', item: 'Rain Jacket/Umbrella' });
+        recommendations.push({ icon: '*', item: 'Waterproof Shoes' });
+        recommendations.push({ icon: '*', item: 'Quick-dry Clothes' });
     } else {
         // Autumn (Sep-Oct)
-        recommendations.push({ icon: '👕', item: 'Light Layers' });
-        recommendations.push({ icon: '👖', item: 'Comfortable Trousers' });
+        recommendations.push({ icon: '*', item: 'Light Layers' });
+        recommendations.push({ icon: '*', item: 'Comfortable Trousers' });
     }
 
-    recommendations.push({ icon: '👟', item: 'Comfortable Walking Shoes' });
-    recommendations.push({ icon: '🧴', item: 'Sunscreen' });
+    recommendations.push({ icon: '*', item: 'Comfortable Walking Shoes' });
+    recommendations.push({ icon: '*', item: 'Sunscreen' });
 
     return recommendations;
 };
@@ -80,46 +99,46 @@ const getTravelModeRecommendations = (distance: number): { icon: string; mode: s
 
     if (distance < 100) {
         modes.push({
-            icon: '🚗',
+            icon: '>',
             mode: 'Self Drive/Taxi',
-            cost: `₹${Math.round(distance * 12)}-₹${Math.round(distance * 20)}`,
+            cost: `Rs.${Math.round(distance * 12)}-Rs.${Math.round(distance * 20)}`,
             duration: `${(distance / 50).toFixed(1)} hrs`,
             recommended: true
         });
     } else if (distance < 500) {
         modes.push({
-            icon: '🚂',
+            icon: '>',
             mode: 'Train (AC)',
-            cost: `₹${Math.round(distance * 2)}-₹${Math.round(distance * 3.5)}`,
+            cost: `Rs.${Math.round(distance * 2)}-Rs.${Math.round(distance * 3.5)}`,
             duration: `${(distance / 60).toFixed(1)} hrs`,
             recommended: true
         });
         modes.push({
-            icon: '🚌',
+            icon: '>',
             mode: 'Bus (Volvo)',
-            cost: `₹${Math.round(distance * 1.5)}-₹${Math.round(distance * 2.5)}`,
+            cost: `Rs.${Math.round(distance * 1.5)}-Rs.${Math.round(distance * 2.5)}`,
             duration: `${(distance / 45).toFixed(1)} hrs`,
             recommended: false
         });
         modes.push({
-            icon: '🚗',
+            icon: '>',
             mode: 'Self Drive',
-            cost: `₹${Math.round(distance * 10)}-₹${Math.round(distance * 14)}`,
+            cost: `Rs.${Math.round(distance * 10)}-Rs.${Math.round(distance * 14)}`,
             duration: `${(distance / 50).toFixed(1)} hrs`,
             recommended: false
         });
     } else {
         modes.push({
-            icon: '✈️',
+            icon: '>',
             mode: 'Flight',
-            cost: `₹${4000 + Math.round(distance * 4)}-₹${8000 + Math.round(distance * 6)}`,
+            cost: `Rs.${4000 + Math.round(distance * 4)}-Rs.${8000 + Math.round(distance * 6)}`,
             duration: `${(distance / 700 + 2).toFixed(1)} hrs`,
             recommended: distance > 800
         });
         modes.push({
-            icon: '🚂',
+            icon: '>',
             mode: 'Train (AC)',
-            cost: `₹${Math.round(distance * 1.5)}-₹${Math.round(distance * 3)}`,
+            cost: `Rs.${Math.round(distance * 1.5)}-Rs.${Math.round(distance * 3)}`,
             duration: `${(distance / 55).toFixed(1)} hrs`,
             recommended: distance <= 800
         });
@@ -151,7 +170,7 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
                 .text('Your Journey Itinerary', 50, 25, { align: 'center' });
 
             doc.fontSize(12).fillColor('#ecf0f1')
-                .text(`${itinerary.length} Days  •  ${Math.round(summary.totalDistance)} km  •  ₹${summary.totalCost.toLocaleString()}`,
+                .text(`${itinerary.length} Days  |  ${Math.round(summary.totalDistance)} km  |  Rs.${summary.totalCost.toLocaleString()}`,
                     50, 55, { align: 'center' });
 
             doc.moveDown(3);
@@ -160,20 +179,20 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
             // ============================================
             // TRIP OVERVIEW
             // ============================================
-            doc.fontSize(14).fillColor('#2980b9').text('📊 TRIP OVERVIEW', { underline: true });
+            doc.fontSize(14).fillColor('#2980b9').text('TRIP OVERVIEW', { underline: true });
             doc.moveDown(0.5);
 
             doc.fontSize(11).fillColor('#333333');
             doc.text(`• Total Duration: ${itinerary.length} days`);
             doc.text(`• Total Distance: ${Math.round(summary.totalDistance)} km`);
-            doc.text(`• Estimated Cost: ₹${summary.totalCost.toLocaleString()}`);
+            doc.text(`• Estimated Cost: Rs.${summary.totalCost.toLocaleString()}`);
             doc.text(`• Trip Pace: ${summary.feasibility}`);
             doc.moveDown(1);
 
             // ============================================
             // DAY-BY-DAY ITINERARY
             // ============================================
-            doc.fontSize(14).fillColor('#2980b9').text('📅 DAY-BY-DAY ITINERARY', { underline: true });
+            doc.fontSize(14).fillColor('#2980b9').text('DAY-BY-DAY ITINERARY', { underline: true });
             doc.moveDown(0.5);
 
             for (const day of itinerary) {
@@ -191,7 +210,7 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
                 if (day.activities && day.activities.length > 0) {
                     doc.fontSize(10).fillColor('#333333');
                     for (const act of day.activities) {
-                        doc.text(`  📍 ${act.name}`, { continued: false });
+                        doc.text(`  > ${act.name}`, { continued: false });
                         doc.fontSize(9).fillColor('#7f8c8d')
                             .text(`      ${act.type} • ${act.timeRequired}h • ${act.bestTimeOfDay}`);
                         doc.fillColor('#333333').fontSize(10);
@@ -205,12 +224,12 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
                 if (day.travel) {
                     doc.moveDown(0.3);
                     doc.fontSize(10).fillColor('#e67e22')
-                        .text(`  🚗 Travel to ${day.travel.to}: ${Math.round(day.travel.distance)}km (~${Math.round(day.travel.duration)}h)`);
+                        .text(`  >> Travel to ${day.travel.to}: ${Math.round(day.travel.distance)}km (~${Math.round(day.travel.duration)}h)`);
                 }
 
                 // Night stay
                 doc.fontSize(10).fillColor('#333333')
-                    .text(`  🌙 Overnight: ${day.nightStay}`);
+                    .text(`  * Overnight: ${getNightStayLabel(day.nightStay)}`);
                 doc.moveDown(0.8);
             }
 
@@ -222,10 +241,10 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
             }
 
             const cities = [...new Set(itinerary.map(d => d.city))];
-            doc.fontSize(14).fillColor('#2980b9').text('🗺️ YOUR ROUTE', { underline: true });
+            doc.fontSize(14).fillColor('#2980b9').text('YOUR ROUTE', { underline: true });
             doc.moveDown(0.5);
 
-            doc.fontSize(11).fillColor('#333333').text(`Route: ${cities.join(' → ')}`);
+            doc.fontSize(11).fillColor('#333333').text(`Route: ${cities.join(' > ')}`);
             doc.moveDown(0.5);
 
             cities.forEach((city, i) => {
@@ -241,17 +260,17 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
                     doc.addPage();
                 }
 
-                doc.fontSize(14).fillColor('#2980b9').text('🚀 RECOMMENDED TRAVEL OPTIONS', { underline: true });
+                doc.fontSize(14).fillColor('#2980b9').text('RECOMMENDED TRAVEL OPTIONS', { underline: true });
                 doc.moveDown(0.5);
 
                 doc.fontSize(10).fillColor('#7f8c8d')
-                    .text(`Total Distance: ${Math.round(summary.totalDistance)} km`);
+                    .text(`Total distance: ${Math.round(summary.totalDistance)} km`);
                 doc.moveDown(0.5);
 
                 const travelModes = getTravelModeRecommendations(summary.totalDistance);
                 for (const mode of travelModes) {
                     doc.fontSize(10).fillColor(mode.recommended ? '#27ae60' : '#333333')
-                        .text(`  ${mode.icon} ${mode.mode}${mode.recommended ? ' ⭐ RECOMMENDED' : ''}`);
+                        .text(`  ${mode.icon} ${mode.mode}${mode.recommended ? ' [RECOMMENDED]' : ''}`);
                     doc.fontSize(9).fillColor('#7f8c8d')
                         .text(`      Duration: ${mode.duration} | Cost: ${mode.cost}`);
                 }
@@ -263,19 +282,19 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
             // ============================================
             doc.addPage();
 
-            doc.fontSize(18).fillColor('#2c3e50').text('🎒 PACKING LIST', { underline: true });
+            doc.fontSize(18).fillColor('#2c3e50').text('PACKING LIST', { underline: true });
             doc.moveDown(0.5);
             doc.fontSize(9).fillColor('#7f8c8d').text('Auto-generated based on your itinerary, season & preferences');
             doc.moveDown(1);
 
             const packingList = generatePackingList(result, currentMonth);
             const categories: { key: keyof typeof packingList; label: string; icon: string }[] = [
-                { key: 'essentials', label: 'ESSENTIALS', icon: '⚡' },
-                { key: 'clothing', label: 'CLOTHING', icon: '👕' },
-                { key: 'accessories', label: 'ACCESSORIES', icon: '🎒' },
-                { key: 'documents', label: 'DOCUMENTS', icon: '📄' },
-                { key: 'healthKit', label: 'HEALTH KIT', icon: '💊' },
-                { key: 'extras', label: 'EXTRAS', icon: '✨' },
+                { key: 'essentials', label: 'ESSENTIALS', icon: '[!]' },
+                { key: 'clothing', label: 'CLOTHING', icon: '[C]' },
+                { key: 'accessories', label: 'ACCESSORIES', icon: '[A]' },
+                { key: 'documents', label: 'DOCUMENTS', icon: '[D]' },
+                { key: 'healthKit', label: 'HEALTH KIT', icon: '[H]' },
+                { key: 'extras', label: 'EXTRAS', icon: '[+]' },
             ];
 
             for (const cat of categories) {
@@ -293,9 +312,9 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
                     if (doc.y > doc.page.height - 40) {
                         doc.addPage();
                     }
-                    const priorityLabel = item.priority === 'must-have' ? '★' : item.priority === 'recommended' ? '●' : '○';
+                    const priorityLabel = item.priority === 'must-have' ? '[*]' : item.priority === 'recommended' ? '[+]' : '[ ]';
                     doc.fontSize(9).fillColor('#333333')
-                        .text(`  ${priorityLabel} ${item.icon} ${item.name}`, { continued: false });
+                        .text(`  ${priorityLabel} ${item.name}`, { continued: false });
                     doc.fontSize(8).fillColor('#7f8c8d')
                         .text(`      ${item.reason}`);
                 }
@@ -310,22 +329,22 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
                 doc.addPage();
             }
 
-            doc.fontSize(14).fillColor('#2980b9').text('💰 COST BREAKDOWN', { underline: true });
+            doc.fontSize(14).fillColor('#2980b9').text('COST BREAKDOWN', { underline: true });
             doc.moveDown(0.5);
 
             doc.fontSize(10).fillColor('#333333');
             if (summary.costBreakup.stay > 0) {
-                doc.text(`  Accommodation: ₹${summary.costBreakup.stay.toLocaleString()}`);
+                doc.text(`  Accommodation: Rs.${summary.costBreakup.stay.toLocaleString()}`);
             }
             const transportCost = summary.costBreakup.transport || summary.costBreakup.travel || 0;
             if (transportCost > 0) {
-                doc.text(`  Transport: ₹${transportCost.toLocaleString()}`);
+                doc.text(`  Transport: Rs.${transportCost.toLocaleString()}`);
             }
             if (summary.costBreakup.activities > 0) {
-                doc.text(`  Activities: ₹${summary.costBreakup.activities.toLocaleString()}`);
+                doc.text(`  Activities: Rs.${summary.costBreakup.activities.toLocaleString()}`);
             }
             if (summary.costBreakup.food && summary.costBreakup.food > 0) {
-                doc.text(`  Food: ₹${summary.costBreakup.food.toLocaleString()}`);
+                doc.text(`  Food: Rs.${summary.costBreakup.food.toLocaleString()}`);
             }
 
             doc.moveDown(0.3);
@@ -333,7 +352,7 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
             doc.moveDown(0.3);
 
             doc.fontSize(11).fillColor('#2c3e50')
-                .text(`  TOTAL: ₹${summary.totalCost.toLocaleString()}`, { continued: false });
+                .text(`  TOTAL: Rs.${summary.totalCost.toLocaleString()}`, { continued: false });
 
             // ============================================
             // EMERGENCY CONTACTS
@@ -346,20 +365,20 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
 
             if (citiesWithInfo.length > 0) {
                 doc.addPage();
-                doc.fontSize(18).fillColor('#c0392b').text('🆘 EMERGENCY CONTACTS', { underline: true });
+                doc.fontSize(18).fillColor('#c0392b').text('EMERGENCY CONTACTS', { underline: true });
                 doc.moveDown(0.5);
                 doc.fontSize(9).fillColor('#7f8c8d').text('Keep this page handy during your trip');
                 doc.moveDown(1);
 
                 // Universal numbers
-                doc.fontSize(11).fillColor('#2c3e50').text('📞 Universal Emergency Numbers', { underline: true });
+                doc.fontSize(11).fillColor('#2c3e50').text('Universal Emergency Numbers', { underline: true });
                 doc.moveDown(0.3);
                 doc.fontSize(10).fillColor('#333333');
-                doc.text('  🚔 Police: 100');
-                doc.text('  🚑 Ambulance: 108');
-                doc.text('  🚒 Fire: 101');
-                doc.text('  📞 Tourist Helpline: 1363');
-                doc.text('  👩 Women Helpline: 1091');
+                doc.text('  Police: 100');
+                doc.text('  Ambulance: 108');
+                doc.text('  Fire: 101');
+                doc.text('  Tourist Helpline: 1363');
+                doc.text('  Women Helpline: 1091');
                 doc.moveDown(1);
 
                 // Per-city info
@@ -371,25 +390,25 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
                         doc.addPage();
                     }
 
-                    doc.fontSize(12).fillColor('#c0392b').text(`📍 ${info.cityName}`, { underline: true });
+                    doc.fontSize(12).fillColor('#c0392b').text(`${info.cityName}`, { underline: true });
                     doc.moveDown(0.3);
 
                     // Police
                     doc.fontSize(10).fillColor('#333333');
-                    doc.text(`  🏛️ ${info.police.station}: ${info.police.number}`);
+                    doc.text(`  Police: ${info.police.station}: ${info.police.number}`);
                     doc.fontSize(9).fillColor('#7f8c8d').text(`      ${info.police.address}`);
 
                     // Hospitals
                     for (const h of info.hospital) {
                         if (doc.y > doc.page.height - 60) doc.addPage();
                         doc.fontSize(10).fillColor('#333333');
-                        doc.text(`  🏥 ${h.name}${h.hasEmergency ? ' (24/7 ER)' : ''}: ${h.number}`);
+                        doc.text(`  Hospital: ${h.name}${h.hasEmergency ? ' (24/7 ER)' : ''}: ${h.number}`);
                         doc.fontSize(9).fillColor('#7f8c8d').text(`      ${h.address}`);
                     }
 
                     // Nearest Airport
                     doc.fontSize(10).fillColor('#333333');
-                    doc.text(`  ✈️ Nearest Airport: ${info.nearestAirport.name} (${info.nearestAirport.code}) — ${info.nearestAirport.distanceKm} km`);
+                    doc.text(`  Nearest Airport: ${info.nearestAirport.name} (${info.nearestAirport.code}) - ${info.nearestAirport.distanceKm} km`);
                     doc.moveDown(0.8);
                 }
             }
@@ -399,7 +418,7 @@ export const generateItineraryPDF = (result: TripResult): Promise<Buffer> => {
             // ============================================
             doc.moveDown(2);
             doc.fontSize(9).fillColor('#95a5a6')
-                .text(`Generated by Trip Planner ✨ on ${new Date().toLocaleDateString()}`, { align: 'center' });
+                .text(`Generated by Trip Planner on ${new Date().toLocaleDateString()}`, { align: 'center' });
 
             // Finalize PDF
             doc.end();

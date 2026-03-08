@@ -57,15 +57,15 @@ export const TripIdeas: FC = () => {
     };
 
     return (
-        <section className="py-20 bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-800">
-            <div className="max-w-7xl mx-auto px-6">
+        <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 {/* Header */}
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-sm font-semibold mb-4">
                         <Sparkles size={16} />
                         Need Inspiration?
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-3">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-3">
                         Curated Trip Ideas
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
@@ -74,7 +74,7 @@ export const TripIdeas: FC = () => {
                 </div>
 
                 {/* Interest Filter Tabs */}
-                <div className="flex justify-center gap-2 mb-10 flex-wrap">
+                <div className="flex justify-center gap-2 mb-8 sm:mb-10 flex-wrap">
                     {INTEREST_TABS.map(tab => (
                         <button
                             key={tab.value}
@@ -97,7 +97,7 @@ export const TripIdeas: FC = () => {
                         <Loader2 className="animate-spin text-violet-500" size={32} />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         <AnimatePresence mode="popLayout">
                             {ideas.slice(0, 6).map((idea, i) => (
                                 <motion.div

@@ -395,6 +395,7 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, states = [], onGenerat
         stateCodes: selectedStateCodes.length > 0 ? selectedStateCodes : ['RJ'],
         selectedCityIds,
         duration: formData.duration,
+        ...(startDate ? { startDate } : {}),
         budget: formData.budget as any,
         travelStyle: formData.travelStyle as any,
         constraints: formData.constraints
@@ -910,6 +911,38 @@ export const TripWizard: FC<TripWizardProps> = ({ cities, states = [], onGenerat
                 className="w-full accent-primary h-2 bg-gray-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer"
               />
               <div className="text-right text-sm font-bold text-primary mt-1">{formData.constraints?.maxTravelHoursPerDay} hours</div>
+            </div>
+
+            {/* Dietary Preferences */}
+            <div className="pt-4">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Dietary Preferences</label>
+              <div className="flex flex-wrap gap-2">
+                {['Vegetarian', 'Vegan', 'Halal', 'Gluten-Free'].map(pref => {
+                  const selected = formData.constraints?.dietaryPreferences?.includes(pref.toLowerCase()) || false;
+                  return (
+                    <button
+                      key={pref}
+                      type="button"
+                      onClick={() => {
+                        const current = formData.constraints?.dietaryPreferences || [];
+                        const val = pref.toLowerCase();
+                        const updated = selected ? current.filter(p => p !== val) : [...current, val];
+                        setFormData({
+                          ...formData,
+                          constraints: { ...formData.constraints!, dietaryPreferences: updated }
+                        });
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        selected
+                          ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700'
+                          : 'bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      {pref === 'Vegetarian' && '🟢 '}{pref === 'Vegan' && '🌱 '}{pref === 'Halal' && '☪️ '}{pref === 'Gluten-Free' && '🌾 '}{pref}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

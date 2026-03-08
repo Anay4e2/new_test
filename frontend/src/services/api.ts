@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { TripRequest, TripResult, City, Place, Package, Hotel, BudgetTier, Restaurant, SavedTrip, FavoritePlace, PackingList, TrainLiveStatus, Review, ParsedTripQuery, TripSuggestion, Festival, EmergencyInfo, BookingLink, Expense, ExpenseSummary, TripGroup, GroupChat, GroupPoll, PublicTrip, TrendingDestination, UserPublicProfile, AppNotification, JournalEntry } from '../types';
+import type { TripRequest, TripResult, City, Place, Package, Hotel, BudgetTier, Restaurant, SavedTrip, FavoritePlace, PackingList, TrainLiveStatus, Review, ParsedTripQuery, TripSuggestion, Festival, EmergencyInfo, BookingLink, Expense, ExpenseSummary, TripGroup, GroupChat, GroupPoll, GroupItineraryRequest, PublicTrip, TrendingDestination, UserPublicProfile, AppNotification, JournalEntry } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -34,9 +34,11 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             // Clear the persisted auth state so the user is redirected to login
             localStorage.removeItem('auth-storage');
-            // Redirect to login (avoid redirect loop if already on /login)
-            if (!window.location.pathname.startsWith('/login')) {
-                window.location.href = '/login';
+            const isAdminPage = window.location.pathname.startsWith('/admin');
+            const loginPath = isAdminPage ? '/admin-login' : '/login';
+            // Redirect to appropriate login (avoid redirect loop)
+            if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/admin-login')) {
+                window.location.href = loginPath;
             }
         }
         return Promise.reject(error);
@@ -130,6 +132,146 @@ export const getAllTripsAdminApi = async (params: { page?: number; limit?: numbe
 
 export const deleteTripAdminApi = async (id: string) => {
     const response = await api.delete(`/admin/trips/${id}`);
+    return response.data;
+};
+
+export const updateTripAdminApi = async (id: string, data: any) => {
+    const response = await api.put(`/admin/trips/${id}`, data);
+    return response.data;
+};
+
+// Admin Users API
+export const getAllUsersAdminApi = async (params: { page?: number; limit?: number; search?: string; role?: string } = {}) => {
+    const response = await api.get('/admin/users', { params });
+    return response.data;
+};
+
+export const updateUserRoleApi = async (id: string, role: string) => {
+    const response = await api.put(`/admin/users/${id}/role`, { role });
+    return response.data;
+};
+
+export const deleteUserAdminApi = async (id: string) => {
+    const response = await api.delete(`/admin/users/${id}`);
+    return response.data;
+};
+
+// Admin Hotels API
+export const getAllHotelsAdminApi = async (params: { page?: number; limit?: number; search?: string; tier?: string } = {}) => {
+    const response = await api.get('/admin/hotels', { params });
+    return response.data;
+};
+
+export const createHotelAdminApi = async (data: any) => {
+    const response = await api.post('/admin/hotels', data);
+    return response.data;
+};
+
+export const updateHotelAdminApi = async (id: string, data: any) => {
+    const response = await api.put(`/admin/hotels/${id}`, data);
+    return response.data;
+};
+
+export const deleteHotelAdminApi = async (id: string) => {
+    const response = await api.delete(`/admin/hotels/${id}`);
+    return response.data;
+};
+
+// Admin Restaurants API
+export const getAllRestaurantsAdminApi = async (params: { page?: number; limit?: number; search?: string; type?: string } = {}) => {
+    const response = await api.get('/admin/restaurants', { params });
+    return response.data;
+};
+
+export const createRestaurantAdminApi = async (data: any) => {
+    const response = await api.post('/admin/restaurants', data);
+    return response.data;
+};
+
+export const updateRestaurantAdminApi = async (id: string, data: any) => {
+    const response = await api.put(`/admin/restaurants/${id}`, data);
+    return response.data;
+};
+
+export const deleteRestaurantAdminApi = async (id: string) => {
+    const response = await api.delete(`/admin/restaurants/${id}`);
+    return response.data;
+};
+
+// Admin Festivals API
+export const getAllFestivalsAdminApi = async (params: { page?: number; limit?: number; search?: string; type?: string } = {}) => {
+    const response = await api.get('/admin/festivals', { params });
+    return response.data;
+};
+
+export const createFestivalAdminApi = async (data: any) => {
+    const response = await api.post('/admin/festivals', data);
+    return response.data;
+};
+
+export const updateFestivalAdminApi = async (id: string, data: any) => {
+    const response = await api.put(`/admin/festivals/${id}`, data);
+    return response.data;
+};
+
+export const deleteFestivalAdminApi = async (id: string) => {
+    const response = await api.delete(`/admin/festivals/${id}`);
+    return response.data;
+};
+
+// Bulk Operations
+export const bulkDeletePlacesApi = async (ids: string[]) => {
+    const response = await api.post('/admin/places/bulk-delete', { ids });
+    return response.data;
+};
+
+export const bulkDeleteHotelsApi = async (ids: string[]) => {
+    const response = await api.post('/admin/hotels/bulk-delete', { ids });
+    return response.data;
+};
+
+export const bulkDeleteRestaurantsApi = async (ids: string[]) => {
+    const response = await api.post('/admin/restaurants/bulk-delete', { ids });
+    return response.data;
+};
+
+export const bulkDeleteFestivalsApi = async (ids: string[]) => {
+    const response = await api.post('/admin/festivals/bulk-delete', { ids });
+    return response.data;
+};
+
+// Audit Logs
+export const getAuditLogsApi = async (params: { page?: number; limit?: number; entity?: string } = {}) => {
+    const response = await api.get('/admin/audit-logs', { params });
+    return response.data;
+};
+
+// Sessions
+export const getActiveSessionsApi = async () => {
+    const response = await api.get('/admin/sessions');
+    return response.data;
+};
+
+// Image Upload
+export const uploadImageApi = async (image: string, folder?: string) => {
+    const response = await api.post('/admin/upload-image', { image, folder });
+    return response.data;
+};
+
+// Admin Packages API (includes inactive packages)
+export const getAllPackagesAdminApi = async (): Promise<{ success: boolean; data: Package[] }> => {
+    const response = await api.get('/packages/admin/all');
+    return response.data;
+};
+
+// App Settings
+export const getAppSettingsApi = async () => {
+    const response = await api.get('/admin/settings');
+    return response.data;
+};
+
+export const updateAppSettingsApi = async (data: any) => {
+    const response = await api.put('/admin/settings', data);
     return response.data;
 };
 
@@ -623,6 +765,27 @@ export const closePoll = async (groupId: string, pollId: string): Promise<{ succ
 
 export const removeMember = async (groupId: string, memberId: string): Promise<{ success: boolean; group: TripGroup }> => {
     const response = await api.delete(`/groups/${groupId}/members/${memberId}`);
+    return response.data;
+};
+
+// Itinerary Requests
+export const createItineraryRequest = async (groupId: string, data: { type: string; title: string; description: string; dayNumber?: number; proposedChanges?: Record<string, unknown> }): Promise<{ success: boolean; request: GroupItineraryRequest }> => {
+    const response = await api.post(`/groups/${groupId}/requests`, data);
+    return response.data;
+};
+
+export const getGroupRequests = async (groupId: string, status?: string): Promise<{ success: boolean; requests: GroupItineraryRequest[] }> => {
+    const response = await api.get(`/groups/${groupId}/requests`, { params: status ? { status } : undefined });
+    return response.data;
+};
+
+export const voteOnRequest = async (groupId: string, requestId: string, vote: 'approve' | 'reject'): Promise<{ success: boolean; request: GroupItineraryRequest }> => {
+    const response = await api.post(`/groups/${groupId}/requests/${requestId}/vote`, { vote });
+    return response.data;
+};
+
+export const resolveRequest = async (groupId: string, requestId: string, data: { status: 'approved' | 'rejected'; rejectionReason?: string }): Promise<{ success: boolean; request: GroupItineraryRequest }> => {
+    const response = await api.post(`/groups/${groupId}/requests/${requestId}/resolve`, data);
     return response.data;
 };
 

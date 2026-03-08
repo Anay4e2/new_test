@@ -8,19 +8,31 @@ import {
     getChatHistory,
     createPoll as createPollApi,
     removeMember as removeMemberApi,
+    createItineraryRequest as createRequestApi,
+    getGroupRequests,
 } from '@/services/api';
 import { useGroupSocket } from '@/hooks/useGroupSocket';
-import type { TripGroup, GroupChat, SavedTrip } from '@/types';
+import type { TripGroup, SavedTrip, GroupItineraryRequest, ItineraryRequestType } from '@/types';
 import {
     ArrowLeft, Loader2, Users, MessageCircle, BarChart3,
     Send, Plus, UserMinus, CheckCircle, XCircle, Clock, Crown,
-    Edit3, Eye,
+    Edit3, Eye, FileText,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { InviteModal } from '@/components/common/InviteModal';
 import { PollCard } from '@/components/common/PollCard';
+import { RequestCard } from '@/components/common/RequestCard';
 
-type Tab = 'members' | 'chat' | 'polls';
+type Tab = 'members' | 'chat' | 'polls' | 'requests';
+
+const REQUEST_TYPES: { value: ItineraryRequestType; label: string }[] = [
+    { value: 'add_activity', label: 'Add Activity' },
+    { value: 'remove_activity', label: 'Remove Activity' },
+    { value: 'change_hotel', label: 'Change Hotel' },
+    { value: 'change_date', label: 'Change Date' },
+    { value: 'modify_route', label: 'Modify Route' },
+    { value: 'custom', label: 'Custom' },
+];
 
 const ROLE_BADGE: Record<string, { icon: FC<any>; label: string; color: string }> = {
     owner: { icon: Crown, label: 'Owner', color: 'text-amber-500' },
@@ -49,12 +61,20 @@ export const GroupTrip: FC = () => {
     const { messages, connected, typingUsers, sendMessage, sendTyping, stopTyping, setInitialMessages } = useGroupSocket(groupId, token);
     const [chatInput, setChatInput] = useState('');
     const [sendingChat, setSendingChat] = useState(false);
-    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     // Poll creation state
     const [showPollForm, setShowPollForm] = useState(false);
     const [pollQuestion, setPollQuestion] = useState('');
     const [pollOptions, setPollOptions] = useState(['', '']);
+
+    // Request state
+    const [requests, setRequests] = useState<GroupItineraryRequest[]>([]);
+    const [showRequestForm, setShowRequestForm] = useState(false);
+    const [requestType, setRequestType] = useState<ItineraryRequestType>('custom');
+    const [requestTitle, setRequestTitle] = useState('');
+    const [requestDesc, setRequestDesc] = useState('');
+    const [requestDay, setRequestDay] = useState<number | ''>('');
 
     const fetchGroup = async () => {
         if (!groupId) return;
@@ -86,11 +106,20 @@ export const GroupTrip: FC = () => {
         fetchGroup();
     }, [groupId]);
 
+    const fetchRequests = async () => {
+        if (!groupId) return;
+        try {
+            const res = await getGroupRequests(groupId);
+            if (res.success) setRequests(res.requests);
+        } catch {
+            toast.error('Failed to load requests.');
+        }
+    };
+
     // Load chat history when switching to chat tab
     useEffect(() => {
-        if (activeTab === 'chat') {
-            fetchChat();
-        }
+        if (activeTab === 'chat') fetchChat();
+        if (activeTab === 'requests') fetchRequests();
     }, [activeTab, groupId]);
 
     useEffect(() => {
@@ -134,6 +163,27 @@ export const GroupTrip: FC = () => {
             fetchGroup();
         } catch {
             toast.error('Failed to create poll.');
+        }
+    };
+
+    const handleCreateRequest = async () => {
+        if (!requestTitle.trim() || !requestDesc.trim() || !groupId) return;
+        try {
+            await createRequestApi(groupId, {
+                type: requestType,
+                title: requestTitle.trim(),
+                description: requestDesc.trim(),
+                dayNumber: requestDay || undefined,
+            });
+            setRequestTitle('');
+            setRequestDesc('');
+            setRequestDay('');
+            setRequestType('custom');
+            setShowRequestForm(false);
+            fetchRequests();
+            toast.success('Request submitted!');
+        } catch {
+            toast.error('Failed to submit request.');
         }
     };
 
@@ -307,6 +357,7 @@ export const GroupTrip: FC = () => {
                                 { key: 'members', icon: Users, label: 'Members', badge: pendingCount > 0 ? pendingCount : undefined },
                                 { key: 'chat', icon: MessageCircle, label: 'Chat' },
                                 { key: 'polls', icon: BarChart3, label: 'Polls' },
+                                { key: 'requests', icon: FileText, label: 'Requests', badge: requests.filter(r => r.status === 'pending').length || undefined },
                             ] as { key: Tab; icon: FC<any>; label: string; badge?: number }[]).map(tab => (
                                 <button
                                     key={tab.key}
@@ -525,7 +576,83 @@ export const GroupTrip: FC = () => {
                                     )}
                                 </div>
                             )}
-                        </div>
+                            {/* Requests Tab */}
+                            {activeTab === 'requests' && (
+                                <div className="p-4 space-y-3">
+                                    <button
+                                        onClick={() => setShowRequestForm(!showRequestForm)}
+                                        className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        <Plus size={14} />
+                                        New Request
+                                    </button>
+
+                                    {showRequestForm && (
+                                        <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-3">
+                                            <select
+                                                value={requestType}
+                                                onChange={e => setRequestType(e.target.value as ItineraryRequestType)}
+                                                className="w-full border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white outline-none"
+                                            >
+                                                {REQUEST_TYPES.map(t => (
+                                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                                ))}
+                                            </select>
+                                            <input
+                                                type="text"
+                                                value={requestTitle}
+                                                onChange={e => setRequestTitle(e.target.value)}
+                                                placeholder="Request title..."
+                                                maxLength={200}
+                                                className="w-full border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                            />
+                                            <textarea
+                                                value={requestDesc}
+                                                onChange={e => setRequestDesc(e.target.value)}
+                                                placeholder="Describe your proposed change..."
+                                                maxLength={1000}
+                                                rows={3}
+                                                className="w-full border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white resize-none outline-none"
+                                            />
+                                            <input
+                                                type="number"
+                                                value={requestDay}
+                                                onChange={e => setRequestDay(e.target.value ? Number(e.target.value) : '')}
+                                                placeholder="Day number (optional)"
+                                                min={1}
+                                                className="w-full border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white outline-none"
+                                            />
+                                            <div className="flex justify-end">
+                                                <button
+                                                    onClick={handleCreateRequest}
+                                                    disabled={!requestTitle.trim() || !requestDesc.trim()}
+                                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                >
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {requests.length === 0 && !showRequestForm ? (
+                                        <div className="text-center text-gray-400 text-sm py-8">
+                                            <FileText size={32} className="mx-auto mb-2 opacity-50" />
+                                            No requests yet. Suggest an itinerary change!
+                                        </div>
+                                    ) : (
+                                        requests.map(req => (
+                                            <RequestCard
+                                                key={req._id}
+                                                groupId={group._id}
+                                                request={req}
+                                                currentUserId={currentUserId}
+                                                isOwner={isOwner}
+                                                onUpdated={fetchRequests}
+                                            />
+                                        ))
+                                    )}
+                                </div>
+                            )}                        </div>
                     </div>
                 </div>
             </div>

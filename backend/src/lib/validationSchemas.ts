@@ -167,6 +167,25 @@ export const votePollSchema = z.object({
   optionIndex: z.coerce.number().int().min(0),
 });
 
+// ─── Itinerary Request Schemas ───
+
+export const createItineraryRequestSchema = z.object({
+  type: z.enum(['add_activity', 'remove_activity', 'change_hotel', 'change_date', 'modify_route', 'custom']),
+  title: z.string().min(1, 'Title is required').max(200).trim(),
+  description: z.string().min(1, 'Description is required').max(1000).trim(),
+  dayNumber: z.coerce.number().int().min(1).optional(),
+  proposedChanges: z.record(z.string(), z.any()).optional(),
+});
+
+export const voteRequestSchema = z.object({
+  vote: z.enum(['approve', 'reject']),
+});
+
+export const resolveRequestSchema = z.object({
+  status: z.enum(['approved', 'rejected']),
+  rejectionReason: z.string().max(500).trim().optional(),
+});
+
 // ─── Mongo ObjectId param validation ───
 
 export const objectIdParam = z.object({

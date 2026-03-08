@@ -44,6 +44,11 @@ export const Navbar: FC = () => {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    // Hide navbar on admin pages (admin panel has its own sidebar)
+    if (location.pathname === '/admin' || location.pathname.startsWith('/admin/')) {
+        return null;
+    }
+
     const allLinks = [...publicLinks, ...(isAuthenticated() ? authLinks : [])];
 
     return (
@@ -129,10 +134,10 @@ export const Navbar: FC = () => {
                         {/* Mobile menu toggle */}
                         <button
                             onClick={() => setMobileOpen(!mobileOpen)}
-                            className="lg:hidden p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+                            className="lg:hidden p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
                             aria-label="Toggle menu"
                         >
-                            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+                            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
                         </button>
                     </div>
                 </div>
@@ -140,14 +145,14 @@ export const Navbar: FC = () => {
 
             {/* Mobile dropdown */}
             {mobileOpen && (
-                <div className="lg:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 space-y-1">
+                <div className="lg:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 space-y-1 max-h-[70vh] overflow-y-auto">
                     {allLinks.map(link => (
                         <Link
                             key={link.to}
                             to={link.to}
                             onClick={() => setMobileOpen(false)}
                             className={clsx(
-                                'block px-3 py-2 rounded-md text-sm font-medium',
+                                'block px-3 py-2.5 rounded-md text-sm font-medium',
                                 location.pathname === link.to
                                     ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                                     : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'

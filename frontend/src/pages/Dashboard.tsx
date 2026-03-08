@@ -187,26 +187,26 @@ export const Dashboard: FC = () => {
         <div className="min-h-screen bg-neutral dark:bg-slate-900">
             {/* Header */}
             <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
-                <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                             <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 dark:text-white">My Dashboard</h1>
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white">My Dashboard</h1>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Welcome back, {user?.name || 'Traveler'}</p>
                         </div>
                     </div>
                     <button
                         onClick={() => navigate('/plan')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0"
                     >
                         + Plan New Trip
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="max-w-6xl mx-auto px-6 flex gap-1">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto scrollbar-hide">
                     <button
                         onClick={() => setActiveTab('trips')}
                         className={clsx(
@@ -256,9 +256,9 @@ export const Dashboard: FC = () => {
             </div>
 
             {/* Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                         {Array.from({ length: 6 }).map((_, i) => <DashboardTripSkeleton key={i} />)}
                     </div>
                 ) : activeTab === 'trips' ? (
@@ -272,7 +272,7 @@ export const Dashboard: FC = () => {
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                             {trips.map(trip => (
                                 <div
                                     key={trip._id}
@@ -504,7 +504,7 @@ export const Dashboard: FC = () => {
                             <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Create a group from one of your trips to plan together with friends!</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                             {groups.map(g => {
                                 const gTrip = typeof g.tripId === 'object' ? g.tripId as any : null;
                                 const acceptedCount = g.members.filter(m => m.status === 'accepted').length;

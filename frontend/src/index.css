@@ -32,3 +32,19 @@ body {
 .dark {
     color-scheme: dark;
 }
+
+/* Print-friendly styles for itinerary */
+@media print {
+  body { background: white !important; color: black !important; }
+  nav, header, .no-print, button, .fixed, [role="dialog"] { display: none !important; }
+  .dark { color-scheme: light; }
+  .bg-primary { background: #2563EB !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  * { box-shadow: none !important; }
+  .overflow-hidden { overflow: visible !important; }
+  .overflow-y-auto { overflow: visible !important; height: auto !important; }
+  .h-\\[calc\\(100vh-3\\.5rem\\)\\] { height: auto !important; }
+  /* Page breaks between days */
+  [data-print-day] { page-break-inside: avoid; break-inside: avoid; }
+  /* Hide interactive elements */
+  .print\\:hidden { display: none !important; }
+}

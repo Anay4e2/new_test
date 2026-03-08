@@ -305,7 +305,7 @@ export const Packages: FC = () => {
 
             {/* Main layout */}
             <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
-                <div className="flex gap-8">
+                <div className="flex gap-4 lg:gap-8">
                     {/* Desktop Filter Sidebar */}
                     <aside className="hidden lg:block w-[280px] flex-shrink-0">
                         <div className="sticky top-[72px] bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
@@ -332,7 +332,7 @@ export const Packages: FC = () => {
 
                         {/* Loading skeleton */}
                         {loading && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                 {Array.from({ length: 4 }).map((_, i) => (
                                     <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-pulse">
                                         <div className="h-52 bg-slate-200 dark:bg-slate-700" />
@@ -388,7 +388,7 @@ export const Packages: FC = () => {
 
                         {/* Package cards grid */}
                         {!loading && !error && filteredPackages.length > 0 && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                 {filteredPackages.map(pkg => (
                                     <div
                                         key={pkg._id}

@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { getPackages, createPackage, updatePackage, deletePackage } from '../../services/api';
+import { getAllPackagesAdminApi, createPackage, updatePackage, deletePackage } from '../../services/api';
 import type { Package } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChipInput from '../common/ChipInput';
@@ -45,7 +45,7 @@ const PackageManager: FC = () => {
     const fetchPackages = async () => {
         setLoading(true);
         try {
-            const response = await getPackages();
+            const response = await getAllPackagesAdminApi();
             if (response.success) setPackages(response.data);
         } catch { toast.error('Failed to load packages.'); } finally {
             setLoading(false);

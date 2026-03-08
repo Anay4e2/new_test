@@ -107,9 +107,9 @@ export const Login: FC = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950" />
 
             {/* Animated gradient orbs */}
-            <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-[40%] right-[20%] w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-[-20%] left-[-10%] w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-[40%] right-[20%] w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] bg-cyan-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
 
             {/* Left panel — branding */}
             <div className="hidden lg:flex lg:w-1/2 relative z-10 flex-col justify-between p-12">
@@ -152,7 +152,7 @@ export const Login: FC = () => {
             </div>
 
             {/* Right panel — form */}
-            <div className="w-full lg:w-1/2 relative z-10 flex items-center justify-center p-6 sm:p-10">
+            <div className="w-full lg:w-1/2 relative z-10 flex items-center justify-center p-4 sm:p-6 md:p-10">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -170,7 +170,7 @@ export const Login: FC = () => {
                     </div>
 
                     {/* Glass card */}
-                    <div className="bg-white/[0.07] backdrop-blur-xl border border-white/[0.1] rounded-3xl p-8 sm:p-10 shadow-2xl shadow-black/20">
+                    <div className="bg-white/[0.07] backdrop-blur-xl border border-white/[0.1] rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl shadow-black/20">
                         <div className="mb-8">
                             <h1 className="text-2xl font-bold text-white mb-2">{t('auth.welcomeBack')}</h1>
                             <p className="text-blue-200/60">{t('auth.signInSubtitle')}</p>

@@ -34,7 +34,7 @@ export const AdminLogin: FC = () => {
                 </div>
 
                 {/* Form Card */}
-                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-8 shadow-sm">
+                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 sm:p-8 shadow-sm">
                     {/* Admin Badge */}
                     <div className="flex items-center justify-center gap-2 mb-6 py-2 px-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-lg mx-auto w-fit">
                         <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -66,7 +66,7 @@ export const AdminLogin: FC = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                placeholder="admin@example.com"
+                                placeholder="admin"
                             />
                         </div>
 

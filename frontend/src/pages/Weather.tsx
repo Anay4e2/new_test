@@ -90,7 +90,7 @@ export const Weather: FC = () => {
                     <div className="inline-flex items-center gap-2 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 px-4 py-1.5 rounded-full text-sm font-medium mb-3">
                         <Cloud size={16} /> Weather Guide
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Seasonal Weather Planner</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mb-2">Seasonal Weather Planner</h1>
                     <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
                         Check monthly weather patterns to pick the perfect time for your trip
                     </p>

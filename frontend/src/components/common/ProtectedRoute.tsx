@@ -12,7 +12,8 @@ export const ProtectedRoute: FC<ProtectedRouteProps> = ({ children, adminOnly = 
     const location = useLocation();
 
     if (!isAuthenticated()) {
-        return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+        const loginPath = adminOnly ? '/admin-login' : `/login?next=${encodeURIComponent(location.pathname)}`;
+        return <Navigate to={loginPath} replace />;
     }
 
     if (adminOnly && !isAdmin()) {

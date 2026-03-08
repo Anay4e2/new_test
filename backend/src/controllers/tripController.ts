@@ -1,7 +1,43 @@
 import { Request, Response } from 'express';
-import { generateTrip, TripRequest } from '../services/planner';
+import { generateTrip, TripRequest, TripResult } from '../services/planner';
 import { optimizeRoute as optimizeRouteService } from '../services/routeOptimizer';
 import logger from '../lib/logger';
+import crypto from 'crypto';
+
+// Simple in-memory cache for trip generation results
+const tripCache = new Map<string, { result: TripResult; timestamp: number }>();
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_CACHE_SIZE = 50;
+
+function getTripCacheKey(req: TripRequest): string {
+    const normalized = {
+        cities: [...req.selectedCityIds].sort(),
+        duration: req.duration,
+        budget: req.budget,
+        style: req.travelStyle,
+        constraints: req.constraints,
+    };
+    return crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
+}
+
+function getCachedTrip(key: string): TripResult | null {
+    const entry = tripCache.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+        tripCache.delete(key);
+        return null;
+    }
+    return entry.result;
+}
+
+function setCachedTrip(key: string, result: TripResult): void {
+    // Evict oldest if at capacity
+    if (tripCache.size >= MAX_CACHE_SIZE) {
+        const oldestKey = tripCache.keys().next().value;
+        if (oldestKey) tripCache.delete(oldestKey);
+    }
+    tripCache.set(key, { result, timestamp: Date.now() });
+}
 
 export const createTrip = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -30,7 +66,15 @@ export const createTrip = async (req: Request, res: Response): Promise<void> => 
         }
 
         // Now planner needs to be async or handle fetching data internally
+        const cacheKey = getTripCacheKey(tripRequest);
+        const cached = getCachedTrip(cacheKey);
+        if (cached) {
+            res.json(cached);
+            return;
+        }
+
         const result = await generateTrip(tripRequest);
+        setCachedTrip(cacheKey, result);
         res.json(result);
     } catch (error: any) {
         logger.error('Error generating trip:', error);

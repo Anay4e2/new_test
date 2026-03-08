@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const Safety: FC = () => {
     const navigate = useNavigate();
     const [safetyMap, setSafetyMap] = useState<Record<string, EmergencyInfo>>({});
-    const [cities, setCities] = useState<City[]>([]);
+    const [, setCities] = useState<City[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedCity, setExpandedCity] = useState<string | null>(null);
     const [search, setSearch] = useState('');
@@ -184,7 +184,7 @@ export const Safety: FC = () => {
                     <div className="inline-flex items-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-4 py-1.5 rounded-full text-sm font-medium mb-3">
                         <Shield size={16} /> Travel Safety
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Safety & Emergency Info</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mb-2">Safety & Emergency Info</h1>
                     <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
                         Emergency contacts, hospitals, local tips and scam warnings for every city
                     </p>

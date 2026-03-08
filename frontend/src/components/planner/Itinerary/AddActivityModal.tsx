@@ -9,9 +9,10 @@ interface AddActivityModalProps {
     onClose: () => void;
     onAdd: (activity: any) => void;
     dayNumber?: number;
+    cityCoordinates?: { lat: number; lng: number };
 }
 
-export const AddActivityModal: FC<AddActivityModalProps> = ({ isOpen, onClose, onAdd, dayNumber }) => {
+export const AddActivityModal: FC<AddActivityModalProps> = ({ isOpen, onClose, onAdd, dayNumber, cityCoordinates }) => {
     const [activeTab, setActiveTab] = useState<'search' | 'custom'>('search');
 
     // --- Google Maps Loader ---
@@ -73,7 +74,7 @@ export const AddActivityModal: FC<AddActivityModalProps> = ({ isOpen, onClose, o
             ...customActivity,
             _id: `custom-${Date.now()}`,
             cityName: 'Custom Location',
-            coordinates: { lat: 0, lng: 0 } // Placeholder
+            coordinates: cityCoordinates || { lat: 0, lng: 0 }
         });
         onClose();
         // Reset form

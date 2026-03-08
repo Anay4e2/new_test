@@ -535,7 +535,7 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
     // --- Loading / Error States ---
     if (loadError) {
         return (
-            <div className="flex items-center justify-center h-full bg-neutral-900 text-white">
+            <div className="flex items-center justify-center h-full bg-neutral-900 text-white" role="alert">
                 <div className="text-center p-8">
                     <h3 className="text-xl font-bold text-red-400 mb-2">Failed to load Google Maps</h3>
                     <p className="text-gray-400">Please check your API key and try again.</p>
@@ -546,7 +546,7 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
 
     if (!isLoaded) {
         return (
-            <div className="flex items-center justify-center h-full bg-neutral-900 text-white">
+            <div className="flex items-center justify-center h-full bg-neutral-900 text-white" role="status" aria-label="Loading map">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
                     <p className="text-gray-400">Loading map...</p>
@@ -556,7 +556,7 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
     }
 
     return (
-        <div className="relative h-full w-full">
+        <div className="relative h-full w-full" role="region" aria-label="Interactive trip map" tabIndex={0}>
             <GoogleMap
                 mapContainerStyle={containerStyle}
                 center={INDIA_CENTER}
@@ -571,6 +571,7 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                     streetViewControl: false,
                     fullscreenControl: true,
                     gestureHandling: 'greedy',
+                    keyboardShortcuts: true,
                     minZoom: 4,
                     maxZoom: 18,
                     restriction: {
@@ -599,6 +600,7 @@ export const Map: FC<MapProps> = ({ center, zoom, onStateClick, route, itinerary
                             <Marker
                                 key={place._id}
                                 position={{ lat: place.coordinates.lat, lng: place.coordinates.lng }}
+                                title={`${place.name}${place.type ? ` (${place.type})` : ''}${place.rating ? ` — Rating: ${place.rating}` : ''}`}
                                 icon={{
                                     url: createMarkerIcon(place.type, placeIsSelected),
                                     scaledSize: new google.maps.Size(placeIsSelected ? 44 : 36, placeIsSelected ? 44 : 36),

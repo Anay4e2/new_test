@@ -1,9 +1,10 @@
 import { FC, useState, useEffect, useMemo } from 'react';
-import { TripWizard, ItineraryView, Map, TripSidebar, TripComparison, SmartSearch } from '@/components/planner';
+import { TripWizard, ItineraryView, Map, TripSidebar, TripComparison, SmartSearch, ItinerarySkeleton } from '@/components/planner';
 import { TripRequest, TripResult } from '@/types';
 import { useTripStore } from '@/stores/tripStore';
 import { getConfig, generateTrip, generateTripVariants, getSeasonalWeather } from '@/services/api';
 import toast from 'react-hot-toast';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const Planner: FC = () => {
   const [config, setConfig] = useState<{ states: any[], cities: any[] }>({ states: [], cities: [] });
@@ -13,6 +14,9 @@ export const Planner: FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'wizard' | 'trip' | 'itinerary' | 'compare' | 'smart'>('trip');
   const [activeDay, setActiveDay] = useState<number | null>(null);
+  const [lastRequest, setLastRequest] = useState<TripRequest | null>(null);
+  const [lastFailedRequest, setLastFailedRequest] = useState<TripRequest | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   // Comparison state
   const [comparisonVariants, setComparisonVariants] = useState<{ label: string; tripResult: TripResult }[]>([]);
@@ -44,6 +48,9 @@ export const Planner: FC = () => {
 
   const handleGenerate = async (req: TripRequest) => {
     setLoading(true);
+    setGenerateError(null);
+    setLastFailedRequest(null);
+    setLastRequest(req);
     try {
       const result = await generateTrip(req);
 
@@ -70,9 +77,12 @@ export const Planner: FC = () => {
 
       setTripResult(result);
       setActiveTab('itinerary');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error('Failed to generate trip. Please try again.');
+      const msg = e?.response?.data?.message || e?.message || 'Failed to generate trip.';
+      setGenerateError(msg);
+      setLastFailedRequest(req);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -154,7 +164,7 @@ export const Planner: FC = () => {
 
       case 'itinerary':
         return tripResult ? (
-          <ItineraryView result={tripResult} onReset={() => setTripResult(null)} activeDay={activeDay} onDaySelect={setActiveDay} startDate={tripStartDate} />
+          <ItineraryView result={tripResult} request={lastRequest || undefined} onReset={() => setTripResult(null)} activeDay={activeDay} onDaySelect={setActiveDay} startDate={tripStartDate} />
         ) : (
           <TripSidebar />
         );
@@ -174,7 +184,7 @@ export const Planner: FC = () => {
   return (
     <div className="flex h-[calc(100vh-3.5rem)] w-full bg-slate-50 dark:bg-slate-900 overflow-hidden transition-colors duration-200">
       {/* Left Sidebar */}
-      <div className="hidden md:flex flex-col w-[420px] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+      <div className="hidden md:flex flex-col w-[340px] lg:w-[420px] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
 
         {/* Tab Switcher */}
         <div className="flex border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -232,7 +242,26 @@ export const Planner: FC = () => {
 
         {/* Sidebar Content */}
         <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+          {generateError && lastFailedRequest && !loading && (
+            <div className="mx-4 mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-red-700 dark:text-red-300">Trip generation failed</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-0.5 truncate">{generateError}</p>
+                </div>
+                <button
+                  onClick={() => handleGenerate(lastFailedRequest)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition-colors flex-shrink-0"
+                >
+                  <RefreshCw size={14} />
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
           {renderSidebar()}
+          {loading && <ItinerarySkeleton />}
         </div>
       </div>
 
@@ -253,7 +282,7 @@ export const Planner: FC = () => {
         />
 
         {/* Mobile Bottom Sheet Toggle */}
-        <div className="absolute bottom-6 right-6 md:hidden z-[1000] flex gap-2">
+        <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 md:hidden z-[1000] flex gap-2">
           <button
             onClick={() => setActiveTab(activeTab === 'trip' ? 'wizard' : 'trip')}
             className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-4 rounded-full shadow-lg font-bold border border-slate-200 dark:border-slate-600"

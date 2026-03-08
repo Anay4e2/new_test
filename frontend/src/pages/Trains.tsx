@@ -13,7 +13,7 @@ import {
 } from '../services/api';
 import {
     Train, Search, ArrowRight, Clock, MapPin, ArrowLeft,
-    Loader2, AlertCircle, Info, ChevronDown, ChevronUp,
+    Loader2, Info, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import clsx from 'clsx';
 

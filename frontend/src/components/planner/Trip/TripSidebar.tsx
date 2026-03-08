@@ -17,14 +17,6 @@ interface TrainInfo {
     toStation: string;
 }
 
-interface TrainSearchResult {
-    fromStation: string;
-    toStation: string;
-    fromCode: string;
-    toCode: string;
-    trains: TrainInfo[];
-}
-
 // Transport mode icons
 const transportIcons: Record<string, string> = {
     road: '🚗',

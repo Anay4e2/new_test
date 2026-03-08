@@ -122,20 +122,20 @@ const RouteIcon: FC = () => (
 
 export const Hero: FC = () => {
   return (
-    <div className="min-h-[85vh] bg-white dark:bg-slate-900 transition-colors duration-200">
+    <div className="min-h-[60vh] md:min-h-[85vh] bg-white dark:bg-slate-900 transition-colors duration-200">
       {/* Hero Content */}
-      <div className="flex items-start max-w-7xl mx-auto px-10 py-8 gap-8">
+      <div className="flex flex-col md:flex-row items-start max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-6 md:py-8 gap-6 md:gap-8">
         {/* Left Column - Content */}
-        <div className="w-1/2 pt-8">
-          <h1 className="text-5xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight mb-6">
+        <div className="w-full md:w-1/2 pt-4 md:pt-8">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight mb-4 md:mb-6">
             Plan Smarter Trips Across India
           </h1>
-          <p className="text-lg text-slate-500 dark:text-slate-400 leading-relaxed mb-8 max-w-lg">
+          <p className="text-base md:text-lg text-slate-500 dark:text-slate-400 leading-relaxed mb-6 md:mb-8 max-w-lg">
             Create optimized multi-city itineraries, explore curated packages, and access real-time travel insights—all in one platform.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex items-center gap-4 mb-12">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8 md:mb-12">
             <Link
               to="/plan"
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-7 rounded-xl shadow-lg shadow-blue-600/25 transition-all hover:shadow-xl hover:shadow-blue-600/30 text-base"
@@ -151,7 +151,7 @@ export const Hero: FC = () => {
           </div>
 
           {/* Feature Highlights */}
-          <div className="flex items-center gap-10">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 md:gap-10">
             <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
               <MapIcon />
               <span className="text-sm font-medium">Interactive Maps</span>
@@ -168,7 +168,7 @@ export const Hero: FC = () => {
         </div>
 
         {/* Right Column - Rajasthan Map */}
-        <div className="w-1/2 relative">
+        <div className="w-full md:w-1/2 relative">
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
             <RajasthanMapSVG />
 

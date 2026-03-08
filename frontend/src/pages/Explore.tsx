@@ -131,18 +131,18 @@ export const Explore: FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
             {/* Hero */}
-            <section className="relative py-16 px-6 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 overflow-hidden">
+            <section className="relative py-10 sm:py-16 px-4 sm:px-6 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMyIvPjwvZz48L2c+PC9zdmc+')] pointer-events-none" />
                 <div className="max-w-4xl mx-auto text-center relative z-10">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-5xl font-black text-white mb-4"
+                        className="text-2xl sm:text-3xl md:text-5xl font-black text-white mb-4"
                     >
-                        <Compass className="inline-block mr-3 mb-1" size={40} />
+                        <Compass className="inline-block mr-2 sm:mr-3 mb-1" size={28} />
                         Discover Trips by Fellow Travelers
                     </motion.h1>
-                    <p className="text-lg text-white/80 max-w-2xl mx-auto mb-8">
+                    <p className="text-base sm:text-lg text-white/80 max-w-2xl mx-auto mb-6 sm:mb-8">
                         Get inspired by real itineraries crafted by the community. Find your next adventure!
                     </p>
                     <div className="flex items-center justify-center gap-4 text-white/60 text-sm">
@@ -155,7 +155,7 @@ export const Explore: FC = () => {
 
             {/* Trending Destinations */}
             {trending.length > 0 && (
-                <section className="py-8 px-6 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <section className="py-6 sm:py-8 px-4 sm:px-6 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                     <div className="max-w-7xl mx-auto">
                         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                             <TrendingUp size={14} /> Trending Destinations
@@ -183,7 +183,7 @@ export const Explore: FC = () => {
             )}
 
             {/* Filters + Feed */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
                 {/* Filter Bar */}
                 <div className="flex flex-wrap items-center gap-3 mb-6">
                     {/* Sort */}
@@ -280,7 +280,7 @@ export const Explore: FC = () => {
 
                 {/* Trip Grid */}
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         {Array.from({ length: 6 }).map((_, i) => <TripCardSkeleton key={i} />)}
                     </div>
                 ) : trips.length === 0 ? (
@@ -291,7 +291,7 @@ export const Explore: FC = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {trips.map(trip => (
                                 <div key={trip._id} onClick={() => handleTripClick(trip)}>
                                     <TripCard

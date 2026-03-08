@@ -6,6 +6,7 @@ export interface TripRequest {
   stateCodes?: string[];
   selectedCityIds: string[];
   duration: number; // in days
+  startDate?: string;
   budget: BudgetTier;
   travelStyle: TravelStyle;
   constraints: {
@@ -13,6 +14,7 @@ export interface TripRequest {
     seniorFriendly: boolean;
     morningReligious: boolean;
     noNightTravel: boolean;
+    dietaryPreferences?: string[];
   };
 }
 
@@ -406,6 +408,34 @@ export interface TripGroup {
   createdAt: string;
 }
 
+export type ItineraryRequestType = 'add_activity' | 'remove_activity' | 'change_hotel' | 'change_date' | 'modify_route' | 'custom';
+export type ItineraryRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface ItineraryRequestVote {
+  userId: string;
+  vote: 'approve' | 'reject';
+  votedAt: string;
+}
+
+export interface GroupItineraryRequest {
+  _id: string;
+  groupId: string;
+  requesterId: string;
+  requesterName: string;
+  type: ItineraryRequestType;
+  title: string;
+  description: string;
+  dayNumber?: number;
+  proposedChanges?: Record<string, unknown>;
+  status: ItineraryRequestStatus;
+  votes: ItineraryRequestVote[];
+  resolvedBy?: string;
+  resolvedAt?: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PublicTripCreator {
   _id: string;
   name: string;
@@ -449,7 +479,7 @@ export interface UserPublicProfile {
   totalLikes: number;
 }
 
-export type NotificationType = 'trip_reminder' | 'weather_alert' | 'price_change' | 'review_prompt' | 'festival_alert' | 'system';
+export type NotificationType = 'trip_reminder' | 'weather_alert' | 'price_change' | 'review_prompt' | 'festival_alert' | 'system' | 'group_request';
 
 export interface AppNotification {
   _id: string;

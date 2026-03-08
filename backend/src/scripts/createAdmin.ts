@@ -11,28 +11,28 @@ const createAdmin = async () => {
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 
-        const email = 'admin@example.com';
-        const password = 'adminpassword';
+        const email = process.env.ADMIN_EMAIL || 'admin';
+        const password = process.env.ADMIN_PASSWORD || 'Admin@1234';
+        const name = process.env.ADMIN_NAME || 'Admin User';
 
         const existingAdmin = await User.findOne({ email });
         if (existingAdmin) {
             console.log('Admin user already exists.');
-            // Update password just in case
             existingAdmin.password = password;
             if (existingAdmin.role !== 'admin') {
                 existingAdmin.role = 'admin';
             }
             await existingAdmin.save();
-            console.log(`Updated existing user role to admin and reset password to: ${password}`);
+            console.log(`Updated existing user role to admin and reset password.`);
         } else {
             const admin = new User({
-                name: 'Admin User',
+                name,
                 email,
                 password,
                 role: 'admin'
             });
             await admin.save();
-            console.log(`Admin user created with email: ${email} and password: ${password}`);
+            console.log(`Admin user created with email: ${email}`);
         }
 
         process.exit(0);

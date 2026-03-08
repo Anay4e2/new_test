@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type NotificationType = 'trip_reminder' | 'weather_alert' | 'price_change' | 'review_prompt' | 'festival_alert' | 'system';
+export type NotificationType = 'trip_reminder' | 'weather_alert' | 'price_change' | 'review_prompt' | 'festival_alert' | 'system' | 'group_request';
 export type NotificationPriority = 'low' | 'medium' | 'high';
 
 export interface INotification extends Document {
@@ -26,7 +26,7 @@ const NotificationSchema: Schema = new Schema(
         },
         type: {
             type: String,
-            enum: ['trip_reminder', 'weather_alert', 'price_change', 'review_prompt', 'festival_alert', 'system'],
+            enum: ['trip_reminder', 'weather_alert', 'price_change', 'review_prompt', 'festival_alert', 'system', 'group_request'],
             required: true,
         },
         title: {

@@ -14,18 +14,18 @@ interface Props {
 
 export const StateOverview: FC<Props> = ({ states }) => {
     return (
-        <section className="py-20 bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-10">
+        <section className="py-12 sm:py-16 md:py-20 bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
                 {/* Section Header */}
-                <div className="text-center mb-14">
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Explore Incredible India</h2>
+                <div className="text-center mb-8 sm:mb-14">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">Explore Incredible India</h2>
                     <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
                         From the snow-capped Himalayas to the tropical backwaters, discover diversity in every corner.
                     </p>
                 </div>
 
                 {/* States Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {states.map((state) => (
                         <Link
                             key={state._id}

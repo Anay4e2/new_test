@@ -27,7 +27,7 @@ export const UpcomingFestivals: FC = () => {
     if (loading || festivals.length === 0) return null;
 
     return (
-        <section className="py-16 px-4 bg-gradient-to-br from-orange-50/50 via-white to-pink-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+        <section className="py-10 sm:py-16 px-4 bg-gradient-to-br from-orange-50/50 via-white to-pink-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
             <div className="max-w-7xl mx-auto">
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
                     <div className="flex items-center justify-between mb-8">
@@ -36,7 +36,7 @@ export const UpcomingFestivals: FC = () => {
                                 <Sparkles size={18} className="text-orange-500" />
                                 <span className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Don't Miss Out</span>
                             </div>
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-serif">Upcoming Festivals</h2>
+                            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white font-serif">Upcoming Festivals</h2>
                         </div>
                         <button
                             onClick={() => navigate('/festivals')}
@@ -47,7 +47,7 @@ export const UpcomingFestivals: FC = () => {
                     </div>
                 </motion.div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                     {festivals.map((festival, i) => {
                         const dots = CROWD_DOTS[festival.crowdLevel] || 2;
                         return (

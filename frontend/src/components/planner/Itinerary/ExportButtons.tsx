@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import { TripResult } from '@/types';
-import { FileText, MessageCircle, Mail, Loader2, Check, X, AlertCircle, Calendar, Download, ExternalLink, Palette } from 'lucide-react';
+import { FileText, MessageCircle, Mail, Loader2, Check, X, AlertCircle, Calendar, Download, ExternalLink, Palette, Printer } from 'lucide-react';
 import api, { getWhatsAppText, sendItineraryEmail, downloadICalFile, getGoogleCalendarUrls } from '@/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -195,6 +195,15 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                     title="Create Postcard"
                 >
                     <Palette size={20} />
+                </button>
+
+                {/* Print Button */}
+                <button
+                    onClick={() => window.print()}
+                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors print:hidden"
+                    title="Print Itinerary"
+                >
+                    <Printer size={20} />
                 </button>
             </div>
 

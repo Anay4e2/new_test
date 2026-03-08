@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, X, RefreshCw } from 'lucide-react';
+import { GripVertical, X, RefreshCw, StickyNote } from 'lucide-react';
 import { Heart } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -14,6 +14,7 @@ interface DraggableActivityProps {
     onRemove: () => void;
     onReplace: (newPlace: any) => void;
     onToggleFavorite: () => void;
+    onNotesChange?: (notes: string) => void;
 }
 
 export const DraggableActivity: FC<DraggableActivityProps> = ({
@@ -25,8 +26,10 @@ export const DraggableActivity: FC<DraggableActivityProps> = ({
     onRemove,
     onReplace,
     onToggleFavorite,
+    onNotesChange,
 }) => {
     const [showReplace, setShowReplace] = useState(false);
+    const [showNotes, setShowNotes] = useState(!!activity.notes);
 
     const {
         attributes,
@@ -51,15 +54,16 @@ export const DraggableActivity: FC<DraggableActivityProps> = ({
                 isDragging && 'opacity-50 z-50 shadow-lg scale-[1.02]'
             )}
         >
-            {/* Drag Handle */}
+            {/* Drag Handle - larger on mobile for better touch targets */}
             {isEditMode && (
                 <button
                     {...attributes}
                     {...listeners}
-                    className="absolute -left-3 top-1/2 -translate-y-1/2 p-0.5 rounded bg-gray-100 dark:bg-slate-600 text-gray-400 hover:text-primary cursor-grab active:cursor-grabbing transition-colors opacity-0 group-hover/act:opacity-100 z-10"
+                    className="absolute -left-3 top-1/2 -translate-y-1/2 p-1 md:p-0.5 rounded bg-gray-100 dark:bg-slate-600 text-gray-400 hover:text-primary cursor-grab active:cursor-grabbing transition-colors md:opacity-0 md:group-hover/act:opacity-100 z-10 touch-none"
                     title="Drag to reorder"
                 >
-                    <GripVertical size={14} />
+                    <GripVertical size={18} className="md:hidden" />
+                    <GripVertical size={14} className="hidden md:block" />
                 </button>
             )}
 
@@ -78,12 +82,35 @@ export const DraggableActivity: FC<DraggableActivityProps> = ({
                 <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1 uppercase tracking-wide font-medium">
                     <span className="text-accent">{activity.type}</span> • <span>{activity.timeRequired}h</span> • <span>{activity.bestTimeOfDay}</span>
                 </div>
+                {/* Notes display */}
+                {activity.notes && !showNotes && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic line-clamp-2">{activity.notes}</p>
+                )}
+                {/* Notes editor */}
+                {isEditMode && showNotes && (
+                    <textarea
+                        value={activity.notes || ''}
+                        onChange={e => onNotesChange?.(e.target.value)}
+                        placeholder="Add a note..."
+                        rows={2}
+                        className="mt-2 w-full text-xs px-2.5 py-1.5 bg-gray-50 dark:bg-slate-600 border border-gray-200 dark:border-slate-500 rounded-lg outline-none focus:border-blue-400 resize-none"
+                    />
+                )}
             </div>
 
             {/* Action Buttons */}
             <div className="flex items-start gap-1 shrink-0">
                 {isEditMode && (
                     <>
+                        {/* Notes Toggle */}
+                        <button
+                            onClick={() => setShowNotes(!showNotes)}
+                            className={clsx('p-1.5 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-full transition-colors', showNotes || activity.notes ? 'text-amber-500' : 'text-gray-400')}
+                            title={showNotes ? 'Hide notes' : 'Add note'}
+                        >
+                            <StickyNote size={14} />
+                        </button>
+
                         {/* Replace Button */}
                         <div className="relative">
                             <button

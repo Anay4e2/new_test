@@ -37,9 +37,9 @@ export const Home: FC = () => {
             <UpcomingFestivals />
 
             {/* Community Section */}
-            <section className="py-16 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-slate-800 dark:to-slate-900">
-                <div className="max-w-4xl mx-auto px-6 text-center">
-                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-3">See What Others Are Planning</h2>
+            <section className="py-10 sm:py-16 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-slate-800 dark:to-slate-900">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mb-3">See What Others Are Planning</h2>
                     <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-xl mx-auto">
                         Get inspired by itineraries from fellow travelers and share your own adventures with the community.
                     </p>
@@ -52,10 +52,10 @@ export const Home: FC = () => {
                 </div>
             </section>
 
-            <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center">
-                <div className="max-w-4xl mx-auto px-6">
-                    <h2 className="text-3xl font-bold mb-4">Ready to start your journey?</h2>
-                    <p className="text-lg mb-8 text-blue-100 max-w-2xl mx-auto">
+            <section className="py-12 sm:py-20 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6">
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to start your journey?</h2>
+                    <p className="text-base sm:text-lg mb-8 text-blue-100 max-w-2xl mx-auto">
                         Design your perfect itinerary with our intelligent trip planner.
                     </p>
                     <a

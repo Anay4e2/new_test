@@ -22,6 +22,7 @@ export interface TripRequest {
     seniorFriendly: boolean;
     morningReligious: boolean;
     noNightTravel: boolean;
+    dietaryPreferences?: string[]; // e.g. ['vegetarian', 'vegan', 'halal', 'gluten-free']
   };
 }
 
@@ -173,14 +174,24 @@ const COSTS = {
   premium: { stay: 150, food: 80, transportPerKm: 0.80, activityAvg: 30 },
 };
 
-// Find the best hotel for a city + budget tier
-const findHotel = (cityName: string, tier: BudgetTier): NightStayInfo | null => {
-  // Filter hotels matching city and tier, pick highest rated
+// Find the best hotel for a city + budget tier, with optional amenity preferences
+const findHotel = (cityName: string, tier: BudgetTier, preferredAmenities?: string[]): NightStayInfo | null => {
   const matches = MOCK_HOTELS.filter(
     h => h.cityName.toLowerCase() === cityName.toLowerCase() && h.tier === tier
   );
   if (matches.length === 0) return null;
-  const best = matches.sort((a, b) => b.rating - a.rating)[0];
+  // Score hotels: base rating + bonus for matching amenities
+  const scored = matches.map(h => {
+    let score = h.rating * 10;
+    if (preferredAmenities && preferredAmenities.length > 0) {
+      const hAmenities = (h.amenities || []).map((a: string) => a.toLowerCase());
+      for (const pref of preferredAmenities) {
+        if (hAmenities.includes(pref.toLowerCase())) score += 5;
+      }
+    }
+    return { hotel: h, score };
+  });
+  const best = scored.sort((a, b) => b.score - a.score)[0].hotel;
   return {
     city: cityName,
     hotel: {
@@ -200,19 +211,50 @@ const BUDGET_TO_PRICE_RANGE: Record<BudgetTier, string[]> = {
   premium: ['moderate', 'expensive'],
 };
 
-// Assign meals for a day in a city, avoiding repeats
+// Assign meals for a day in a city, avoiding repeats with proximity & variety awareness
 const assignMeals = (
   cityName: string,
   budget: BudgetTier,
-  usedRestaurantIds: Set<string>
+  usedRestaurantIds: Set<string>,
+  usedCuisines: Set<string>,
+  activitiesCentroid?: { lat: number; lng: number },
+  dietaryPreferences?: string[]
 ): { meals: DayItinerary['meals']; foodCost: number } => {
   const allowedRanges = BUDGET_TO_PRICE_RANGE[budget];
-  const cityRestaurants = MOCK_RESTAURANTS.filter(
+  let cityRestaurants = MOCK_RESTAURANTS.filter(
     r => r.cityName.toLowerCase() === cityName.toLowerCase() && allowedRanges.includes(r.priceRange)
   );
 
-  // Sort by rating descending
-  const sorted = [...cityRestaurants].sort((a, b) => b.rating - a.rating);
+  // Apply dietary preference filtering
+  if (dietaryPreferences && dietaryPreferences.length > 0) {
+    const prefs = dietaryPreferences.map(p => p.toLowerCase());
+    const filtered = cityRestaurants.filter(r => {
+      if (prefs.includes('vegetarian') && !r.vegetarian) return false;
+      if (prefs.includes('vegan') && !r.vegetarian) return false; // vegan subset of veg
+      return true;
+    });
+    // Only apply filter if we still have enough restaurants; otherwise fallback
+    if (filtered.length >= 3) cityRestaurants = filtered;
+  }
+
+  // Score each restaurant: rating + cuisine variety bonus + proximity bonus
+  const scored = cityRestaurants.map(r => {
+    let score = (r.rating || 3) * 10;
+    // Cuisine variety bonus: prefer cuisines not yet used
+    const cuisineKey = r.cuisine[0]?.toLowerCase();
+    if (cuisineKey && !usedCuisines.has(cuisineKey)) {
+      score += 5;
+    }
+    // Proximity bonus if we have activity coordinates
+    if (activitiesCentroid && r.coordinates?.lat && r.coordinates?.lng) {
+      const dist = haversineDistance(activitiesCentroid.lat, activitiesCentroid.lng, r.coordinates.lat, r.coordinates.lng);
+      score += Math.max(0, 10 - dist); // Up to 10 bonus points for nearby
+    }
+    return { restaurant: r, score };
+  });
+
+  // Sort by score descending
+  const sorted = scored.sort((a, b) => b.score - a.score).map(s => s.restaurant);
 
   const pickRestaurant = (preferred?: string[]): MealRecommendation | undefined => {
     const candidates = preferred
@@ -221,6 +263,7 @@ const assignMeals = (
     const pick = candidates.length > 0 ? candidates[0] : sorted.filter(r => !usedRestaurantIds.has(r._id))[0];
     if (!pick) return undefined;
     usedRestaurantIds.add(pick._id);
+    if (pick.cuisine[0]) usedCuisines.add(pick.cuisine[0].toLowerCase());
     return {
       restaurant: pick.name,
       cuisine: pick.cuisine[0],
@@ -232,7 +275,7 @@ const assignMeals = (
   };
 
   const breakfast = pickRestaurant(['cafe', 'street-food', 'dhaba']);
-  const lunch = pickRestaurant(['casual', 'dhaba']);
+  const lunch = pickRestaurant(['casual', 'dhaba', 'street-food']);
   const dinner = pickRestaurant(['casual', 'fine-dining']);
 
   const foodCost = (breakfast?.cost || 0) + (lunch?.cost || 0) + (dinner?.cost || 0);
@@ -325,6 +368,8 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   let totalCost = 0;
   let totalDist = 0;
   const usedRestaurantIds = new Set<string>();
+  const usedCuisines = new Set<string>();
+  const visitedPlaceIds = new Set<string>();
   let costBreakup = { stay: 0, transport: 0, activities: 0, food: 0 };
 
   const costConfig = COSTS[budget];
@@ -347,12 +392,35 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     // Get places for this city
     let cityPlaces = MOCK_PLACES.filter(p => p.cityName === city.name);
 
-    // If extreme heat, prioritize indoor activities by sorting them first
-    if (weatherInfo.temp >= 40) {
-      const indoorTypes = ['Museum', 'Temple', 'Palace', 'Gallery', 'Shopping'];
+    // Weather-based activity prioritization
+    const indoorTypes = ['Museum', 'Temple', 'Palace', 'Gallery', 'Shopping'];
+    const outdoorTypes = ['Park', 'Garden', 'Lake', 'Fort', 'Viewpoint', 'Market'];
+
+    if (weatherInfo.temp >= 38) {
+      // Hot weather: prioritize indoor & early-morning activities
+      cityPlaces = [
+        ...cityPlaces.filter((p: Place) => indoorTypes.includes(p.type) || p.bestTimeOfDay === 'Morning'),
+        ...cityPlaces.filter((p: Place) => !indoorTypes.includes(p.type) && p.bestTimeOfDay !== 'Morning'),
+      ];
+    } else if (weatherInfo.temp <= 10) {
+      // Cold weather: prioritize indoor activities, skip lakes/parks
       cityPlaces = [
         ...cityPlaces.filter((p: Place) => indoorTypes.includes(p.type)),
-        ...cityPlaces.filter((p: Place) => !indoorTypes.includes(p.type)),
+        ...cityPlaces.filter((p: Place) => !indoorTypes.includes(p.type) && !['Lake', 'Park', 'Garden'].includes(p.type)),
+        ...cityPlaces.filter((p: Place) => ['Lake', 'Park', 'Garden'].includes(p.type)),
+      ];
+    } else if (weatherInfo.condition.toLowerCase().includes('rain') || weatherInfo.condition.toLowerCase().includes('monsoon')) {
+      // Rainy weather: heavily prioritize indoor; demote outdoor
+      cityPlaces = [
+        ...cityPlaces.filter((p: Place) => indoorTypes.includes(p.type)),
+        ...cityPlaces.filter((p: Place) => !indoorTypes.includes(p.type) && !outdoorTypes.includes(p.type)),
+        ...cityPlaces.filter((p: Place) => outdoorTypes.includes(p.type)),
+      ];
+    } else if (weatherInfo.temp >= 25 && weatherInfo.temp <= 35 && !weatherInfo.condition.toLowerCase().includes('rain')) {
+      // Pleasant weather: prioritize outdoor activities
+      cityPlaces = [
+        ...cityPlaces.filter((p: Place) => outdoorTypes.includes(p.type) || p.bestTimeOfDay === 'Evening'),
+        ...cityPlaces.filter((p: Place) => !outdoorTypes.includes(p.type) && p.bestTimeOfDay !== 'Evening'),
       ];
     }
 
@@ -381,17 +449,13 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       const maxPlaces = travelStyle === 'relaxed' ? 2 : 4;
 
       for (const place of cityPlaces) {
-        // Simple check if place already added in *this* trip?
-        // Need to track global visited places if we want to avoid repeats across days?
-        // For now, just avoid repeats in daily list (already done)
-        // But also check if it was visited in previous days for this city?
-        // The loop `cityPlaces = cityPlaces.filter` handles repeats for the *same city* loop.
-
         if (dailyActivities.includes(place)) continue;
+        if (visitedPlaceIds.has(place._id)) continue; // Skip duplicates across all days
         if (dailyActivities.length >= maxPlaces) break;
         if (timeUsed + place.timeRequired > 8) break; // Max 8 hours sightseeing
 
         dailyActivities.push(place);
+        visitedPlaceIds.add(place._id);
         timeUsed += place.timeRequired;
       }
 
@@ -401,8 +465,13 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
       // Find hotel for this night
       const hotelInfo = findHotel(city.name, budget);
 
-      // Assign meal recommendations
-      const { meals, foodCost } = assignMeals(city.name, budget, usedRestaurantIds);
+      // Assign meal recommendations (with cuisine variety & proximity awareness)
+      const activitiesWithCoords = dailyActivities.filter((a: any) => a.coordinates?.lat && a.coordinates?.lng);
+      const centroid = activitiesWithCoords.length > 0 ? {
+        lat: activitiesWithCoords.reduce((s: number, a: any) => s + a.coordinates.lat, 0) / activitiesWithCoords.length,
+        lng: activitiesWithCoords.reduce((s: number, a: any) => s + a.coordinates.lng, 0) / activitiesWithCoords.length,
+      } : undefined;
+      const { meals, foodCost } = assignMeals(city.name, budget, usedRestaurantIds, usedCuisines, centroid, constraints.dietaryPreferences);
 
       // Calculate Costs — use real hotel price when available
       const dayActivityCost = dailyActivities.length * costConfig.activityAvg;
@@ -422,7 +491,14 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
           temp: weatherInfo.temp,
           condition: weatherInfo.condition,
           icon: weatherInfo.icon,
-          advisory: weatherInfo.advisory,
+          advisory: weatherInfo.advisory
+            || (weatherInfo.temp >= 42 ? 'Extreme heat warning — stay hydrated, avoid outdoor activities between 11 AM–4 PM.'
+            : weatherInfo.temp >= 38 ? 'Hot weather — carry water, prefer indoor & morning activities.'
+            : weatherInfo.temp <= 5 ? 'Very cold — dress in layers, carry warm clothing.'
+            : weatherInfo.temp <= 10 ? 'Cold weather — carry a jacket, prefer midday outdoor visits.'
+            : weatherInfo.condition.toLowerCase().includes('heavy rain') ? 'Heavy rain expected — carry rain gear, avoid flood-prone areas.'
+            : weatherInfo.condition.toLowerCase().includes('rain') ? 'Rain likely — carry an umbrella, plan indoor alternatives.'
+            : undefined),
         },
         stats: {
           totalDistance: 0, // Intra-city ignored for MVP stats
@@ -472,9 +548,36 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
         costBreakup.transport += travelCost;
         totalDist += travel.distance;
 
-        // Feasibility check: Travel time
+        // Enforce maxTravelHoursPerDay constraint
         if (constraints.maxTravelHoursPerDay && travel.duration > constraints.maxTravelHoursPerDay) {
-          dayPlan.stats.feasibility = 'impossible'; // Or warning
+          dayPlan.stats.feasibility = 'impossible';
+          warnings.push(
+            `Day ${currentDay}: Travel from ${city.name} to ${nextCity.name} takes ~${Math.round(travel.duration)}h, exceeding your ${constraints.maxTravelHoursPerDay}h limit. Consider a faster mode or splitting the journey.`
+          );
+          // Reduce activities on travel-heavy days
+          if (dailyActivities.length > 2) {
+            dailyActivities.splice(2);
+            dayPlan.activities = dailyActivities;
+          }
+        }
+
+        // Enforce noNightTravel constraint
+        if (constraints.noNightTravel) {
+          // Assume sightseeing starts at 9 AM and departure should be before 6 PM to avoid night travel
+          const sightseeingHours = dailyActivities.reduce((sum: number, a: any) => sum + (a.timeRequired || 0), 0);
+          const estimatedDepartureHour = 9 + sightseeingHours + 1; // 1h buffer
+          const estimatedArrivalHour = estimatedDepartureHour + travel.duration;
+
+          if (estimatedArrivalHour > 20) { // Arriving after 8 PM counts as night travel
+            warnings.push(
+              `Day ${currentDay}: Travel to ${nextCity.name} may involve night travel (est. arrival ~${Math.round(estimatedArrivalHour)}:00). Consider reducing activities or choosing a faster transport mode.`
+            );
+            // Suggest earlier departure by trimming activities
+            if (dailyActivities.length > 1 && estimatedArrivalHour > 22) {
+              dailyActivities.splice(Math.max(1, dailyActivities.length - 1));
+              dayPlan.activities = dailyActivities;
+            }
+          }
         }
       }
 

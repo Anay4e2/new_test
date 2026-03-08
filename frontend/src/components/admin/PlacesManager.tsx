@@ -1,11 +1,14 @@
 import { FC, useState, useEffect } from 'react';
 import {
-    getAllPlacesAdminApi, createPlaceApi, updatePlaceApi, deletePlaceApi
+    getAllPlacesAdminApi, createPlaceApi, updatePlaceApi, deletePlaceApi, bulkDeletePlacesApi
 } from '../../services/api';
 import {
-    Search, Plus, Edit2, Trash2, MapPin, Loader, X, Filter
+    Search, Plus, Edit2, Trash2, MapPin, Loader, X, Filter, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDebounce } from '../../hooks';
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 
 const PlacesManager: FC = () => {
     const [places, setPlaces] = useState<any[]>([]);
@@ -31,10 +34,17 @@ const PlacesManager: FC = () => {
     });
 
     const [processing, setProcessing] = useState(false);
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const debouncedSearch = useDebounce(search, 300);
+
+    const [confirmState, setConfirmState] = useState<{
+        open: boolean; title: string; message: string; confirmLabel: string;
+        variant: 'danger' | 'warning'; onConfirm: () => void;
+    }>({ open: false, title: '', message: '', confirmLabel: '', variant: 'danger', onConfirm: () => {} });
 
     useEffect(() => {
         fetchPlaces();
-    }, [pagination.page, search, typeFilter]);
+    }, [pagination.page, debouncedSearch, typeFilter]);
 
     const fetchPlaces = async () => {
         setLoading(true);
@@ -42,7 +52,7 @@ const PlacesManager: FC = () => {
             const res = await getAllPlacesAdminApi({
                 page: pagination.page,
                 limit: pagination.limit,
-                search,
+                search: debouncedSearch,
                 type: typeFilter
             });
             if (res.success) {
@@ -58,19 +68,43 @@ const PlacesManager: FC = () => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        setPagination({ ...pagination, page: 1 }); // Reset to page 1
+        setPagination({ ...pagination, page: 1 });
     };
 
-    const handleDelete = async (id: string, name: string) => {
-        if (confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) {
-            try {
-                await deletePlaceApi(id);
-                fetchPlaces();
-            } catch (error) {
-                console.error('Failed to delete place', error);
-                alert('Failed to delete place');
-            }
-        }
+    const handleDelete = (id: string, name: string) => {
+        setConfirmState({
+            open: true, title: 'Delete Place',
+            message: `Are you sure you want to delete "${name}"? This cannot be undone.`,
+            confirmLabel: 'Delete', variant: 'danger',
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, open: false }));
+                try { await deletePlaceApi(id); toast.success('Place deleted'); fetchPlaces(); }
+                catch { toast.error('Failed to delete place'); }
+            },
+        });
+    };
+
+    const handleBulkDelete = () => {
+        if (selected.size === 0) return;
+        setConfirmState({
+            open: true, title: 'Bulk Delete',
+            message: `Delete ${selected.size} selected places? This cannot be undone.`,
+            confirmLabel: `Delete ${selected.size}`, variant: 'danger',
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, open: false }));
+                try { await bulkDeletePlacesApi(Array.from(selected)); setSelected(new Set()); toast.success('Places deleted'); fetchPlaces(); }
+                catch { toast.error('Failed to bulk delete'); }
+            },
+        });
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+    };
+
+    const toggleSelectAll = () => {
+        if (selected.size === places.length) setSelected(new Set());
+        else setSelected(new Set(places.map(p => p._id)));
     };
 
     const openModal = (place?: any) => {
@@ -116,10 +150,11 @@ const PlacesManager: FC = () => {
                 await createPlaceApi(formData);
             }
             setIsModalOpen(false);
+            toast.success(editingPlace ? 'Place updated' : 'Place created');
             fetchPlaces();
         } catch (error) {
             console.error('Failed to save place', error);
-            alert('Failed to save place');
+            toast.error('Failed to save place');
         } finally {
             setProcessing(false);
         }
@@ -129,12 +164,19 @@ const PlacesManager: FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Places Management</h2>
-                <button
-                    onClick={() => openModal()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                >
-                    <Plus size={18} /> Add Place
-                </button>
+                <div className="flex gap-2">
+                    {selected.size > 0 && (
+                        <button onClick={handleBulkDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2">
+                            <Trash2 size={18} /> Delete ({selected.size})
+                        </button>
+                    )}
+                    <button
+                        onClick={() => openModal()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    >
+                        <Plus size={18} /> Add Place
+                    </button>
+                </div>
             </div>
 
             {/* Filters */}
@@ -174,6 +216,7 @@ const PlacesManager: FC = () => {
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-gray-400 font-medium">
                             <tr>
+                                <th className="px-4 py-4"><input type="checkbox" checked={places.length > 0 && selected.size === places.length} onChange={toggleSelectAll} /></th>
                                 <th className="px-6 py-4">Name</th>
                                 <th className="px-6 py-4">City</th>
                                 <th className="px-6 py-4">Type</th>
@@ -184,19 +227,22 @@ const PlacesManager: FC = () => {
                         <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center">
+                                    <td colSpan={6} className="px-6 py-8 text-center">
                                         <Loader className="animate-spin w-6 h-6 mx-auto text-blue-500" />
                                     </td>
                                 </tr>
                             ) : places.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                        No places found matching your criteria.
+                                    <td colSpan={6} className="px-6 py-16 text-center">
+                                        <MapPin className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                                        <p className="text-gray-500 font-medium">No places found</p>
+                                        <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filter</p>
                                     </td>
                                 </tr>
                             ) : (
                                 places.map((place) => (
                                     <tr key={place._id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <td className="px-4 py-4"><input type="checkbox" checked={selected.has(place._id)} onChange={() => toggleSelect(place._id)} /></td>
                                         <td className="px-6 py-4 font-medium text-slate-800 dark:text-white">
                                             {place.name}
                                         </td>
@@ -414,6 +460,16 @@ const PlacesManager: FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel={confirmState.confirmLabel}
+                variant={confirmState.variant}
+                onConfirm={confirmState.onConfirm}
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+            />
         </div>
     );
 };

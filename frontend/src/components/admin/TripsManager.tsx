@@ -1,16 +1,25 @@
 import { FC, useState, useEffect } from 'react';
-import { getAllTripsAdminApi, deleteTripAdminApi } from '../../services/api';
+import { getAllTripsAdminApi, deleteTripAdminApi, updateTripAdminApi } from '../../services/api';
 import { Search, Trash2, Loader, Eye, Calendar, Map, User } from 'lucide-react';
+import { useDebounce } from '../../hooks';
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 
 const TripsManager: FC = () => {
     const [trips, setTrips] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 300);
+
+    const [confirmState, setConfirmState] = useState<{
+        open: boolean; title: string; message: string; confirmLabel: string;
+        variant: 'danger' | 'warning'; onConfirm: () => void;
+    }>({ open: false, title: '', message: '', confirmLabel: '', variant: 'danger', onConfirm: () => {} });
 
     useEffect(() => {
         fetchTrips();
-    }, [pagination.page, search]);
+    }, [pagination.page, debouncedSearch]);
 
     const fetchTrips = async () => {
         setLoading(true);
@@ -18,7 +27,7 @@ const TripsManager: FC = () => {
             const res = await getAllTripsAdminApi({
                 page: pagination.page,
                 limit: pagination.limit,
-                search
+                search: debouncedSearch
             });
             if (res.success) {
                 setTrips(res.trips);
@@ -36,15 +45,31 @@ const TripsManager: FC = () => {
         setPagination({ ...pagination, page: 1 });
     };
 
-    const handleDelete = async (id: string, title: string) => {
-        if (confirm(`Are you sure you want to delete trip "${title}"? This cannot be undone.`)) {
-            try {
-                await deleteTripAdminApi(id);
-                fetchTrips();
-            } catch (error) {
-                console.error('Failed to delete trip', error);
-                alert('Failed to delete trip');
-            }
+    const handleDelete = (id: string, title: string) => {
+        setConfirmState({
+            open: true, title: 'Delete Trip',
+            message: `Are you sure you want to delete trip "${title}"? This cannot be undone.`,
+            confirmLabel: 'Delete', variant: 'danger',
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, open: false }));
+                try {
+                    await deleteTripAdminApi(id);
+                    toast.success('Trip deleted');
+                    fetchTrips();
+                } catch {
+                    toast.error('Failed to delete trip');
+                }
+            },
+        });
+    };
+
+    const toggleVisibility = async (id: string, isPublic: boolean) => {
+        try {
+            await updateTripAdminApi(id, { isPublic: !isPublic });
+            setTrips(prev => prev.map(t => t._id === id ? { ...t, isPublic: !isPublic } : t));
+            toast.success(`Trip is now ${!isPublic ? 'public' : 'private'}`);
+        } catch {
+            toast.error('Failed to update visibility');
         }
     };
 
@@ -90,8 +115,10 @@ const TripsManager: FC = () => {
                                 </tr>
                             ) : trips.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                        No trips found matching your criteria.
+                                    <td colSpan={5} className="px-6 py-16 text-center">
+                                        <Map className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                                        <p className="text-gray-500 font-medium">No trips found</p>
+                                        <p className="text-gray-400 text-sm mt-1">Try adjusting your search</p>
                                     </td>
                                 </tr>
                             ) : (
@@ -117,15 +144,21 @@ const TripsManager: FC = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {trip.isPublic ? (
-                                                <span className="px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-semibold">
-                                                    Public
-                                                </span>
-                                            ) : (
-                                                <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-semibold">
-                                                    Private
-                                                </span>
-                                            )}
+                                            <button
+                                                onClick={() => toggleVisibility(trip._id, trip.isPublic)}
+                                                className="cursor-pointer"
+                                                title={`Click to make ${trip.isPublic ? 'private' : 'public'}`}
+                                            >
+                                                {trip.isPublic ? (
+                                                    <span className="px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-semibold">
+                                                        Public
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-semibold">
+                                                        Private
+                                                    </span>
+                                                )}
+                                            </button>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2">
@@ -175,6 +208,16 @@ const TripsManager: FC = () => {
                     </div>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel={confirmState.confirmLabel}
+                variant={confirmState.variant}
+                onConfirm={confirmState.onConfirm}
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+            />
         </div>
     );
 };
