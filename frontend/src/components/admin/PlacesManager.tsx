@@ -3,7 +3,7 @@ import {
     getAllPlacesAdminApi, createPlaceApi, updatePlaceApi, deletePlaceApi, bulkDeletePlacesApi
 } from '../../services/api';
 import {
-    Search, Plus, Edit2, Trash2, MapPin, Loader, X, Filter, Download
+    Search, Plus, Edit2, Trash2, MapPin, Loader, X, Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDebounce } from '../../hooks';

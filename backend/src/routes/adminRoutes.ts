@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { adminMiddleware } from '../middleware/adminMiddleware';
 import {
     getSummary,
@@ -36,11 +37,18 @@ import {
     getAuditLogs,
     getActiveSessions,
     uploadImage,
+    uploadFile,
     getAppSettings,
     updateAppSettings
 } from '../controllers/adminController';
 
 const router = Router();
+
+// Multer for multipart file uploads (images, videos, PDFs) — 50MB limit
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 },
+});
 
 // All routes require admin authentication
 router.use(adminMiddleware);
@@ -95,8 +103,11 @@ router.get('/audit-logs', getAuditLogs);
 // Sessions
 router.get('/sessions', getActiveSessions);
 
-// Image Upload
+// Image Upload (base64 legacy)
 router.post('/upload-image', uploadImage);
+
+// Generic File Upload (multipart — images, videos, PDFs)
+router.post('/upload-file', upload.single('file'), uploadFile);
 
 // App Settings
 router.get('/settings', getAppSettings);

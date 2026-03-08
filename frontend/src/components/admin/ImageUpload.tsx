@@ -1,6 +1,6 @@
 import { FC, useRef, useState } from 'react';
 import { Upload, X, Link as LinkIcon } from 'lucide-react';
-import { uploadImageApi } from '../../services/api';
+import { uploadFileAdminApi } from '../../services/api';
 import toast from 'react-hot-toast';
 
 interface ImageUploadProps {
@@ -22,34 +22,28 @@ const ImageUpload: FC<ImageUploadProps> = ({ value, onChange, label = 'Image' })
             toast.error('Please select an image file');
             return;
         }
-        if (file.size > 7 * 1024 * 1024) {
-            toast.error('Image must be under 7MB');
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('Image must be under 10MB');
             return;
         }
 
         setUploading(true);
-        const reader = new FileReader();
-        reader.onload = async () => {
-            const base64 = reader.result as string;
-            try {
-                const res = await uploadImageApi(base64);
-                if (res.success) {
-                    onChange(res.imageUrl);
-                } else {
-                    onChange(base64);
-                }
-            } catch {
-                // Fallback: use base64 directly for MVP
-                onChange(base64);
-            } finally {
-                setUploading(false);
+        try {
+            const res = await uploadFileAdminApi(file, 'admin');
+            if (res.success) {
+                onChange(res.url);
+            } else {
+                toast.error('Upload failed');
             }
-        };
-        reader.onerror = () => {
+        } catch {
+            // Fallback: use base64 directly for MVP
+            const reader = new FileReader();
+            reader.onload = () => onChange(reader.result as string);
+            reader.readAsDataURL(file);
+        } finally {
             setUploading(false);
-            toast.error('Failed to read image file');
-        };
-        reader.readAsDataURL(file);
+            if (fileRef.current) fileRef.current.value = '';
+        }
     };
 
     return (

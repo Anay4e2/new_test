@@ -6,7 +6,7 @@ dotenv.config();
 
 const createAdmin = async () => {
     try {
-        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/trip_planner';
+        const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/trip_planner';
         console.log(`Connecting to MongoDB at ${mongoUri}...`);
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');

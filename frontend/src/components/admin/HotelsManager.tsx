@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react';
 import { getAllHotelsAdminApi, createHotelAdminApi, updateHotelAdminApi, deleteHotelAdminApi, bulkDeleteHotelsApi } from '../../services/api';
-import { Search, Plus, Edit2, Trash2, Loader, X, Filter, Hotel as HotelIcon, Download } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Loader, X, Filter, Hotel as HotelIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImageUpload from './ImageUpload';
 import { useDebounce } from '../../hooks';

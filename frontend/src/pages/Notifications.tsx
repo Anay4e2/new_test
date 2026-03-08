@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, ArrowLeft, Check, Trash2, MapPin, Cloud, Star, Megaphone, Calendar, AlertTriangle, Loader2 } from 'lucide-react';
+import { Bell, ArrowLeft, Check, Trash2, MapPin, Cloud, Star, Megaphone, Calendar, AlertTriangle, Loader2, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { useNotificationStore } from '@/stores/notificationStore';
@@ -15,6 +15,7 @@ const TYPE_ICON: Record<NotificationType, FC<{ size?: number; className?: string
     review_prompt: Star,
     festival_alert: Calendar,
     system: Megaphone,
+    group_request: Users,
 };
 
 const TYPE_COLOR: Record<NotificationType, string> = {
@@ -24,6 +25,7 @@ const TYPE_COLOR: Record<NotificationType, string> = {
     review_prompt: 'text-amber-500 bg-amber-50 dark:bg-amber-900/30',
     festival_alert: 'text-purple-500 bg-purple-50 dark:bg-purple-900/30',
     system: 'text-gray-500 bg-gray-50 dark:bg-gray-800',
+    group_request: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30',
 };
 
 const TYPE_LABEL: Record<NotificationType, string> = {
@@ -33,6 +35,7 @@ const TYPE_LABEL: Record<NotificationType, string> = {
     review_prompt: 'Review Prompts',
     festival_alert: 'Festival Alerts',
     system: 'System',
+    group_request: 'Group Requests',
 };
 
 const FILTER_TABS = [

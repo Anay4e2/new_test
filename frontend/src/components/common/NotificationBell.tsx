@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, MapPin, Cloud, Star, Megaphone, Calendar, AlertTriangle } from 'lucide-react';
+import { Bell, Check, MapPin, Cloud, Star, Megaphone, Calendar, AlertTriangle, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { useNotificationStore } from '@/stores/notificationStore';
@@ -14,6 +14,7 @@ const ICON_MAP: Record<NotificationType, FC<{ size?: number; className?: string 
     review_prompt: Star,
     festival_alert: Calendar,
     system: Megaphone,
+    group_request: Users,
 };
 
 const COLOR_MAP: Record<NotificationType, string> = {
@@ -23,6 +24,7 @@ const COLOR_MAP: Record<NotificationType, string> = {
     review_prompt: 'text-amber-500 bg-amber-50 dark:bg-amber-900/30',
     festival_alert: 'text-purple-500 bg-purple-50 dark:bg-purple-900/30',
     system: 'text-gray-500 bg-gray-50 dark:bg-gray-800',
+    group_request: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30',
 };
 
 function timeAgo(dateStr: string): string {

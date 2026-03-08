@@ -29,9 +29,9 @@ export function getIntegrationStatus(): IntegrationStatus[] {
       provider: process.env.MONGO_URI ? 'MongoDB' : 'In-Memory Mock Data',
     },
     {
-      name: 'Image Upload',
+      name: 'File Upload',
       enabled: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY),
-      provider: process.env.CLOUDINARY_CLOUD_NAME ? 'Cloudinary' : 'Base64 Data URI',
+      provider: process.env.CLOUDINARY_CLOUD_NAME ? 'Cloudinary (images, videos, PDFs)' : 'Base64 Data URI',
     },
     {
       name: 'Email',

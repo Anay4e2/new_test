@@ -589,13 +589,72 @@ export const uploadImage = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: 'Invalid image format. Use base64 data URL.' });
         }
 
-        // In production, you'd upload to S3/Cloudinary. For MVP, store as data URL.
-        // The image is already a valid data URL that can be used in <img src="">
-        const imageUrl = image;
+        const { isCloudinaryConfigured, uploadToCloudinary } = await import('../services/uploadService');
+        if (isCloudinaryConfigured()) {
+            const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const result = await uploadToCloudinary(buffer, { folder: folder || 'admin', resourceType: 'image' });
+            return res.json({ success: true, imageUrl: result.url, publicId: result.publicId });
+        }
 
-        res.json({ success: true, imageUrl });
+        // Fallback: return base64 data URL as-is
+        res.json({ success: true, imageUrl: image });
     } catch (error) {
         logger.error('Error in uploadImage:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// --- Generic File Upload (multipart) ---
+
+const ALLOWED_MIME_TYPES = [
+    'image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml',
+    'video/mp4', 'video/webm', 'video/quicktime',
+    'application/pdf',
+];
+
+export const uploadFile = async (req: Request, res: Response) => {
+    try {
+        const file = (req as any).file as Express.Multer.File | undefined;
+        if (!file) {
+            return res.status(400).json({ success: false, message: 'No file provided' });
+        }
+
+        if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+            return res.status(400).json({ success: false, message: 'File type not allowed. Supported: images, videos (mp4/webm/mov), PDF.' });
+        }
+
+        const folder = (req.body.folder as string) || 'uploads';
+
+        const { isCloudinaryConfigured, uploadToCloudinary, detectResourceType } = await import('../services/uploadService');
+        if (isCloudinaryConfigured()) {
+            const resourceType = detectResourceType(file.mimetype);
+            const result = await uploadToCloudinary(file.buffer, {
+                folder,
+                resourceType,
+                originalFilename: file.originalname,
+            });
+            return res.json({
+                success: true,
+                url: result.url,
+                publicId: result.publicId,
+                resourceType: result.resourceType,
+                originalName: file.originalname,
+                mimeType: file.mimetype,
+            });
+        }
+
+        // Fallback: convert to base64 data URL
+        const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+        res.json({
+            success: true,
+            url: base64,
+            resourceType: file.mimetype.startsWith('image/') ? 'image' : file.mimetype.startsWith('video/') ? 'video' : 'raw',
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+        });
+    } catch (error) {
+        logger.error('Error in uploadFile:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

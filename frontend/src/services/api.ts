@@ -258,6 +258,38 @@ export const uploadImageApi = async (image: string, folder?: string) => {
     return response.data;
 };
 
+// Generic File Upload (multipart — images, videos, PDFs)
+export interface FileUploadResponse {
+    success: boolean;
+    url: string;
+    publicId?: string;
+    resourceType: 'image' | 'video' | 'raw';
+    originalName: string;
+    mimeType: string;
+    size?: number;
+}
+
+export const uploadFileApi = async (file: File, folder?: string): Promise<FileUploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) formData.append('folder', folder);
+    const response = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+};
+
+// Admin File Upload (multipart — requires admin role)
+export const uploadFileAdminApi = async (file: File, folder?: string): Promise<FileUploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) formData.append('folder', folder);
+    const response = await api.post('/admin/upload-file', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+};
+
 // Admin Packages API (includes inactive packages)
 export const getAllPackagesAdminApi = async (): Promise<{ success: boolean; data: Package[] }> => {
     const response = await api.get('/packages/admin/all');
