@@ -5,12 +5,21 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3001:3001"
+    env_file:
+      - ./backend/.env
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - MONGO_URI=mongodb://mongo:27017/tripplanner
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
-      - CORS_ORIGINS=http://localhost
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/trip_planner}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env or shell}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
+      - RAPIDAPI_KEY=${RAPIDAPI_KEY:-}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-}
+    networks:
+      - app-net
     depends_on:
       mongo:
         condition: service_healthy
@@ -28,23 +37,19 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    networks:
+      - app-net
     depends_on:
       backend:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
   mongo:
-    image: mongo:7
-    ports:
-      - "27017:27017"
+    image: mongo:8
     volumes:
       - mongo-data:/data/db
+    networks:
+      - app-net
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
@@ -52,6 +57,10 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+networks:
+  app-net:
+    driver: bridge
 
 volumes:
   mongo-data:

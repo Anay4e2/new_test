@@ -17,6 +17,9 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 
+// Trust first proxy (nginx / Docker network)
+app.set('trust proxy', 1);
+
 // Connect to Database
 connectDB();
 
@@ -105,6 +108,13 @@ const server = httpServer.listen(PORT, () => {
 
 const shutdown = () => {
     logger.info('Shutting down gracefully...');
+    // Force exit after 10s if graceful shutdown hangs
+    const forceExit = setTimeout(() => {
+        logger.error('Forced shutdown after timeout');
+        process.exit(1);
+    }, 10_000);
+    forceExit.unref();
+
     server.close(() => {
         mongoose.connection.close().then(() => {
             logger.info('Server and database connections closed.');

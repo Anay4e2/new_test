@@ -16,7 +16,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/localhost:3001\/api\/itinerary/,
+            urlPattern: /\/api\/itinerary/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'itinerary-api-cache',
@@ -28,7 +28,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https?:\/\/localhost:3001\/api\/(generate-trip|cities|places)/,
+            urlPattern: /\/api\/(generate-trip|cities|places)/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'trip-api-cache',

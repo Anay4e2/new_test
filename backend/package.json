@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/app.ts",
+    "start": "node dist/src/app.js",
     "dev": "ts-node src/app.ts",
+    "build": "tsc",
     "seed": "ts-node src/scripts/seedDatabase.ts",
     "test": "vitest run"
   },
@@ -14,8 +15,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@types/compression": "^1.8.1",
-    "@types/multer": "^2.0.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",
@@ -38,6 +37,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/multer": "^2.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

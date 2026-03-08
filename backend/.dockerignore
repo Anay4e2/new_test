@@ -1,0 +1,14 @@
+node_modules
+dist
+npm-debug.log*
+.env
+.env.*
+!.env.example
+*.md
+.git
+.gitignore
+vitest.config.ts
+coverage
+__tests__
+*.test.ts
+*.spec.ts

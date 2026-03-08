@@ -1,14 +1,18 @@
-FROM node:20-alpine AS base
+# Stage 1: Install ALL deps and compile TypeScript
+FROM node:22-alpine AS build
 WORKDIR /app
+COPY package.json package-lock.json tsconfig.json ./
+RUN npm ci
+COPY src/ ./src/
+RUN npx tsc
 
-# Backend build
-FROM base AS backend-deps
-COPY backend/package.json backend/package-lock.json ./
+# Stage 2: Production image with only compiled JS + prod deps
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
-
-FROM base AS backend
-COPY --from=backend-deps /app/node_modules ./node_modules
-COPY backend/ ./
+COPY --from=build /app/dist ./dist
+USER node
 EXPOSE 3001
-CMD ["npx", "ts-node", "src/app.ts"]
+CMD ["node", "dist/src/app.js"]
 
