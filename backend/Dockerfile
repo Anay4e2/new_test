@@ -14,5 +14,5 @@ RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
 USER node
 EXPOSE 3001
-CMD ["node", "dist/src/app.js"]
+CMD ["node", "dist/app.js"]
 
