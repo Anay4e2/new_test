@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, getMe, adminLogin, forgotPassword, resetPassword, updateProfile, changePassword } from '../controllers/authController';
+import { register, login, getMe, adminLogin, forgotPassword, resetPassword, updateProfile, changePassword, verifyOtp, resendOtp } from '../controllers/authController';
 import { googleAuth } from '../controllers/oauthController';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { validate } from '../middleware/validate';
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, updateProfileSchema, changePasswordSchema } from '../lib/validationSchemas';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, updateProfileSchema, changePasswordSchema, verifyOtpSchema, resendOtpSchema } from '../lib/validationSchemas';
 
 const router = Router();
 
@@ -18,6 +18,8 @@ const authLimiter = rateLimit({
 
 // Public routes (rate-limited + validated)
 router.post('/register', authLimiter, validate(registerSchema), register);
+router.post('/verify-otp', authLimiter, validate(verifyOtpSchema), verifyOtp);
+router.post('/resend-otp', authLimiter, validate(resendOtpSchema), resendOtp);
 router.post('/login', authLimiter, validate(loginSchema), login);
 router.post('/admin-login', authLimiter, validate(loginSchema), adminLogin);
 router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), forgotPassword);

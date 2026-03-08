@@ -1,7 +1,9 @@
-import { FC, useEffect, useState, useMemo } from 'react';
+import { FC, useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getPackages, getPackageById, getConfig } from '@/services/api';
 import { useTripStore } from '@/stores/tripStore';
 import type { Package, Place } from '@/types';
+import toast from 'react-hot-toast';
 
 // ── Filter constants ──
 const DURATION_OPTIONS = [
@@ -37,7 +39,34 @@ export const Packages: FC = () => {
 
     // Adding to trip
     const [addingId, setAddingId] = useState<string | null>(null);
-    const { addPlace } = useTripStore();
+    const [expandedPkg, setExpandedPkg] = useState<string | null>(null);
+    const [expandedDetails, setExpandedDetails] = useState<Record<string, Place[]>>({});
+    const { addPackage, addedPackages } = useTripStore();
+    const [searchParams] = useSearchParams();
+    const highlightId = searchParams.get('highlight');
+    const highlightedRef = useRef<HTMLDivElement | null>(null);
+    const didHighlight = useRef(false);
+
+    // Auto-expand and scroll to highlighted package
+    const autoExpandHighlighted = useCallback(async (pkgList: Package[]) => {
+        if (!highlightId || didHighlight.current) return;
+        const target = pkgList.find(p => p.id === highlightId || p._id === highlightId);
+        if (!target) return;
+        didHighlight.current = true;
+        setExpandedPkg(target._id);
+        if (!expandedDetails[target._id]) {
+            try {
+                const response = await getPackageById(target.id);
+                if (response.success && response.data.placesDetails) {
+                    setExpandedDetails(prev => ({ ...prev, [target._id]: response.data.placesDetails! }));
+                }
+            } catch { /* ignore */ }
+        }
+        // Scroll after a brief delay to let the DOM render
+        setTimeout(() => {
+            highlightedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+    }, [highlightId, expandedDetails]);
 
     // ── Fetch data ──
     useEffect(() => {
@@ -46,7 +75,10 @@ export const Packages: FC = () => {
             setError(null);
             try {
                 const [pkgRes] = await Promise.all([getPackages(), getConfig()]);
-                if (pkgRes.success) setPackages(pkgRes.data);
+                if (pkgRes.success) {
+                    setPackages(pkgRes.data);
+                    autoExpandHighlighted(pkgRes.data);
+                }
                 // Derive unique states
                 const uniqueStates = Array.from(new Set(pkgRes.data.map((p: Package) => p.state))).sort();
                 setStates(uniqueStates);
@@ -122,18 +154,46 @@ export const Packages: FC = () => {
     };
 
     const handleAddToTrip = async (pkg: Package) => {
+        if (addedPackages.find(p => p._id === pkg._id)) {
+            toast('Package already added to trip', { icon: 'ℹ️' });
+            return;
+        }
         setAddingId(pkg._id);
         try {
             const response = await getPackageById(pkg.id);
             if (response.success && response.data.placesDetails) {
-                response.data.placesDetails.forEach((place: Place) => {
-                    addPlace(place);
-                });
+                const places = response.data.placesDetails;
+                addPackage(
+                    {
+                        _id: pkg._id, id: pkg.id, title: pkg.title, state: pkg.state,
+                        days: pkg.days, price: pkg.price, cities: pkg.cities,
+                        tags: pkg.tags, image: pkg.image,
+                        placeIds: places.map((p: Place) => p._id),
+                    },
+                    places
+                );
+                toast.success(`"${pkg.title}" added to your trip!`);
             }
         } catch {
-            console.error('Error adding package to trip');
+            toast.error('Failed to add package');
         } finally {
             setAddingId(null);
+        }
+    };
+
+    const handleToggleDetails = async (pkg: Package) => {
+        if (expandedPkg === pkg._id) {
+            setExpandedPkg(null);
+            return;
+        }
+        setExpandedPkg(pkg._id);
+        if (!expandedDetails[pkg._id]) {
+            try {
+                const response = await getPackageById(pkg.id);
+                if (response.success && response.data.placesDetails) {
+                    setExpandedDetails(prev => ({ ...prev, [pkg._id]: response.data.placesDetails! }));
+                }
+            } catch { /* ignore */ }
         }
     };
 
@@ -392,7 +452,12 @@ export const Packages: FC = () => {
                                 {filteredPackages.map(pkg => (
                                     <div
                                         key={pkg._id}
-                                        className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-xl hover:shadow-blue-600/5 transition-all duration-300 group"
+                                        ref={(highlightId && (pkg.id === highlightId || pkg._id === highlightId)) ? highlightedRef : undefined}
+                                        className={`bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border hover:shadow-xl hover:shadow-blue-600/5 transition-all duration-300 group ${
+                                            (highlightId && (pkg.id === highlightId || pkg._id === highlightId))
+                                                ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800'
+                                                : 'border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700'
+                                        }`}
                                     >
                                         {/* Image */}
                                         <div className="relative h-52 overflow-hidden">
@@ -483,21 +548,96 @@ export const Packages: FC = () => {
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <button
-                                                        onClick={() => handleAddToTrip(pkg)}
-                                                        disabled={addingId === pkg._id}
-                                                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/30 transition-all flex items-center gap-1.5"
+                                                        onClick={() => handleToggleDetails(pkg)}
+                                                        className="px-3 py-2.5 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
                                                     >
-                                                        {addingId === pkg._id ? (
-                                                            <>
-                                                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                                Adding...
-                                                            </>
-                                                        ) : (
-                                                            <>+ Add to Trip</>
-                                                        )}
+                                                        {expandedPkg === pkg._id ? 'Hide' : 'Details'}
                                                     </button>
+                                                    {addedPackages.find(p => p._id === pkg._id) ? (
+                                                        <span className="px-4 py-2.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-semibold rounded-xl flex items-center gap-1.5">
+                                                            ✓ Added
+                                                        </span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleAddToTrip(pkg)}
+                                                            disabled={addingId === pkg._id}
+                                                            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/30 transition-all flex items-center gap-1.5"
+                                                        >
+                                                            {addingId === pkg._id ? (
+                                                                <>
+                                                                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                                    Adding...
+                                                                </>
+                                                            ) : (
+                                                                <>+ Add to Trip</>
+                                                            )}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
+
+                                            {/* Expanded Details Panel */}
+                                            {expandedPkg === pkg._id && (
+                                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                                                    {/* Duration & Route */}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3">
+                                                            <p className="text-[10px] font-semibold text-blue-500 uppercase mb-1">Duration</p>
+                                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{pkg.days} Night{pkg.days !== 1 ? 's' : ''} / {pkg.days + 1} Day{pkg.days !== 0 ? 's' : ''}</p>
+                                                        </div>
+                                                        <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3">
+                                                            <p className="text-[10px] font-semibold text-emerald-500 uppercase mb-1">Cities to Visit</p>
+                                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{pkg.cities.join(' → ')}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Places to Visit */}
+                                                    {expandedDetails[pkg._id] ? (
+                                                        <div>
+                                                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">📍 Places You'll Visit ({expandedDetails[pkg._id].length})</p>
+                                                            <div className="space-y-2 max-h-52 overflow-y-auto">
+                                                                {expandedDetails[pkg._id].map((place, i) => (
+                                                                    <div key={place._id} className="flex items-start gap-2.5 p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                                                                        <span className="w-5 h-5 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded-full flex-shrink-0 mt-0.5">{i + 1}</span>
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{place.name}</p>
+                                                                            <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                                                                                <span>{place.cityName}</span>
+                                                                                {place.type && <><span>·</span><span>{place.type}</span></>}
+                                                                                {place.visitDuration && <><span>·</span><span>⏱ {place.visitDuration}</span></>}
+                                                                            </div>
+                                                                            {place.description && (
+                                                                                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-1">{place.description}</p>
+                                                                            )}
+                                                                        </div>
+                                                                        {place.rating && (
+                                                                            <span className="text-[11px] font-semibold text-amber-500 flex-shrink-0">⭐ {place.rating}</span>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center py-4">
+                                                            <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                                                            <span className="ml-2 text-xs text-slate-400">Loading details...</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Stay Info */}
+                                                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3">
+                                                        <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase mb-1">🏨 Where You'll Stay</p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {pkg.cities.map(city => (
+                                                                <span key={city} className="inline-flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800/40 rounded-lg text-xs text-slate-700 dark:text-slate-300">
+                                                                    📍 {city}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">Accommodation in each city for the duration of your stay.</p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

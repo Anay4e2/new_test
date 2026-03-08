@@ -42,7 +42,7 @@ export const Login: FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const redirectTo = searchParams.get('next') || '/plan';
-    const { login, googleLogin, isLoading, error, clearError } = useAuthStore();
+    const { login, googleLogin, isLoading, error, clearError, pendingVerificationEmail } = useAuthStore();
     const { t } = useTranslation();
 
     const [email, setEmail] = useState('');
@@ -98,6 +98,12 @@ export const Login: FC = () => {
         if (success) {
             toast.success('Welcome back!');
             navigate(redirectTo);
+        } else {
+            // Check if user needs email verification
+            const store = useAuthStore.getState();
+            if (store.pendingVerificationEmail) {
+                navigate('/verify-otp');
+            }
         }
     };
 

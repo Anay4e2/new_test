@@ -8,6 +8,12 @@ import Restaurant from '../models/Restaurant';
 import Festival from '../models/Festival';
 import AuditLog from '../models/AuditLog';
 import { AdminRequest } from '../middleware/adminMiddleware';
+import TripGroup from '../models/TripGroup';
+import JournalEntry from '../models/JournalEntry';
+import Review from '../models/Review';
+import FavoritePlace from '../models/FavoritePlace';
+import Expense from '../models/Expense';
+import Notification from '../models/Notification';
 
 function escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -689,6 +695,138 @@ export const updateAppSettings = async (req: Request, res: Response) => {
         res.json({ success: true, settings });
     } catch (error) {
         logger.error('Error in updateAppSettings:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// --- User Audit Report ---
+
+export const getUserAuditReport = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id).select('name email role provider avatar interests isVerified createdAt');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const [
+            trips,
+            groupsOwned,
+            groupsMember,
+            journals,
+            reviews,
+            favorites,
+            expenses,
+            contactQueries,
+            postcards,
+            notifications,
+        ] = await Promise.all([
+            SavedTrip.find({ userId: id })
+                .select('title isPublic isFavorite likes tags createdAt tripResult.summary tripRequest.duration tripRequest.budget tripRequest.selectedCityIds')
+                .sort({ createdAt: -1 })
+                .lean(),
+            TripGroup.find({ ownerId: id })
+                .select('name tripId inviteCode members.email members.name members.role members.status maxMembers createdAt')
+                .populate('tripId', 'title')
+                .sort({ createdAt: -1 })
+                .lean(),
+            TripGroup.find({ 'members.userId': id, ownerId: { $ne: id } })
+                .select('name tripId ownerId members createdAt')
+                .populate('tripId', 'title')
+                .populate('ownerId', 'name email')
+                .sort({ createdAt: -1 })
+                .lean(),
+            JournalEntry.find({ userId: id })
+                .select('tripId day city title mood isPublic createdAt')
+                .sort({ createdAt: -1 })
+                .lean(),
+            Review.find({ userId: id })
+                .select('placeId placeName cityName rating title comment createdAt')
+                .sort({ createdAt: -1 })
+                .lean(),
+            FavoritePlace.find({ userId: id })
+                .select('placeId placeName cityName addedAt')
+                .sort({ addedAt: -1 })
+                .lean(),
+            Expense.find({ userId: id })
+                .select('tripId category amount description day city paymentMethod createdAt')
+                .sort({ createdAt: -1 })
+                .lean(),
+            (await import('../models/ContactQuery')).default.find({ email: user.email })
+                .select('subject status createdAt')
+                .sort({ createdAt: -1 })
+                .lean(),
+            (await import('../models/Postcard')).default.find({ userId: id })
+                .select('city message template createdAt')
+                .sort({ createdAt: -1 })
+                .lean(),
+            Notification.find({ userId: id })
+                .select('type title message isRead createdAt')
+                .sort({ createdAt: -1 })
+                .limit(50)
+                .lean(),
+        ]);
+
+        // Build trip IDs for cross-referencing
+        const tripIds = trips.map(t => t._id.toString());
+
+        // Mark which trips are group trips
+        const groupTripIds = new Set([
+            ...groupsOwned.map(g => (g.tripId as any)?._id?.toString?.() || g.tripId?.toString()),
+            ...groupsMember.map(g => (g.tripId as any)?._id?.toString?.() || g.tripId?.toString()),
+        ].filter(Boolean));
+
+        const tripsWithGroupFlag = trips.map(t => ({
+            ...t,
+            isGroupTrip: groupTripIds.has(t._id.toString()),
+        }));
+
+        // Expense summary
+        const expenseSummary = {
+            total: expenses.reduce((sum, e) => sum + e.amount, 0),
+            byCategory: expenses.reduce((acc, e) => {
+                acc[e.category] = (acc[e.category] || 0) + e.amount;
+                return acc;
+            }, {} as Record<string, number>),
+            byPaymentMethod: expenses.reduce((acc, e) => {
+                acc[e.paymentMethod] = (acc[e.paymentMethod] || 0) + e.amount;
+                return acc;
+            }, {} as Record<string, number>),
+        };
+
+        // Activity summary counts
+        const summary = {
+            totalTrips: trips.length,
+            publicTrips: trips.filter(t => t.isPublic).length,
+            groupTripsOwned: groupsOwned.length,
+            groupTripsJoined: groupsMember.length,
+            totalJournals: journals.length,
+            totalReviews: reviews.length,
+            averageRating: reviews.length > 0 ? +(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : 0,
+            totalFavorites: favorites.length,
+            totalExpense: expenseSummary.total,
+            totalPostcards: postcards.length,
+            totalContactQueries: contactQueries.length,
+        };
+
+        res.json({
+            success: true,
+            user,
+            summary,
+            trips: tripsWithGroupFlag,
+            groupsOwned,
+            groupsJoined: groupsMember,
+            journals,
+            reviews,
+            favorites,
+            expenses,
+            expenseSummary,
+            contactQueries,
+            postcards,
+            notifications,
+        });
+    } catch (error) {
+        logger.error('Error in getUserAuditReport:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

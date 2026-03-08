@@ -286,6 +286,47 @@ const assignMeals = (
   };
 };
 
+// Diversify places by type using round-robin interleaving.
+// Groups places by type, sorts each group by rating (highest first),
+// then picks one from each type in turn so the itinerary has variety.
+const diversifyByType = (places: Place[]): Place[] => {
+  if (places.length <= 1) return places;
+
+  // Group by type
+  const groups = new Map<string, Place[]>();
+  for (const p of places) {
+    const key = p.type || 'Other';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(p);
+  }
+
+  // Sort each group by rating descending
+  for (const arr of groups.values()) {
+    arr.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  }
+
+  // Sort type groups: types with higher top-rated place come first
+  const sortedGroups = [...groups.values()].sort(
+    (a, b) => (b[0].rating || 0) - (a[0].rating || 0)
+  );
+
+  // Round-robin pick from each type group
+  const result: Place[] = [];
+  let idx = 0;
+  let remaining = true;
+  while (remaining) {
+    remaining = false;
+    for (const group of sortedGroups) {
+      if (idx < group.length) {
+        result.push(group[idx]);
+        remaining = true;
+      }
+    }
+    idx++;
+  }
+
+  return result;
+};
 
 export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
   const { selectedCityIds, duration, budget, travelStyle, constraints } = req;
@@ -390,10 +431,10 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     const weatherInfo = getSeasonalWeather(city.name, currentMonth);
 
     // Get places for this city
-    let cityPlaces = MOCK_PLACES.filter(p => p.cityName === city.name);
+    let cityPlaces: Place[] = MOCK_PLACES.filter(p => p.cityName === city.name);
 
     // Weather-based activity prioritization
-    const indoorTypes = ['Museum', 'Temple', 'Palace', 'Gallery', 'Shopping'];
+    const indoorTypes = ['Museum', 'Palace', 'Gallery', 'Shopping'];
     const outdoorTypes = ['Park', 'Garden', 'Lake', 'Fort', 'Viewpoint', 'Market'];
 
     if (weatherInfo.temp >= 38) {
@@ -428,6 +469,9 @@ export const generateTrip = async (req: TripRequest): Promise<TripResult> => {
     if (constraints.seniorFriendly) {
       cityPlaces = cityPlaces.filter((p: Place) => (p.tags || []).includes('senior-friendly'));
     }
+
+    // Diversify by type: interleave places so no single type dominates
+    cityPlaces = diversifyByType(cityPlaces);
 
     // Schedule days in this city
     for (let d = 0; d < stayDuration; d++) {

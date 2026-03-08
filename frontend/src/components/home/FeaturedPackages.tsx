@@ -72,7 +72,7 @@ export const FeaturedPackages: FC<Props> = ({ packages }) => {
 
                 {/* CTA Button */}
                 <Link
-                  to="/packages"
+                  to={`/packages?highlight=${pkg.id}`}
                   className="block w-full text-center border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-semibold py-2.5 rounded-xl transition-colors duration-200"
                 >
                   View Details

@@ -52,8 +52,12 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
             if (!user.provider || user.provider === 'local') {
                 user.provider = 'google';
                 user.providerId = payload.sub;
-                await user.save();
             }
+            // Google-authenticated users are always verified
+            if (!user.isVerified) {
+                user.isVerified = true;
+            }
+            await user.save();
         } else {
             // Create new user with Google provider (no password needed)
             user = await User.create({
@@ -61,6 +65,7 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
                 email: payload.email,
                 provider: 'google',
                 providerId: payload.sub,
+                isVerified: true,
             });
         }
 

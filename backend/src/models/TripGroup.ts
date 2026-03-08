@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import crypto from 'crypto';
 
 export interface IGroupMember {
     userId?: mongoose.Types.ObjectId;
@@ -34,6 +35,7 @@ export interface ITripGroup extends Document {
     tripId: mongoose.Types.ObjectId;
     ownerId: mongoose.Types.ObjectId;
     name: string;
+    inviteCode: string;
     members: IGroupMember[];
     chat: IGroupChat[];
     polls: IGroupPoll[];
@@ -88,6 +90,7 @@ const TripGroupSchema = new Schema<ITripGroup>(
         tripId: { type: Schema.Types.ObjectId, ref: 'SavedTrip', required: true },
         ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         name: { type: String, required: true, trim: true, maxlength: 200 },
+        inviteCode: { type: String, unique: true, default: () => crypto.randomBytes(6).toString('hex') },
         members: [GroupMemberSchema],
         chat: [GroupChatSchema],
         polls: [GroupPollSchema],
@@ -99,5 +102,6 @@ const TripGroupSchema = new Schema<ITripGroup>(
 TripGroupSchema.index({ ownerId: 1 });
 TripGroupSchema.index({ 'members.userId': 1 });
 TripGroupSchema.index({ 'members.email': 1 });
+TripGroupSchema.index({ inviteCode: 1 });
 
 export default mongoose.model<ITripGroup>('TripGroup', TripGroupSchema);

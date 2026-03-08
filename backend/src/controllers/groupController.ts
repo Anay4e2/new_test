@@ -255,15 +255,85 @@ export const getGroup = async (req: AuthRequest, res: Response): Promise<void> =
                 (user?.email && m.email === user.email)
             );
 
+        // Strip inviteCode for non-members
+        const groupObj = group.toObject();
         if (!isMember) {
-            res.status(403).json({ success: false, message: 'Not a member of this group' });
-            return;
+            delete (groupObj as any).inviteCode;
+            // Strip chat/polls for non-members
+            groupObj.chat = [];
+            groupObj.polls = [];
         }
 
-        res.json({ success: true, group });
+        res.json({ success: true, group: groupObj, isMember });
     } catch (error: any) {
         logger.error('Error getting group:', error);
         res.status(500).json({ success: false, message: 'Failed to get group' });
+    }
+};
+
+// POST /api/groups/:id/join — join group via invite link
+export const joinGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { inviteCode } = req.body;
+
+        const user = await User.findById(req.userId);
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        const group = await TripGroup.findById(id);
+        if (!group) {
+            res.status(404).json({ success: false, message: 'Group not found' });
+            return;
+        }
+
+        if (group.inviteCode !== inviteCode) {
+            res.status(403).json({ success: false, message: 'Invalid invite code' });
+            return;
+        }
+
+        // Check if already a member
+        const existing = group.members.find(
+            m => (m.userId && m.userId.toString() === req.userId) || m.email === user.email
+        );
+        if (existing) {
+            if (existing.status === 'declined') {
+                existing.status = 'accepted';
+                existing.respondedAt = new Date();
+                if (!existing.userId) {
+                    existing.userId = user._id as any;
+                    existing.name = user.name;
+                }
+                await group.save();
+                res.json({ success: true, group });
+                return;
+            }
+            res.json({ success: true, group, message: 'Already a member' });
+            return;
+        }
+
+        if (group.members.length >= group.maxMembers) {
+            res.status(400).json({ success: false, message: `Group is full (max ${group.maxMembers} members)` });
+            return;
+        }
+
+        group.members.push({
+            userId: user._id as any,
+            email: user.email,
+            name: user.name,
+            role: 'viewer',
+            status: 'accepted',
+            invitedAt: new Date(),
+            respondedAt: new Date(),
+        } as any);
+
+        await group.save();
+        res.json({ success: true, group });
+    } catch (error: any) {
+        logger.error('Error joining group:', error);
+        res.status(500).json({ success: false, message: 'Failed to join group' });
     }
 };
 

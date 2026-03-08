@@ -1,5 +1,5 @@
 import { FC, useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import toast from 'react-hot-toast';
 import {
@@ -10,13 +10,14 @@ import {
     removeMember as removeMemberApi,
     createItineraryRequest as createRequestApi,
     getGroupRequests,
+    joinGroup as joinGroupApi,
 } from '@/services/api';
 import { useGroupSocket } from '@/hooks/useGroupSocket';
 import type { TripGroup, SavedTrip, GroupItineraryRequest, ItineraryRequestType } from '@/types';
 import {
     ArrowLeft, Loader2, Users, MessageCircle, BarChart3,
     Send, Plus, UserMinus, CheckCircle, XCircle, Clock, Crown,
-    Edit3, Eye, FileText,
+    Edit3, Eye, FileText, Link2, LogIn,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { InviteModal } from '@/components/common/InviteModal';
@@ -49,11 +50,14 @@ const STATUS_BADGE: Record<string, { icon: FC<any>; label: string; color: string
 export const GroupTrip: FC = () => {
     const { groupId } = useParams<{ groupId: string }>();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { isAuthenticated, user, token } = useAuthStore();
     const chatEndRef = useRef<HTMLDivElement>(null);
 
     const [group, setGroup] = useState<TripGroup | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isMember, setIsMember] = useState(true);
+    const [joiningGroup, setJoiningGroup] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('members');
     const [showInvite, setShowInvite] = useState(false);
 
@@ -80,7 +84,10 @@ export const GroupTrip: FC = () => {
         if (!groupId) return;
         try {
             const res = await getGroup(groupId);
-            if (res.success) setGroup(res.group);
+            if (res.success) {
+                setGroup(res.group);
+                setIsMember(res.isMember);
+            }
         } catch {
             toast.error('Failed to load group.');
         } finally {
@@ -105,6 +112,29 @@ export const GroupTrip: FC = () => {
         }
         fetchGroup();
     }, [groupId]);
+
+    // Auto-join from invite URL
+    useEffect(() => {
+        const inviteCode = searchParams.get('invite');
+        if (inviteCode && group && !isMember && groupId) {
+            (async () => {
+                setJoiningGroup(true);
+                try {
+                    const res = await joinGroupApi(groupId, inviteCode);
+                    if (res.success) {
+                        setGroup(res.group);
+                        setIsMember(true);
+                        toast.success('Joined the group!');
+                        setSearchParams({}, { replace: true });
+                    }
+                } catch {
+                    toast.error('Invalid or expired invite link.');
+                } finally {
+                    setJoiningGroup(false);
+                }
+            })();
+        }
+    }, [group, isMember, groupId]);
 
     const fetchRequests = async () => {
         if (!groupId) return;
@@ -207,6 +237,36 @@ export const GroupTrip: FC = () => {
         }
     };
 
+    const handleJoinGroup = async () => {
+        if (!groupId || !group) return;
+        const inviteCode = group.inviteCode || searchParams.get('invite') || '';
+        if (!inviteCode) {
+            toast.error('No invite code found.');
+            return;
+        }
+        setJoiningGroup(true);
+        try {
+            const res = await joinGroupApi(groupId, inviteCode);
+            if (res.success) {
+                setGroup(res.group);
+                setIsMember(true);
+                toast.success('Joined the group!');
+                setSearchParams({}, { replace: true });
+            }
+        } catch {
+            toast.error('Failed to join group.');
+        } finally {
+            setJoiningGroup(false);
+        }
+    };
+
+    const handleCopyInviteLink = () => {
+        if (!group) return;
+        const link = `${window.location.origin}/group/${group._id}?invite=${group.inviteCode}`;
+        navigator.clipboard.writeText(link);
+        toast.success('Invite link copied!');
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-neutral dark:bg-slate-900 flex items-center justify-center">
@@ -221,6 +281,39 @@ export const GroupTrip: FC = () => {
                 <div className="text-center">
                     <p className="text-gray-500 dark:text-gray-400 mb-4">Group not found or you don't have access.</p>
                     <button onClick={() => navigate('/dashboard')} className="text-blue-500 hover:underline text-sm">Back to Dashboard</button>
+                </div>
+            </div>
+        );
+    }
+
+    // Non-member view: show group name and join button
+    if (!isMember && !joiningGroup) {
+        const inviteCode = searchParams.get('invite');
+        return (
+            <div className="min-h-screen bg-neutral dark:bg-slate-900 flex items-center justify-center">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-8 text-center mx-4">
+                    <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Users size={32} className="text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{group.name}</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                        {group.members.filter(m => m.status === 'accepted').length} member{group.members.filter(m => m.status === 'accepted').length !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">You've been invited to join this group trip!</p>
+                    {inviteCode ? (
+                        <button
+                            onClick={handleJoinGroup}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                        >
+                            <LogIn size={18} />
+                            Join Group
+                        </button>
+                    ) : (
+                        <p className="text-sm text-gray-400">Ask the group owner for an invite link to join.</p>
+                    )}
+                    <button onClick={() => navigate('/dashboard')} className="mt-3 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        Back to Dashboard
+                    </button>
                 </div>
             </div>
         );
@@ -385,13 +478,22 @@ export const GroupTrip: FC = () => {
                             {activeTab === 'members' && (
                                 <div className="p-4">
                                     {isOwner && (
-                                        <button
-                                            onClick={() => setShowInvite(true)}
-                                            className="w-full mb-3 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors"
-                                        >
-                                            <Plus size={14} />
-                                            Invite Members
-                                        </button>
+                                        <div className="flex gap-2 mb-3">
+                                            <button
+                                                onClick={() => setShowInvite(true)}
+                                                className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                                            >
+                                                <Plus size={14} />
+                                                Invite Members
+                                            </button>
+                                            <button
+                                                onClick={handleCopyInviteLink}
+                                                className="flex items-center justify-center gap-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                                                title="Copy invite link"
+                                            >
+                                                <Link2 size={14} />
+                                            </button>
+                                        </div>
                                     )}
                                     <div className="space-y-2">
                                         {group.members.map(member => {

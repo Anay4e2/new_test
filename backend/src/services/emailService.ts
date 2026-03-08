@@ -65,7 +65,7 @@ function getNightStayName(nightStay: string | { hotel: { name: string }; city: s
     return nightStay as string;
 }
 
-function buildEmailHTML(tripResult: TripResult): string {
+export function buildItineraryEmailHTML(tripResult: TripResult): string {
     const { itinerary, summary } = tripResult;
     const cities = [...new Set(itinerary.map(d => d.city))];
 
@@ -168,7 +168,7 @@ export async function sendItineraryEmail(
 
     try {
         const transporter = createTransporter();
-        const html = buildEmailHTML(tripResult);
+        const html = buildItineraryEmailHTML(tripResult);
 
         const cities = [...new Set(tripResult.itinerary.map(d => d.city))];
         const subject = `🇮🇳 Your ${tripResult.itinerary.length}-Day Trip Itinerary — ${cities.slice(0, 3).join(', ')}`;

@@ -1,4 +1,4 @@
-import { FC, useState, FormEvent } from 'react';
+import { FC, useState, useEffect, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ import {
     getTrainSchedule,
     getTrainFare,
 } from '../services/api';
+import { useDebounce } from '../hooks';
 import {
     Train, Search, ArrowRight, Clock, MapPin, ArrowLeft,
     Loader2, Info, ChevronDown, ChevronUp,
@@ -426,14 +427,14 @@ const LiveStationBoard: FC = () => {
     const [loading, setLoading] = useState(false);
     const [board, setBoard] = useState<any>(null);
 
-    const handleStationSearch = async (query: string) => {
-        setStationQuery(query);
-        if (query.length < 2) { setSuggestions([]); return; }
-        try {
-            const data = await searchStation(query);
-            setSuggestions(data.stations?.slice(0, 8) || []);
-        } catch { console.warn('Station search failed'); }
-    };
+    const debouncedStationQuery = useDebounce(stationQuery, 300);
+
+    useEffect(() => {
+        if (debouncedStationQuery.length < 2) { setSuggestions([]); return; }
+        searchStation(debouncedStationQuery)
+            .then(data => setSuggestions(data.stations?.slice(0, 8) || []))
+            .catch(() => console.warn('Station search failed'));
+    }, [debouncedStationQuery]);
 
     const selectStation = (code: string, name: string) => {
         setStationCode(code);
@@ -467,7 +468,7 @@ const LiveStationBoard: FC = () => {
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
                             <input
-                                value={stationQuery} onChange={e => handleStationSearch(e.target.value)}
+                                value={stationQuery} onChange={e => setStationQuery(e.target.value)}
                                 placeholder="Type station name..."
                                 className="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             />

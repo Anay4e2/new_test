@@ -143,7 +143,7 @@ const RestaurantsManager: FC = () => {
         setFormData(prev => ({ ...prev, [field]: prev[field].filter(v => v !== value) }));
     };
 
-    const priceLabel = { budget: '₹', moderate: '₹₹', expensive: '₹₹₹' };
+    const priceLabel = { budget: '\u20B9', moderate: '\u20B9\u20B9', expensive: '\u20B9\u20B9\u20B9' };
 
     return (
         <div className="space-y-6">
@@ -216,7 +216,10 @@ const RestaurantsManager: FC = () => {
                                     <td className="px-6 py-4">
                                         <span className="px-2 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs font-semibold capitalize">{r.type}</span>
                                     </td>
-                                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{priceLabel[r.priceRange as keyof typeof priceLabel] || r.priceRange}</td>
+                                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                        <span>{priceLabel[r.priceRange as keyof typeof priceLabel] || r.priceRange}</span>
+                                        <div className="text-xs text-gray-400 dark:text-gray-500">{`\u20B9${r.averageCost}`}</div>
+                                    </td>
                                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300">⭐ {r.rating}</td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-2">

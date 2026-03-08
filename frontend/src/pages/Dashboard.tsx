@@ -177,6 +177,7 @@ export const Dashboard: FC = () => {
                 setTrips(prev => prev.map(t => t._id === tripId ? { ...t, isPublic, tags: publishTags } : t));
                 setPublishingTrip(null);
                 setPublishTags([]);
+                toast.success(isPublic ? 'Trip published to community!' : 'Trip unpublished.');
             }
         } catch {
             toast.error('Failed to publish trip.');

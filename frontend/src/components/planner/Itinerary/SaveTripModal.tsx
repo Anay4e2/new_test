@@ -1,8 +1,9 @@
 import { FC, useState } from 'react';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { saveTrip } from '@/services/api';
+import { saveTrip, publishTripApi } from '@/services/api';
 import { TripRequest, TripResult } from '@/types';
+import toast from 'react-hot-toast';
 
 interface SaveTripModalProps {
   isOpen: boolean;
@@ -11,9 +12,13 @@ interface SaveTripModalProps {
   result: TripResult;
 }
 
+const TAG_OPTIONS = ['Solo', 'Family', 'Adventure', 'Culture', 'Food Lover', 'Budget', 'Luxury', 'Weekend', 'Pilgrimage'];
+
 export const SaveTripModal: FC<SaveTripModalProps> = ({ isOpen, onClose, request, result }) => {
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState('');
+  const [publishToFeed, setPublishToFeed] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
 
   const handleSave = async () => {
@@ -22,15 +27,27 @@ export const SaveTripModal: FC<SaveTripModalProps> = ({ isOpen, onClose, request
     try {
       const res = await saveTrip(title.trim(), request || {}, result);
       if (res.success) {
+        if (publishToFeed && res.trip?._id) {
+          try {
+            await publishTripApi(res.trip._id, { isPublic: true, tags: selectedTags });
+            toast.success('Trip saved & published to community!');
+          } catch {
+            toast.success('Trip saved! (Publishing failed – you can publish from Dashboard.)');
+          }
+        } else {
+          toast.success('Trip saved!');
+        }
         setSuccess(true);
         setTimeout(() => {
           onClose();
           setSuccess(false);
           setTitle('');
+          setPublishToFeed(false);
+          setSelectedTags([]);
         }, 1500);
       }
     } catch {
-      alert('Failed to save trip. Please try again.');
+      toast.error('Failed to save trip. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -73,6 +90,43 @@ export const SaveTripModal: FC<SaveTripModalProps> = ({ isOpen, onClose, request
                   className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   autoFocus
                 />
+
+                {/* Publish to Community toggle */}
+                <button
+                  type="button"
+                  onClick={() => setPublishToFeed(!publishToFeed)}
+                  className={`mt-3 w-full flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm transition-all ${
+                    publishToFeed
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                      : 'border-gray-200 dark:border-slate-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <Globe size={16} />
+                  <span className="flex-1 text-left">Publish to Community</span>
+                  <div className={`w-9 h-5 rounded-full transition-colors ${publishToFeed ? 'bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}>
+                    <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform mt-0.5 ${publishToFeed ? 'translate-x-4.5 ml-[18px]' : 'ml-0.5'}`} />
+                  </div>
+                </button>
+
+                {publishToFeed && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {TAG_OPTIONS.map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])}
+                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${
+                          selectedTags.includes(tag)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white dark:bg-slate-700 text-gray-500 border-gray-200 dark:border-slate-600'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex gap-3 mt-5 justify-end">
                   <button
                     onClick={onClose}

@@ -11,6 +11,9 @@ export interface IUser {
     interests?: string[];
     provider?: string;
     providerId?: string;
+    isVerified: boolean;
+    otp?: string;
+    otpExpire?: Date;
     resetPasswordToken?: string;
     resetPasswordExpire?: Date;
     createdAt: Date;
@@ -64,6 +67,18 @@ const UserSchema = new Schema<IUser, mongoose.Model<IUser, {}, IUserMethods>, IU
         type: String,
         trim: true,
     }],
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: {
+        type: String,
+        select: false
+    },
+    otpExpire: {
+        type: Date,
+        select: false
+    },
     resetPasswordToken: {
         type: String,
         select: false

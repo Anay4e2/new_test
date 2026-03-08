@@ -54,7 +54,7 @@ const getPasswordStrength = (password: string): { score: number; label: string; 
 
 export const Register: FC = () => {
     const navigate = useNavigate();
-    const { register, googleLogin, isLoading, error, clearError } = useAuthStore();
+    const { register, googleLogin, isLoading, error, clearError, pendingVerificationEmail } = useAuthStore();
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -122,7 +122,13 @@ export const Register: FC = () => {
 
         const success = await register(name, email, password);
         if (success) {
-            navigate('/plan');
+            // If pendingVerificationEmail is set, go to OTP page; otherwise go to plan
+            const store = useAuthStore.getState();
+            if (store.pendingVerificationEmail) {
+                navigate('/verify-otp');
+            } else {
+                navigate('/plan');
+            }
         }
     };
 

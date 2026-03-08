@@ -32,6 +32,7 @@ export const Restaurants: FC = () => {
     const [loading, setLoading] = useState(false);
     const [citiesLoading, setCitiesLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [vegFilter, setVegFilter] = useState<'all' | 'veg' | 'non-veg'>('all');
 
     useEffect(() => {
         getCities().then(c => {
@@ -52,13 +53,17 @@ export const Restaurants: FC = () => {
             .finally(() => setLoading(false));
     }, [selectedCity, typeFilter]);
 
-    const filtered = search
-        ? restaurants.filter(r =>
-            r.name.toLowerCase().includes(search.toLowerCase()) ||
-            r.cuisine.some(c => c.toLowerCase().includes(search.toLowerCase())) ||
-            r.mustTry.some(m => m.toLowerCase().includes(search.toLowerCase()))
-        )
-        : restaurants;
+    const filtered = restaurants.filter(r => {
+        if (vegFilter === 'veg' && !r.vegetarian) return false;
+        if (vegFilter === 'non-veg' && r.vegetarian) return false;
+        if (search) {
+            const s = search.toLowerCase();
+            return r.name.toLowerCase().includes(s) ||
+                r.cuisine.some(c => c.toLowerCase().includes(s)) ||
+                r.mustTry.some(m => m.toLowerCase().includes(s));
+        }
+        return true;
+    });
 
     const vegCount = filtered.filter(r => r.vegetarian).length;
     const avgRating = filtered.length > 0
@@ -116,6 +121,40 @@ export const Restaurants: FC = () => {
                             aria-label="Search restaurants"
                         />
                     </div>
+                </div>
+
+                {/* Veg / Non-Veg Filter */}
+                <div className="flex gap-2 mb-6">
+                    <button
+                        onClick={() => setVegFilter('all')}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                            vegFilter === 'all'
+                                ? 'bg-orange-600 text-white border-orange-600'
+                                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-600 hover:border-orange-300'
+                        }`}
+                    >
+                        All
+                    </button>
+                    <button
+                        onClick={() => setVegFilter('veg')}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5 ${
+                            vegFilter === 'veg'
+                                ? 'bg-green-600 text-white border-green-600'
+                                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-600 hover:border-green-300'
+                        }`}
+                    >
+                        <Leaf size={14} /> Veg
+                    </button>
+                    <button
+                        onClick={() => setVegFilter('non-veg')}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5 ${
+                            vegFilter === 'non-veg'
+                                ? 'bg-red-600 text-white border-red-600'
+                                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-600 hover:border-red-300'
+                        }`}
+                    >
+                        <UtensilsCrossed size={14} /> Non-Veg
+                    </button>
                 </div>
 
                 {/* Stats */}

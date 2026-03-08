@@ -1,6 +1,7 @@
 import { FC, useState, useRef, useEffect } from 'react';
 import { TripRequest, ParsedTripQuery, TripSuggestion } from '@/types';
 import { parseTripQuery, getTripIdeas } from '@/services/api';
+import { useDebounce } from '@/hooks';
 import { Search, Sparkles, X, Check, Loader2, ArrowRight, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -54,12 +55,17 @@ export const SmartSearch: FC<SmartSearchProps> = ({ onGenerate, cities, isLoadin
     const [activeInterests, setActiveInterests] = useState<string[]>([]);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const debouncedQuery = useDebounce(query, 600);
 
     // Load trip ideas on mount
     useEffect(() => {
         fetchTripIdeas([]);
     }, []);
+
+    // Auto-parse when debounced query changes
+    useEffect(() => {
+        if (debouncedQuery.length > 10) handleParse(debouncedQuery);
+    }, [debouncedQuery]);
 
     const fetchTripIdeas = async (interests: string[]) => {
         setLoadingIdeas(true);
@@ -84,14 +90,6 @@ export const SmartSearch: FC<SmartSearchProps> = ({ onGenerate, cities, isLoadin
     const handleQueryChange = (value: string) => {
         setQuery(value);
         setParsedResult(null);
-
-        // Debounced auto-suggest
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        if (value.length > 10) {
-            debounceRef.current = setTimeout(() => {
-                handleParse(value);
-            }, 600);
-        }
     };
 
     const handleParse = async (text?: string) => {

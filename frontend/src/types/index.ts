@@ -401,6 +401,7 @@ export interface TripGroup {
   tripId: string | SavedTrip;
   ownerId: string;
   name: string;
+  inviteCode: string;
   members: GroupMember[];
   chat: GroupChat[];
   polls: GroupPoll[];

@@ -39,8 +39,10 @@ import {
     uploadImage,
     uploadFile,
     getAppSettings,
-    updateAppSettings
+    updateAppSettings,
+    getUserAuditReport
 } from '../controllers/adminController';
+import { getContactQueries, updateContactQuery, deleteContactQuery } from '../controllers/contactController';
 
 const router = Router();
 
@@ -74,6 +76,7 @@ router.delete('/trips/:id', deleteTripAdmin);
 // Users Management
 router.get('/users', getAllUsersAdmin);
 router.put('/users/:id/role', updateUserRole);
+router.get('/users/:id/audit', getUserAuditReport);
 router.delete('/users/:id', deleteUserAdmin);
 
 // Hotels Management
@@ -102,6 +105,11 @@ router.get('/audit-logs', getAuditLogs);
 
 // Sessions
 router.get('/sessions', getActiveSessions);
+
+// Contact Queries Management
+router.get('/contact-queries', getContactQueries);
+router.put('/contact-queries/:id', updateContactQuery);
+router.delete('/contact-queries/:id', deleteContactQuery);
 
 // Image Upload (base64 legacy)
 router.post('/upload-image', uploadImage);

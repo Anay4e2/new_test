@@ -3,13 +3,14 @@ import { PackageCard } from './PackageCard';
 import { getPackages, getPackageById } from '../../../services/api';
 import { useTripStore } from '../../../stores/tripStore';
 import type { Package, Place } from '../../../types';
+import toast from 'react-hot-toast';
 
 export const PackagesSection: FC = () => {
     const [packages, setPackages] = useState<Package[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const { addPlace } = useTripStore();
+    const { addPackage, addedPackages } = useTripStore();
 
     useEffect(() => {
         fetchPackages();
@@ -32,17 +33,27 @@ export const PackagesSection: FC = () => {
     };
 
     const handleAddToTrip = async (pkg: Package) => {
+        if (addedPackages.find(p => p._id === pkg._id)) {
+            toast('Package already added', { icon: 'ℹ️' });
+            return;
+        }
         try {
-            // Fetch package with place details
             const response = await getPackageById(pkg.id);
             if (response.success && response.data.placesDetails) {
-                // Add each place to the trip
-                response.data.placesDetails.forEach((place: Place) => {
-                    addPlace(place);
-                });
+                const places = response.data.placesDetails;
+                addPackage(
+                    {
+                        _id: pkg._id, id: pkg.id, title: pkg.title, state: pkg.state,
+                        days: pkg.days, price: pkg.price, cities: pkg.cities,
+                        tags: pkg.tags, image: pkg.image,
+                        placeIds: places.map((p: Place) => p._id),
+                    },
+                    places
+                );
+                toast.success(`"${pkg.title}" added!`);
             }
         } catch (err) {
-            console.error('Error adding package to trip:', err);
+            toast.error('Failed to add package');
         }
     };
 
@@ -104,6 +115,7 @@ export const PackagesSection: FC = () => {
                             key={pkg._id}
                             pkg={pkg}
                             onAddToTrip={handleAddToTrip}
+                            isAdded={!!addedPackages.find(p => p._id === pkg._id)}
                         />
                     ))}
                 </div>

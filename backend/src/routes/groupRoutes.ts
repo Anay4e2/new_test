@@ -12,6 +12,7 @@ import {
     votePoll,
     removeMember,
     closePoll,
+    joinGroup,
 } from '../controllers/groupController';
 import {
     createItineraryRequest,
@@ -39,6 +40,7 @@ router.get('/:id', validateParams(objectIdParam), getGroup);
 // Members
 router.post('/:id/invite', validateParams(objectIdParam), validate(inviteMembersSchema), inviteMembers);
 router.post('/:id/respond', validateParams(objectIdParam), validate(respondInviteSchema), respondToInvite);
+router.post('/:id/join', validateParams(objectIdParam), joinGroup);
 router.delete('/:id/members/:memberId', removeMember);
 
 // Chat

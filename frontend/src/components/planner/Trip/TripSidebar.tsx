@@ -194,7 +194,9 @@ export const TripSidebar: FC = () => {
         isOptimizing,
         optimizeRoute,
         showRouteOnMap,
-        setShowRouteOnMap
+        setShowRouteOnMap,
+        addedPackages,
+        removePackage
     } = useTripStore();
 
     const { isAuthenticated } = useAuthStore();
@@ -279,12 +281,48 @@ export const TripSidebar: FC = () => {
                 <div className="flex gap-4 text-sm text-gray-400">
                     <span>📍 {selectedPlaces.length} places</span>
                     <span>🏙️ {cities.length} cities</span>
+                    {addedPackages.length > 0 && <span>📦 {addedPackages.length} pkg{addedPackages.length !== 1 ? 's' : ''}</span>}
                     {totalDistance > 0 && <span>🛣️ {totalDistance} km</span>}
                 </div>
             </div>
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Added Packages */}
+                {addedPackages.length > 0 && (
+                    <div>
+                        <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">
+                            📦 Packages Added
+                        </h3>
+                        <div className="space-y-2">
+                            {addedPackages.map(pkg => (
+                                <div key={pkg._id} className="p-3 bg-gradient-to-r from-orange-500/10 to-pink-500/10 rounded-lg border border-orange-500/20">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <div className="font-medium text-white truncate text-sm">{pkg.title}</div>
+                                            <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-0.5">
+                                                <span>📅 {pkg.days}N/{pkg.days + 1}D</span>
+                                                <span>•</span>
+                                                <span>🏙️ {pkg.cities.join(' → ')}</span>
+                                            </div>
+                                            <div className="text-xs text-emerald-400 font-semibold mt-1">
+                                                ₹{pkg.price.toLocaleString()}/person · {pkg.placeIds.length} places
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => removePackage(pkg._id)}
+                                            className="p-1 hover:bg-red-500/20 rounded transition-colors flex-shrink-0"
+                                            title="Remove package"
+                                        >
+                                            <span className="text-red-400 text-sm">✕</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Selected Places */}
                 <div>
                     <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">

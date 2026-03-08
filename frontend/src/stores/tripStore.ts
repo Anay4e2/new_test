@@ -34,9 +34,25 @@ export interface OptimizedPlace extends Place {
     order: number;
 }
 
+export interface AddedPackage {
+    _id: string;
+    id: string;
+    title: string;
+    state: string;
+    days: number;
+    price: number;
+    cities: string[];
+    tags: string[];
+    image: string;
+    placeIds: string[];
+}
+
 interface TripStore {
     // === SELECTED PLACES ===
     selectedPlaces: Place[];
+
+    // === ADDED PACKAGES ===
+    addedPackages: AddedPackage[];
 
     // === DAYS CONFIGURATION ===
     daysPerCity: Record<string, number>;  // cityName -> days
@@ -57,6 +73,8 @@ interface TripStore {
 
     // === ACTIONS ===
     addPlace: (place: Place) => void;
+    addPackage: (pkg: AddedPackage, places: Place[]) => void;
+    removePackage: (pkgId: string) => void;
     removePlace: (placeId: string) => void;
     togglePlace: (place: Place) => void;
     isPlaceSelected: (placeId: string) => boolean;
@@ -81,6 +99,7 @@ interface TripStore {
 export const useTripStore = create<TripStore>((set, get) => ({
     // Initial State
     selectedPlaces: [],
+    addedPackages: [],
     daysPerCity: {},
     optimizedRoute: [],
     routeSegments: [],
@@ -90,6 +109,22 @@ export const useTripStore = create<TripStore>((set, get) => ({
     isGenerating: false,
     showRouteOnMap: false,
     tripStartDate: null,
+
+    // === PACKAGE ACTIONS ===
+    addPackage: (pkg, places) => {
+        const current = get().addedPackages;
+        if (current.find(p => p._id === pkg._id)) return;
+        set({ addedPackages: [...current, pkg] });
+        places.forEach(place => get().addPlace(place));
+    },
+
+    removePackage: (pkgId) => {
+        const pkg = get().addedPackages.find(p => p._id === pkgId);
+        if (!pkg) return;
+        // Remove the package's places
+        pkg.placeIds.forEach(id => get().removePlace(id));
+        set({ addedPackages: get().addedPackages.filter(p => p._id !== pkgId) });
+    },
 
     // === PLACE ACTIONS ===
     addPlace: (place) => {
@@ -149,6 +184,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     clearAllPlaces: () => {
         set({
             selectedPlaces: [],
+            addedPackages: [],
             daysPerCity: {},
             optimizedRoute: [],
             routeSegments: [],

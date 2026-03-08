@@ -14,11 +14,12 @@ import FestivalsManager from '../components/admin/FestivalsManager';
 import SettingsPanel from '../components/admin/SettingsPanel';
 import AuditLogViewer from '../components/admin/AuditLogViewer';
 import SessionManager from '../components/admin/SessionManager';
+import ContactQueriesManager from '../components/admin/ContactQueriesManager';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const tabMeta: Record<string, { title: string; description: string }> = {
     overview: { title: 'Dashboard', description: 'Overview of your platform activity' },
-    users: { title: 'User Management', description: 'Manage users and their roles' },
+    users: { title: 'User Management', description: 'Manage users and admins separately' },
     places: { title: 'Places', description: 'Manage tourist attractions and POIs' },
     hotels: { title: 'Hotels', description: 'Manage hotel listings' },
     restaurants: { title: 'Restaurants', description: 'Manage restaurant listings' },
@@ -28,6 +29,7 @@ const tabMeta: Record<string, { title: string; description: string }> = {
     analytics: { title: 'Analytics', description: 'View platform metrics and usage data' },
     audit: { title: 'Audit Logs', description: 'Review system activity logs' },
     sessions: { title: 'Sessions', description: 'Manage active user sessions' },
+    queries: { title: 'Contact Queries', description: 'View and manage user contact submissions' },
     settings: { title: 'Settings', description: 'Configure application settings' },
 };
 
@@ -56,6 +58,7 @@ export const Admin: FC = () => {
             case 'analytics': return <AnalyticsView />;
             case 'audit': return <AuditLogViewer />;
             case 'sessions': return <SessionManager />;
+            case 'queries': return <ContactQueriesManager />;
             case 'settings': return <SettingsPanel />;
             default: return <DashboardOverview />;
         }

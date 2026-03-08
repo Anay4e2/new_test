@@ -2,6 +2,7 @@ import { FC, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, MapPin, Landmark, Package } from 'lucide-react';
 import { globalSearchApi, SearchResults } from '@/services/api';
+import { useDebounce } from '@/hooks';
 
 export const GlobalSearch: FC = () => {
     const [query, setQuery] = useState('');
@@ -9,8 +10,8 @@ export const GlobalSearch: FC = () => {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const navigate = useNavigate();
+    const debouncedQuery = useDebounce(query, 300);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -20,19 +21,16 @@ export const GlobalSearch: FC = () => {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    const handleSearch = (value: string) => {
-        setQuery(value);
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        if (value.trim().length < 2) { setResults(null); setOpen(false); return; }
-        debounceRef.current = setTimeout(async () => {
-            setLoading(true);
-            try {
-                const res = await globalSearchApi(value.trim(), 5);
-                if (res.success) { setResults(res.results); setOpen(true); }
-            } catch { /* ignore */ }
-            setLoading(false);
-        }, 300);
-    };
+    useEffect(() => {
+        if (debouncedQuery.trim().length < 2) { setResults(null); setOpen(false); return; }
+        let cancelled = false;
+        setLoading(true);
+        globalSearchApi(debouncedQuery.trim(), 5)
+            .then(res => { if (!cancelled && res.success) { setResults(res.results); setOpen(true); } })
+            .catch(() => { /* ignore */ })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, [debouncedQuery]);
 
     const close = () => { setOpen(false); setQuery(''); setResults(null); };
     const hasResults = results && (results.cities.length + results.places.length + results.packages.length > 0);
@@ -44,7 +42,7 @@ export const GlobalSearch: FC = () => {
                 <input
                     type="text"
                     value={query}
-                    onChange={e => handleSearch(e.target.value)}
+                    onChange={e => setQuery(e.target.value)}
                     placeholder="Search cities, places..."
                     className="bg-transparent text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 outline-none w-full"
                 />

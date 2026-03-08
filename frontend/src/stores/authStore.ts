@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { registerUser, loginUser, adminLoginUser, getCurrentUser, googleAuthApi } from '../services/api';
+import { registerUser, loginUser, adminLoginUser, getCurrentUser, googleAuthApi, verifyOtpApi, resendOtpApi } from '../services/api';
 
 interface User {
     id: string;
@@ -17,12 +17,15 @@ interface AuthState {
     token: string | null;
     isLoading: boolean;
     error: string | null;
+    pendingVerificationEmail: string | null;
 
     // Actions
     register: (name: string, email: string, password: string) => Promise<boolean>;
     login: (email: string, password: string) => Promise<boolean>;
     googleLogin: (idToken: string) => Promise<boolean>;
     adminLogin: (email: string, password: string) => Promise<boolean>;
+    verifyOtp: (email: string, otp: string) => Promise<boolean>;
+    resendOtp: (email: string) => Promise<boolean>;
     logout: () => void;
     fetchCurrentUser: () => Promise<void>;
     clearError: () => void;
@@ -39,12 +42,20 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             isLoading: false,
             error: null,
+            pendingVerificationEmail: null,
 
             register: async (name: string, email: string, password: string): Promise<boolean> => {
                 set({ isLoading: true, error: null });
                 try {
                     const response = await registerUser(name, email, password);
-                    if (response.success) {
+                    if (response.success && response.requiresVerification) {
+                        set({
+                            isLoading: false,
+                            error: null,
+                            pendingVerificationEmail: response.email || email,
+                        });
+                        return true;
+                    } else if (response.success) {
                         set({
                             user: response.user,
                             token: response.token,
@@ -80,7 +91,16 @@ export const useAuthStore = create<AuthState>()(
                         return false;
                     }
                 } catch (error: any) {
-                    const message = error.response?.data?.message || 'Login failed';
+                    const data = error.response?.data;
+                    if (data?.requiresVerification) {
+                        set({
+                            isLoading: false,
+                            error: null,
+                            pendingVerificationEmail: data.email || email,
+                        });
+                        return false;
+                    }
+                    const message = data?.message || 'Login failed';
                     set({ isLoading: false, error: message });
                     return false;
                 }
@@ -104,6 +124,43 @@ export const useAuthStore = create<AuthState>()(
                     }
                 } catch (error: any) {
                     const message = error.response?.data?.message || 'Google login failed';
+                    set({ isLoading: false, error: message });
+                    return false;
+                }
+            },
+
+            verifyOtp: async (email: string, otp: string): Promise<boolean> => {
+                set({ isLoading: true, error: null });
+                try {
+                    const response = await verifyOtpApi(email, otp);
+                    if (response.success) {
+                        set({
+                            user: response.user,
+                            token: response.token,
+                            isLoading: false,
+                            error: null,
+                            pendingVerificationEmail: null,
+                        });
+                        return true;
+                    } else {
+                        set({ isLoading: false, error: response.message || 'Verification failed' });
+                        return false;
+                    }
+                } catch (error: any) {
+                    const message = error.response?.data?.message || 'Verification failed';
+                    set({ isLoading: false, error: message });
+                    return false;
+                }
+            },
+
+            resendOtp: async (email: string): Promise<boolean> => {
+                set({ isLoading: true, error: null });
+                try {
+                    const response = await resendOtpApi(email);
+                    set({ isLoading: false, error: null });
+                    return response.success;
+                } catch (error: any) {
+                    const message = error.response?.data?.message || 'Failed to resend code';
                     set({ isLoading: false, error: message });
                     return false;
                 }

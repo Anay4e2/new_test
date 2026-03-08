@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
 
+
 export const About: FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
@@ -106,17 +107,6 @@ export const About: FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-100 dark:border-slate-800 py-8 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="text-sm text-slate-500 dark:text-slate-500">© 2026 TripPlanner. All rights reserved.</span>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Home</Link>
-            <Link to="/explore" className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Explore</Link>
-            <Link to="/packages" className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Packages</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

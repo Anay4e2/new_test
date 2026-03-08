@@ -57,6 +57,8 @@ export interface AuthResponse {
         createdAt: string;
     };
     message?: string;
+    requiresVerification?: boolean;
+    email?: string;
 }
 
 export const registerUser = async (name: string, email: string, password: string): Promise<AuthResponse> => {
@@ -101,6 +103,16 @@ export const changePasswordApi = async (currentPassword: string, newPassword: st
 
 export const googleAuthApi = async (idToken: string): Promise<AuthResponse> => {
     const response = await api.post('/auth/google', { idToken });
+    return response.data;
+};
+
+export const verifyOtpApi = async (email: string, otp: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/verify-otp', { email, otp });
+    return response.data;
+};
+
+export const resendOtpApi = async (email: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post('/auth/resend-otp', { email });
     return response.data;
 };
 
@@ -775,7 +787,7 @@ export const getMyGroups = async (): Promise<{ success: boolean; groups: TripGro
     return response.data;
 };
 
-export const getGroup = async (id: string): Promise<{ success: boolean; group: TripGroup }> => {
+export const getGroup = async (id: string): Promise<{ success: boolean; group: TripGroup; isMember: boolean }> => {
     const response = await api.get(`/groups/${id}`);
     return response.data;
 };
@@ -817,6 +829,11 @@ export const closePoll = async (groupId: string, pollId: string): Promise<{ succ
 
 export const removeMember = async (groupId: string, memberId: string): Promise<{ success: boolean; group: TripGroup }> => {
     const response = await api.delete(`/groups/${groupId}/members/${memberId}`);
+    return response.data;
+};
+
+export const joinGroup = async (groupId: string, inviteCode: string): Promise<{ success: boolean; group: TripGroup; message?: string }> => {
+    const response = await api.post(`/groups/${groupId}/join`, { inviteCode });
     return response.data;
 };
 
