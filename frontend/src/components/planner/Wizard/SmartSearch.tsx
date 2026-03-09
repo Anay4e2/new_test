@@ -153,14 +153,7 @@ export const SmartSearch: FC<SmartSearchProps> = ({ onGenerate, cities, isLoadin
 
         // If no cities selected, pick cities from the state
         if (req.selectedCityIds.length === 0) {
-            const stateCities = cities.filter((c: any) => {
-                const stateCodeMap: Record<string, string> = {
-                    RJ: 'RAJASTHAN', KL: 'KERALA', GA: 'GOA', HP: 'HIMACHAL_PRADESH',
-                    UP: 'UTTAR_PRADESH', MP: 'MADHYA_PRADESH', GJ: 'GUJARAT',
-                    MH: 'MAHARASHTR', TN: 'TAMIL_NADU', WB: 'WEST_BENGA', KA: 'KARNATAKA',
-                };
-                return c.stateCode === (stateCodeMap[req.stateCode] || req.stateCode);
-            });
+            const stateCities = cities.filter((c: any) => c.stateCode === req.stateCode);
             req.selectedCityIds = stateCities.slice(0, 3).map((c: any) => c._id);
         }
 

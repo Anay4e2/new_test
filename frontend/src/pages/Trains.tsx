@@ -87,12 +87,50 @@ export const Trains: FC = () => {
 const TrainSearch: FC = () => {
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
+    const [fromCode, setFromCode] = useState('');
+    const [toCode, setToCode] = useState('');
     const [date, setDate] = useState('');
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<any>(null);
     const [expandedTrain, setExpandedTrain] = useState<string | null>(null);
     const [scheduleData, setScheduleData] = useState<Record<string, any>>({});
     const [fareData, setFareData] = useState<Record<string, any>>({});
+
+    // Autocomplete state
+    const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
+    const [toSuggestions, setToSuggestions] = useState<any[]>([]);
+    const [showFromDropdown, setShowFromDropdown] = useState(false);
+    const [showToDropdown, setShowToDropdown] = useState(false);
+    const debouncedFrom = useDebounce(from, 250);
+    const debouncedTo = useDebounce(to, 250);
+
+    useEffect(() => {
+        if (debouncedFrom.length < 2) { setFromSuggestions([]); return; }
+        searchStation(debouncedFrom)
+            .then(data => { setFromSuggestions(data.stations?.slice(0, 10) || []); setShowFromDropdown(true); })
+            .catch(() => {});
+    }, [debouncedFrom]);
+
+    useEffect(() => {
+        if (debouncedTo.length < 2) { setToSuggestions([]); return; }
+        searchStation(debouncedTo)
+            .then(data => { setToSuggestions(data.stations?.slice(0, 10) || []); setShowToDropdown(true); })
+            .catch(() => {});
+    }, [debouncedTo]);
+
+    const selectFrom = (code: string, name: string) => {
+        setFrom(`${name} (${code})`);
+        setFromCode(code);
+        setShowFromDropdown(false);
+        setFromSuggestions([]);
+    };
+
+    const selectTo = (code: string, name: string) => {
+        setTo(`${name} (${code})`);
+        setToCode(code);
+        setShowToDropdown(false);
+        setToSuggestions([]);
+    };
 
     const handleSearch = async (e: FormEvent) => {
         e.preventDefault();
@@ -144,21 +182,53 @@ const TrainSearch: FC = () => {
         <div className="space-y-6">
             <form onSubmit={handleSearch} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200/50 dark:border-slate-700/50">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
+                    <div className="relative">
                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">From</label>
                         <input
-                            value={from} onChange={e => setFrom(e.target.value)} placeholder="e.g. Delhi, Jaipur"
+                            value={from}
+                            onChange={e => { setFrom(e.target.value); setFromCode(''); }}
+                            onFocus={() => fromSuggestions.length > 0 && setShowFromDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowFromDropdown(false), 200)}
+                            placeholder="Type city or station..."
                             className="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            autoComplete="off"
                             required
                         />
+                        {showFromDropdown && fromSuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-700 rounded-lg shadow-xl border border-gray-200 dark:border-slate-600 z-30 max-h-52 overflow-y-auto">
+                                {fromSuggestions.map((s: any) => (
+                                    <button key={`${s.code}-${s.name}`} type="button" onMouseDown={() => selectFrom(s.code, s.name)} className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-slate-600 text-slate-700 dark:text-gray-300 transition-colors flex items-center gap-2">
+                                        <span className="font-mono text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded shrink-0">{s.code}</span>
+                                        <span className="truncate">{s.name}</span>
+                                        {s.state && <span className="text-[10px] text-gray-400 ml-auto shrink-0">{s.state}</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <div>
+                    <div className="relative">
                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">To</label>
                         <input
-                            value={to} onChange={e => setTo(e.target.value)} placeholder="e.g. Mumbai, Udaipur"
+                            value={to}
+                            onChange={e => { setTo(e.target.value); setToCode(''); }}
+                            onFocus={() => toSuggestions.length > 0 && setShowToDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowToDropdown(false), 200)}
+                            placeholder="Type city or station..."
                             className="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            autoComplete="off"
                             required
                         />
+                        {showToDropdown && toSuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-700 rounded-lg shadow-xl border border-gray-200 dark:border-slate-600 z-30 max-h-52 overflow-y-auto">
+                                {toSuggestions.map((s: any) => (
+                                    <button key={`${s.code}-${s.name}`} type="button" onMouseDown={() => selectTo(s.code, s.name)} className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-slate-600 text-slate-700 dark:text-gray-300 transition-colors flex items-center gap-2">
+                                        <span className="font-mono text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded shrink-0">{s.code}</span>
+                                        <span className="truncate">{s.name}</span>
+                                        {s.state && <span className="text-[10px] text-gray-400 ml-auto shrink-0">{s.state}</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Date (optional)</label>

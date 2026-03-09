@@ -3,6 +3,7 @@ import logger from '../lib/logger';
 // Uses the RapidAPI IRCTC API for live Indian Railway train data
 
 import axios from 'axios';
+import { resolveStation, searchStations, STATIONS, StationEntry } from './stationData';
 
 // RapidAPI Configuration
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '';
@@ -13,75 +14,15 @@ if (!RAPIDAPI_KEY) {
     logger.warn('RAPIDAPI_KEY not set — train API calls will use mock data');
 }
 
-// Station codes for major cities (mapping city/location to nearest railway station)
-export const STATION_CODES: Record<string, string> = {
-    // Metro Cities
-    'Delhi': 'NDLS',      // New Delhi
-    'New Delhi': 'NDLS',
-    'Mumbai': 'CSTM',      // Mumbai CST
-    'Kolkata': 'HWH',      // Howrah
-    'Chennai': 'MAS',      // Chennai Central
-    'Bangalore': 'SBC',    // Bangalore City
-    'Hyderabad': 'SC',     // Secunderabad
+// Station codes for major cities — kept for backward compat with cached routes keys
+export const STATION_CODES: Record<string, string> = {};
+for (const s of STATIONS) { STATION_CODES[s.name] = s.code; }
 
-    // Rajasthan (Tourist destinations with nearest stations)
-    'Jaipur': 'JP',        // Jaipur Junction
-    'Jodhpur': 'JU',       // Jodhpur Junction
-    'Udaipur': 'UDZ',      // Udaipur City
-    'Jaisalmer': 'JSM',    // Jaisalmer
-    'Bikaner': 'BKN',      // Bikaner Junction
-    'Ajmer': 'AII',        // Ajmer Junction
-    'Pushkar': 'AII',      // Nearest: Ajmer Junction (11km away)
-    'Mount Abu': 'ABR',    // Abu Road
-    'Chittorgarh': 'COR',  // Chittorgarh
-    'Sawai Madhopur': 'SWM', // Sawai Madhopur (for Ranthambore)
-    'Ranthambore': 'SWM',  // Nearest: Sawai Madhopur
-    'Bharatpur': 'BTE',    // Bharatpur Junction
-    'Alwar': 'AWR',        // Alwar Junction
-
-    // North India
-    'Agra': 'AGC',         // Agra Cantt
-    'Lucknow': 'LKO',      // Lucknow
-    'Varanasi': 'BSB',     // Varanasi Junction
-    'Ahmedabad': 'ADI',    // Ahmedabad Junction
-    'Pune': 'PUNE',        // Pune Junction
-    'Chandigarh': 'CDG',   // Chandigarh
-    'Amritsar': 'ASR',     // Amritsar Junction
-    'Haridwar': 'HW',      // Haridwar Junction
-    'Rishikesh': 'RKSH',   // Rishikesh
-    'Dehradun': 'DDN',     // Dehradun
-    'Shimla': 'SML',       // Shimla (narrow gauge)
-    'Manali': 'CDG',       // Nearest: Chandigarh (310km)
-    'Dharamshala': 'PTKC', // Pathankot Cantt (nearest)
-    'Jammu': 'JAT',        // Jammu Tawi
-
-    // South India
-    'Kochi': 'ERS',        // Ernakulam Junction
-    'Madurai': 'MDU',      // Madurai Junction
-    'Mysore': 'MYS',       // Mysore Junction
-    'Ooty': 'MTP',         // Mettupalayam (nearest, then toy train)
-    'Coimbatore': 'CBE',   // Coimbatore Junction
-    'Trivandrum': 'TVC',   // Trivandrum Central
-    'Mangalore': 'MAQ',    // Mangalore Junction
-
-    // East India
-    'Guwahati': 'GHY',     // Guwahati
-    'Bhubaneswar': 'BBS',  // Bhubaneswar
-    'Patna': 'PNBE',       // Patna Junction
-    'Darjeeling': 'NJP',   // Nearest: New Jalpaiguri
-    'Gangtok': 'NJP',      // Nearest: New Jalpaiguri
-    'Puri': 'PURI',        // Puri
-
-    // West India
-    'Goa': 'MAO',          // Madgaon (Goa)
-    'Panaji': 'KRMI',      // Karmali (nearest to Panaji)
-    'Surat': 'ST',         // Surat
-    'Vadodara': 'BRC',     // Vadodara Junction
-    'Indore': 'INDB',      // Indore Junction
-    'Bhopal': 'BPL',       // Bhopal Junction
-    'Ujjain': 'UJN',       // Ujjain Junction
-    'Khajuraho': 'KURJ',   // Khajuraho
-};
+// Resolve any user input to a station code (case-insensitive)
+function resolveStationCode(input: string): string {
+    const entry = resolveStation(input);
+    return entry ? entry.code : input;
+}
 
 // Cached train data for popular routes (fallback when API is unavailable)
 const CACHED_TRAINS: Record<string, TrainInfo[]> = {
@@ -212,8 +153,8 @@ class TrainAPIService {
 
     // Get trains between two stations
     async getTrainsBetweenStations(fromStation: string, toStation: string, date?: string): Promise<TrainSearchResult> {
-        const fromCode = STATION_CODES[fromStation] || fromStation;
-        const toCode = STATION_CODES[toStation] || toStation;
+        const fromCode = resolveStationCode(fromStation);
+        const toCode = resolveStationCode(toStation);
 
         // Format date as YYYY-MM-DD if not provided, use tomorrow
         const journeyDate = date || this.getTomorrowDate();
@@ -422,22 +363,9 @@ class TrainAPIService {
         };
     }
 
-    // Search for station codes
-    async searchStation(stationName: string): Promise<any[]> {
-        try {
-            const response = await rapidApiClient.get('/api/v1/searchStation', {
-                params: { query: stationName },
-            });
-
-            if (response.data && response.data.status && response.data.data) {
-                return response.data.data;
-            }
-
-            return [];
-        } catch (error: any) {
-            logger.error('Search Station Error:', error.response?.data || error.message);
-            return [];
-        }
+    // Search for station codes — local database search
+    async searchStation(stationName: string): Promise<StationEntry[]> {
+        return searchStations(stationName, 15);
     }
 
     // Check seat availability
@@ -453,8 +381,8 @@ class TrainAPIService {
             const response = await rapidApiClient.get('/api/v1/checkSeatAvailability', {
                 params: {
                     trainNo: trainNumber,
-                    fromStationCode: STATION_CODES[fromStation] || fromStation,
-                    toStationCode: STATION_CODES[toStation] || toStation,
+                    fromStationCode: resolveStationCode(fromStation),
+                    toStationCode: resolveStationCode(toStation),
                     classType: classType, // SL, 3A, 2A, 1A, CC, EC
                     date: date,
                     quota: quota, // GN-General, TQ-Tatkal, PT-Premium Tatkal
@@ -478,8 +406,8 @@ class TrainAPIService {
             const response = await rapidApiClient.get('/api/v2/getFare', {
                 params: {
                     trainNo: trainNumber,
-                    fromStationCode: STATION_CODES[fromStation] || fromStation,
-                    toStationCode: STATION_CODES[toStation] || toStation,
+                    fromStationCode: resolveStationCode(fromStation),
+                    toStationCode: resolveStationCode(toStation),
                 },
             });
 

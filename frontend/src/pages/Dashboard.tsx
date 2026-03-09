@@ -2,18 +2,20 @@ import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
+import { useTripStore } from '@/stores/tripStore';
 import { getMyTrips, getMyFavorites, updateTrip, deleteTrip as deleteTripApi, getExpenseSummary, getMyGroups, createGroup, publishTripApi, getJournalEntryCount, cloneTripApi } from '@/services/api';
 import type { SavedTrip, FavoritePlace, ExpenseSummary, TripGroup } from '@/types';
-import { Star, Trash2, MapPin, Clock, ArrowLeft, Loader2, Heart, Calendar, IndianRupee, Wallet, Users, Plus, Globe, BookOpen, Copy } from 'lucide-react';
+import { Star, Trash2, MapPin, Clock, ArrowLeft, Loader2, Heart, Calendar, IndianRupee, Wallet, Users, Plus, Globe, BookOpen, Copy, Package } from 'lucide-react';
 import clsx from 'clsx';
 import { ExpenseTracker } from '@/components/planner/Trip/ExpenseTracker';
 import { DashboardTripSkeleton } from '@/components/common/Skeleton';
 
-type Tab = 'trips' | 'favorites' | 'groups';
+type Tab = 'trips' | 'favorites' | 'groups' | 'packages';
 
 export const Dashboard: FC = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
+    const { addedPackages, removePackage } = useTripStore();
 
     const [activeTab, setActiveTab] = useState<Tab>('trips');
     const [trips, setTrips] = useState<SavedTrip[]>([]);
@@ -240,6 +242,17 @@ export const Dashboard: FC = () => {
                         )}
                     >
                         Group Trips ({groups.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('packages')}
+                        className={clsx(
+                            'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+                            activeTab === 'packages'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                        )}
+                    >
+                        Saved Packages ({addedPackages.length})
                     </button>
                     <button
                         onClick={() => navigate('/my-reviews')}
@@ -492,6 +505,81 @@ export const Dashboard: FC = () => {
                                     </div>
                                     <div className="text-xs text-gray-400 dark:text-gray-500">
                                         {new Date(fav.addedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                ) : activeTab === 'packages' ? (
+                    addedPackages.length === 0 ? (
+                        <div className="text-center py-20">
+                            <Package size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                            <h3 className="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-2">No saved packages yet</h3>
+                            <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Browse packages and click "Add to Trip" to save them here.</p>
+                            <button onClick={() => navigate('/packages')} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Browse Packages
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                            {addedPackages.map(pkg => (
+                                <div
+                                    key={pkg._id}
+                                    className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
+                                >
+                                    {pkg.image && (
+                                        <div className="relative h-36 overflow-hidden">
+                                            <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                            <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-orange-500/80 text-white text-xs font-semibold rounded-full">
+                                                {pkg.state}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="p-4">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <h3 className="font-bold text-slate-800 dark:text-white text-base line-clamp-1">{pkg.title}</h3>
+                                            <button
+                                                onClick={() => removePackage(pkg._id)}
+                                                className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors text-gray-300 hover:text-red-500 shrink-0"
+                                                title="Remove package"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                            🗺️ {pkg.cities.join(' → ')}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 mb-3">
+                                            <span className="flex items-center gap-1">
+                                                <Calendar size={12} />
+                                                {pkg.days} Night{pkg.days !== 1 ? 's' : ''} / {pkg.days + 1} Day{pkg.days !== 0 ? 's' : ''}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <MapPin size={12} />
+                                                {pkg.cities.length} {pkg.cities.length === 1 ? 'City' : 'Cities'}
+                                            </span>
+                                        </div>
+                                        {pkg.tags && pkg.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mb-3">
+                                                {pkg.tags.slice(0, 4).map((tag, i) => (
+                                                    <span key={i} className="px-2 py-0.5 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-[10px] rounded-full">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-slate-700">
+                                            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                                ₹{pkg.price.toLocaleString()}
+                                            </div>
+                                            <button
+                                                onClick={() => navigate(`/packages?highlight=${pkg.id}`)}
+                                                className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                                            >
+                                                View Details →
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

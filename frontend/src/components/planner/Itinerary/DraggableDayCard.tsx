@@ -32,13 +32,13 @@ export const DraggableDayCard: FC<DraggableDayCardProps> = ({ id, dayNumber, isE
             style={style}
             data-print-day={dayNumber}
             className={clsx(
-                'relative pl-8 border-l-2 border-primary/30 pb-8 last:border-0 last:pb-0',
+                'relative pl-10 border-l-2 border-primary/30 pb-10 last:border-0 last:pb-0',
                 isDragging && 'opacity-50 z-50 scale-[1.02]',
                 isEditMode && 'group/day'
             )}
         >
             {/* Day Marker */}
-            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary border-2 border-white shadow-md" />
+            <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-primary border-[3px] border-white shadow-lg" />
 
             {/* Drag Handle - always visible on mobile for discoverability */}
             {isEditMode && (

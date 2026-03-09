@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import ThemeToggle from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
-import { LanguageSelector } from './LanguageSelector';
 import { GlobalSearch } from './GlobalSearch';
 import { Menu, X, User, LogOut, LayoutDashboard, Star, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
@@ -86,7 +85,6 @@ export const Navbar: FC = () => {
                     <div className="flex items-center gap-2">
                         <GlobalSearch />
                         <NotificationBell />
-                        <LanguageSelector />
                         <ThemeToggle />
                         {isAuthenticated() ? (
                             <div className="hidden sm:block relative" ref={userMenuRef}>

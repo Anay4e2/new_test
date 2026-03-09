@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import api from '../services/api';
 
 // Types
@@ -96,7 +97,9 @@ interface TripStore {
     getRouteCoordinates: () => [number, number][];
 }
 
-export const useTripStore = create<TripStore>((set, get) => ({
+export const useTripStore = create<TripStore>()(
+  persist(
+    (set, get) => ({
     // Initial State
     selectedPlaces: [],
     addedPackages: [],
@@ -291,4 +294,15 @@ export const useTripStore = create<TripStore>((set, get) => ({
         }
         return optimized.map(p => [p.coordinates.lat, p.coordinates.lng] as [number, number]);
     }
-}));
+    }),
+    {
+      name: 'trip-planner-store',
+      partialize: (state) => ({
+        selectedPlaces: state.selectedPlaces,
+        addedPackages: state.addedPackages,
+        daysPerCity: state.daysPerCity,
+        tripStartDate: state.tripStartDate,
+      }),
+    }
+  )
+);

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { nanoid } from 'nanoid';
+import mongoose from 'mongoose';
 import SharedTrip from '../models/SharedTrip';
+import SavedTrip from '../models/SavedTrip';
 import { AuthRequest } from '../middleware/authMiddleware';
 
 export const createShare = async (req: Request, res: Response): Promise<void> => {
@@ -36,43 +38,62 @@ export const createShare = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
+function buildOgMeta(tripResult: any) {
+    const itinerary = tripResult?.itinerary || [];
+    const cities = [...new Set(itinerary.map((d: any) => d.city))] as string[];
+    const totalDays = itinerary.length;
+    const totalCost = Math.round(tripResult?.summary?.totalCost || 0);
+    const ogTitle = `${totalDays}-Day ${cities.slice(0, 3).join(', ')} Adventure`;
+    const ogDescription = `${totalDays}-day trip through ${cities.join(', ')}`;
+    return { title: ogTitle, description: ogDescription, image: null };
+}
+
 export const getShare = async (req: Request, res: Response): Promise<void> => {
     try {
         const { shareId } = req.params;
 
+        // First try SharedTrip collection (shared via nanoid link)
         const shared = await SharedTrip.findOneAndUpdate(
             { shareId },
             { $inc: { viewCount: 1 } },
             { new: true }
         );
 
-        if (!shared) {
-            res.status(404).json({ success: false, message: 'Shared trip not found or has expired' });
+        if (shared) {
+            res.json({
+                success: true,
+                tripRequest: shared.tripRequest,
+                tripResult: shared.tripResult,
+                viewCount: shared.viewCount,
+                createdAt: shared.createdAt,
+                expiresAt: shared.expiresAt,
+                og: buildOgMeta(shared.tripResult),
+            });
             return;
         }
 
-        // Build OG meta tags for social sharing
-        const tripResult = shared.tripResult as any;
-        const itinerary = tripResult?.itinerary || [];
-        const cities = [...new Set(itinerary.map((d: any) => d.city))] as string[];
-        const totalDays = itinerary.length;
-        const totalCost = Math.round(tripResult?.summary?.totalCost || 0);
-        const ogTitle = `${totalDays}-Day ${cities.slice(0, 3).join(', ')} Adventure`;
-        const ogDescription = `${totalDays}-day trip through ${cities.join(', ')} â€” â‚¹${totalCost.toLocaleString('en-IN')} budget`;
+        // Fallback: try SavedTrip collection by _id (public trips from Explore page)
+        if (mongoose.Types.ObjectId.isValid(shareId)) {
+            const savedTrip = await SavedTrip.findOneAndUpdate(
+                { _id: shareId, isPublic: true },
+                { $inc: { viewCount: 1 } },
+                { new: true }
+            );
 
-        res.json({
-            success: true,
-            tripRequest: shared.tripRequest,
-            tripResult: shared.tripResult,
-            viewCount: shared.viewCount,
-            createdAt: shared.createdAt,
-            expiresAt: shared.expiresAt,
-            og: {
-                title: ogTitle,
-                description: ogDescription,
-                image: null, // Can be populated with postcard image URL in future
-            },
-        });
+            if (savedTrip) {
+                res.json({
+                    success: true,
+                    tripRequest: savedTrip.tripRequest,
+                    tripResult: savedTrip.tripResult,
+                    viewCount: (savedTrip as any).viewCount || 0,
+                    createdAt: savedTrip.createdAt,
+                    og: buildOgMeta(savedTrip.tripResult),
+                });
+                return;
+            }
+        }
+
+        res.status(404).json({ success: false, message: 'Shared trip not found or has expired' });
     } catch (error: any) {
         res.status(500).json({ success: false, message: 'Failed to get shared trip' });
     }
