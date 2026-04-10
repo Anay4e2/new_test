@@ -7,6 +7,7 @@
     "start": "node dist/app.js",
     "dev": "ts-node src/app.ts",
     "build": "tsc",
+    "create:admin": "ts-node src/scripts/createAdmin.ts",
     "seed": "ts-node src/scripts/seedDatabase.ts",
     "seed:full": "ts-node src/scripts/seedFullDatabase.ts",
     "test": "vitest run"

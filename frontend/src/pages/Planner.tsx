@@ -17,6 +17,7 @@ export const Planner: FC = () => {
   const [lastRequest, setLastRequest] = useState<TripRequest | null>(null);
   const [lastFailedRequest, setLastFailedRequest] = useState<TripRequest | null>(null);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
 
   // Comparison state
   const [comparisonVariants, setComparisonVariants] = useState<{ label: string; tripResult: TripResult }[]>([]);
@@ -107,6 +108,7 @@ export const Planner: FC = () => {
     if (selected) {
       setTripResult(selected.tripResult);
       setActiveTab('itinerary');
+      setMobilePanelOpen(true);
     }
   };
 
@@ -281,13 +283,97 @@ export const Planner: FC = () => {
           onDaySelect={setActiveDay}
         />
 
+        {/* Mobile Bottom Sheet */}
+        <div className="md:hidden absolute inset-x-0 bottom-0 z-[950] pointer-events-none">
+          <div className={`pointer-events-auto bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 rounded-t-2xl shadow-2xl transition-all duration-300 ${mobilePanelOpen ? 'translate-y-0' : 'translate-y-[calc(100%-72px)]'}`}>
+            <div className="px-4 pt-2.5 pb-2 border-b border-slate-100 dark:border-slate-700">
+              <div className="mx-auto mb-2 h-1.5 w-14 rounded-full bg-slate-300 dark:bg-slate-600" />
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                <button
+                  onClick={() => {
+                    setActiveTab('trip');
+                    setMobilePanelOpen(true);
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${activeTab === 'trip' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
+                >
+                  My Trip
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('wizard');
+                    setMobilePanelOpen(true);
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${activeTab === 'wizard' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
+                >
+                  Advanced
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('smart');
+                    setMobilePanelOpen(true);
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${activeTab === 'smart' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
+                >
+                  Smart
+                </button>
+                {tripResult && (
+                  <button
+                    onClick={() => {
+                      setActiveTab('itinerary');
+                      setMobilePanelOpen(true);
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${activeTab === 'itinerary' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
+                  >
+                    Itinerary
+                  </button>
+                )}
+                {comparisonVariants.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setActiveTab('compare');
+                      setMobilePanelOpen(true);
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${activeTab === 'compare' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
+                  >
+                    Compare
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="max-h-[65vh] overflow-y-auto bg-slate-50 dark:bg-slate-900">
+              {generateError && lastFailedRequest && !loading && (
+                <div className="mx-4 mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-red-700 dark:text-red-300">Trip generation failed</p>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-0.5 truncate">{generateError}</p>
+                    </div>
+                    <button
+                      onClick={() => handleGenerate(lastFailedRequest)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition-colors flex-shrink-0"
+                    >
+                      <RefreshCw size={14} />
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
+              {renderSidebar()}
+              {loading && <ItinerarySkeleton />}
+            </div>
+          </div>
+        </div>
+
         {/* Mobile Bottom Sheet Toggle */}
         <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 md:hidden z-[1000] flex gap-2">
           <button
-            onClick={() => setActiveTab(activeTab === 'trip' ? 'wizard' : 'trip')}
+            onClick={() => setMobilePanelOpen(prev => !prev)}
             className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-4 rounded-full shadow-lg font-bold border border-slate-200 dark:border-slate-600"
+            aria-label={mobilePanelOpen ? 'Close planner panel' : 'Open planner panel'}
           >
-            {activeTab === 'trip' ? '⚙️' : '🗺️'}
+            {mobilePanelOpen ? '✕' : '☰'}
           </button>
           {selectedPlaces.length > 0 && (
             <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">

@@ -51,6 +51,7 @@ function buildOgMeta(tripResult: any) {
 export const getShare = async (req: Request, res: Response): Promise<void> => {
     try {
         const { shareId } = req.params;
+        const userId = (req as AuthRequest).userId;
 
         // First try SharedTrip collection (shared via nanoid link)
         const shared = await SharedTrip.findOneAndUpdate(
@@ -74,8 +75,16 @@ export const getShare = async (req: Request, res: Response): Promise<void> => {
 
         // Fallback: try SavedTrip collection by _id (public trips from Explore page)
         if (mongoose.Types.ObjectId.isValid(shareId)) {
+            const query: Record<string, any> = { _id: shareId };
+
+            // Publicly accessible for everyone; private trip accessible for owner when authenticated.
+            query.$or = [{ isPublic: true }];
+            if (userId) {
+                query.$or.push({ userId });
+            }
+
             const savedTrip = await SavedTrip.findOneAndUpdate(
-                { _id: shareId, isPublic: true },
+                query,
                 { $inc: { viewCount: 1 } },
                 { new: true }
             );

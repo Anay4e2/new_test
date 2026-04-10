@@ -5,9 +5,9 @@ export const Footer: FC = () => {
     return (
         <footer className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
                     {/* Brand */}
-                    <div className="col-span-2 sm:col-span-2 md:col-span-1">
+                    <div className="sm:col-span-2 md:col-span-1">
                         <Link to="/" className="flex items-center gap-2 mb-4">
                             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                                 <span className="text-white font-bold text-sm">T</span>

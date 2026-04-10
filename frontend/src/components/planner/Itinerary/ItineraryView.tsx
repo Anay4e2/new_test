@@ -48,6 +48,25 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
   // Data source: editable copy when in edit mode, original otherwise
   const displayItinerary = isEditMode ? editStore.editableItinerary : itinerary;
 
+  const toNumber = (value: unknown): number => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+  };
+
+  const formatINR = (value: unknown): string => toNumber(value).toLocaleString('en-IN');
+  const totalCost = toNumber(summary?.totalCost);
+  const totalDistance = toNumber(summary?.totalDistance);
+  const costBreakup = {
+    stay: toNumber(summary?.costBreakup?.stay),
+    transport: toNumber(summary?.costBreakup?.transport),
+    activities: toNumber(summary?.costBreakup?.activities),
+    food: toNumber(summary?.costBreakup?.food),
+  };
+
   // Extract unique city names for safety info
   const tripCities = [...new Set(displayItinerary.map(d => d.city))];
 
@@ -172,7 +191,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
   const handleCopyItinerary = useCallback(() => {
     const lines: string[] = [];
     lines.push(`🗺️ Trip Itinerary — ${displayItinerary.length} Days`);
-    lines.push(`💰 ₹${summary.totalCost.toLocaleString()} • 📏 ${Math.round(summary.totalDistance)}km`);
+    lines.push(`💰 ₹${formatINR(totalCost)} • 📏 ${Math.round(totalDistance)}km`);
     lines.push(`🏙️ Cities: ${tripStats.uniqueCities.join(' → ')}`);
     lines.push('');
     displayItinerary.forEach(day => {
@@ -191,7 +210,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
     }).catch(() => {
       toast.error('Failed to copy');
     });
-  }, [displayItinerary, summary, tripStats, getDayDate]);
+  }, [displayItinerary, totalCost, totalDistance, tripStats, getDayDate]);
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -303,15 +322,15 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
             <div className="min-w-0">
               <h2 className="text-xl sm:text-2xl font-bold font-serif truncate">{t('planner.yourJourney')}</h2>
               <div className="flex items-center gap-2 text-white/80 text-xs sm:text-sm mt-1 flex-wrap">
-                <span className="flex items-center gap-1"><Calendar size={13} /> {itinerary.length} Days</span>
+                <span className="flex items-center gap-1"><Calendar size={13} /> {displayItinerary.length} Days</span>
                 <span>•</span>
                 <span className="flex items-center gap-1"><MapPin size={13} /> {tripStats.cityCount} {tripStats.cityCount === 1 ? 'City' : 'Cities'}</span>
                 <span>•</span>
-                <span>₹{summary.totalCost.toLocaleString()}</span>
+                <span>₹{formatINR(totalCost)}</span>
               </div>
               {startDate && (
                 <div className="text-white/60 text-xs mt-1">
-                  {formatDate(new Date(startDate))} — {formatDate(getDayDate(itinerary.length)!)}
+                  {formatDate(new Date(startDate))} — {formatDate(getDayDate(displayItinerary.length)!)}
                 </div>
               )}
             </div>
@@ -418,7 +437,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
         )}
 
         {/* Summary Stats - Enhanced */}
-        <div className="p-5 sm:p-6 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-b from-secondary/10 to-transparent dark:from-slate-700/50 dark:to-transparent shrink-0 space-y-4">
+        <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-b from-secondary/10 to-transparent dark:from-slate-700/50 dark:to-transparent shrink-0 space-y-3.5">
           {/* Route Preview */}
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 overflow-x-auto no-scrollbar pb-1">
             <MapPin size={14} className="text-primary shrink-0" />
@@ -431,22 +450,22 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
           </div>
 
           {/* Stats Row */}
-          <div className="grid grid-cols-4 gap-3">
-            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-slate-700">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-2.5 sm:p-3 shadow-sm border border-gray-100 dark:border-slate-700">
               <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">{t('planner.estimatedCost')}</div>
-              <div className="font-bold text-base text-primary">₹{summary.totalCost.toLocaleString()}</div>
+              <div className="font-bold text-base text-primary">₹{formatINR(totalCost)}</div>
             </div>
-            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-slate-700">
+            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-2.5 sm:p-3 shadow-sm border border-gray-100 dark:border-slate-700">
               <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">{t('planner.pace')}</div>
-              <div className={clsx("text-xs font-bold px-2.5 py-1 rounded-full border inline-block uppercase", getFeasibilityColor(summary.feasibility))}>
-                {summary.feasibility}
+              <div className={clsx("text-xs font-bold px-2.5 py-1 rounded-full border inline-block uppercase", getFeasibilityColor(summary?.feasibility || 'unknown'))}>
+                {summary?.feasibility || 'unknown'}
               </div>
             </div>
-            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-slate-700">
+            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-2.5 sm:p-3 shadow-sm border border-gray-100 dark:border-slate-700">
               <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">Distance</div>
-              <div className="font-bold text-base text-gray-700 dark:text-gray-300">{Math.round(summary.totalDistance)} km</div>
+              <div className="font-bold text-base text-gray-700 dark:text-gray-300">{Math.round(totalDistance)} km</div>
             </div>
-            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-slate-700">
+            <div className="text-center bg-white dark:bg-slate-800 rounded-xl p-2.5 sm:p-3 shadow-sm border border-gray-100 dark:border-slate-700">
               <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">Activities</div>
               <div className="font-bold text-base text-gray-700 dark:text-gray-300">{tripStats.totalActivities}</div>
             </div>
@@ -455,20 +474,20 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
           {/* Visual Cost Breakdown Bar */}
           <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-slate-700">
             <div className="h-3 rounded-full overflow-hidden flex bg-gray-100 dark:bg-slate-600">
-              {summary.totalCost > 0 && (
+              {totalCost > 0 && (
                 <>
-                  <div className="bg-indigo-500 transition-all" style={{ width: `${(summary.costBreakup.stay / summary.totalCost * 100)}%` }} title={`Stay: ₹${summary.costBreakup.stay.toLocaleString()}`} />
-                  <div className="bg-blue-400 transition-all" style={{ width: `${(summary.costBreakup.transport / summary.totalCost * 100)}%` }} title={`Transport: ₹${summary.costBreakup.transport.toLocaleString()}`} />
-                  <div className="bg-emerald-400 transition-all" style={{ width: `${(summary.costBreakup.activities / summary.totalCost * 100)}%` }} title={`Activities: ₹${summary.costBreakup.activities.toLocaleString()}`} />
-                  <div className="bg-orange-400 transition-all" style={{ width: `${(summary.costBreakup.food / summary.totalCost * 100)}%` }} title={`Food: ₹${summary.costBreakup.food.toLocaleString()}`} />
+                  <div className="bg-indigo-500 transition-all" style={{ width: `${(costBreakup.stay / totalCost * 100)}%` }} title={`Stay: ₹${formatINR(costBreakup.stay)}`} />
+                  <div className="bg-blue-400 transition-all" style={{ width: `${(costBreakup.transport / totalCost * 100)}%` }} title={`Transport: ₹${formatINR(costBreakup.transport)}`} />
+                  <div className="bg-emerald-400 transition-all" style={{ width: `${(costBreakup.activities / totalCost * 100)}%` }} title={`Activities: ₹${formatINR(costBreakup.activities)}`} />
+                  <div className="bg-orange-400 transition-all" style={{ width: `${(costBreakup.food / totalCost * 100)}%` }} title={`Food: ₹${formatINR(costBreakup.food)}`} />
                 </>
               )}
             </div>
-            <div className="flex gap-4 mt-2.5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" />Stay ₹{summary.costBreakup.stay.toLocaleString()}</span>
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />Transport ₹{summary.costBreakup.transport.toLocaleString()}</span>
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />Activities ₹{summary.costBreakup.activities.toLocaleString()}</span>
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" />Food ₹{summary.costBreakup.food.toLocaleString()}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-x-3 sm:gap-y-1.5 mt-2.5 text-xs text-gray-500 dark:text-gray-400">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" />Stay ₹{formatINR(costBreakup.stay)}</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />Transport ₹{formatINR(costBreakup.transport)}</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />Activities ₹{formatINR(costBreakup.activities)}</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" />Food ₹{formatINR(costBreakup.food)}</span>
             </div>
           </div>
         </div>
@@ -594,7 +613,7 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
         )}
 
         {/* Timeline */}
-        <div ref={timelineRef} className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-8 custom-scrollbar">
+        <div ref={timelineRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDayDragEnd}>
             <SortableContext items={displayItinerary.map((d: any) => `day-${d.day}`)} strategy={verticalListSortingStrategy}>
               {displayItinerary.map((day: any, idx: number) => {
@@ -629,9 +648,9 @@ export const ItineraryView: FC<ItineraryViewProps> = ({ result, request, onReset
                     <h3 className="text-xl sm:text-2xl font-bold text-text dark:text-white mt-2 font-serif">{day.city}</h3>
                     {/* Day Cost Breakdown */}
                     <div className="flex items-center gap-3 sm:gap-4 mt-2.5 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
-                      <span className="font-semibold text-primary">₹{day.stats.totalCost.toLocaleString()}</span>
-                      <span className="flex items-center gap-1">🏨 ₹{(typeof day.nightStay === 'object' && day.nightStay?.hotel ? day.nightStay.hotel.pricePerNight : 0).toLocaleString()}</span>
-                      {day.meals && <span className="flex items-center gap-1">🍽️ ₹{((day.meals.breakfast?.cost || 0) + (day.meals.lunch?.cost || 0) + (day.meals.dinner?.cost || 0)).toLocaleString()}</span>}
+                      <span className="font-semibold text-primary">₹{formatINR(day?.stats?.totalCost)}</span>
+                      <span className="flex items-center gap-1">🏨 ₹{formatINR(typeof day.nightStay === 'object' && day.nightStay?.hotel ? day.nightStay.hotel.pricePerNight : 0)}</span>
+                      {day.meals && <span className="flex items-center gap-1">🍽️ ₹{formatINR((day.meals.breakfast?.cost || 0) + (day.meals.lunch?.cost || 0) + (day.meals.dinner?.cost || 0))}</span>}
                       {day.travel && <span className="flex items-center gap-1">🚗 {Math.round(day.travel.distance)}km</span>}
                       <span className="flex items-center gap-1.5"><Clock size={13} /> {(day.activities || []).reduce((s: number, a: any) => s + (a.timeRequired || 0), 0)}h planned</span>
                     </div>

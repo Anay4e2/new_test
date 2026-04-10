@@ -190,7 +190,7 @@ export const Dashboard: FC = () => {
         <div className="min-h-screen bg-neutral dark:bg-slate-900">
             {/* Header */}
             <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between gap-3">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                             <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
@@ -202,7 +202,7 @@ export const Dashboard: FC = () => {
                     </div>
                     <button
                         onClick={() => navigate('/plan')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0"
+                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0"
                     >
                         + Plan New Trip
                     </button>
@@ -213,7 +213,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => setActiveTab('trips')}
                         className={clsx(
-                            'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'trips'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -224,7 +224,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => setActiveTab('favorites')}
                         className={clsx(
-                            'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'favorites'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -235,7 +235,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => { setActiveTab('groups'); if (groups.length === 0) fetchGroups(); }}
                         className={clsx(
-                            'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'groups'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -246,7 +246,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => setActiveTab('packages')}
                         className={clsx(
-                            'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'packages'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'

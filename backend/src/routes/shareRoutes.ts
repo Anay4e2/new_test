@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { createShare, getShare } from '../controllers/shareController';
+import { optionalAuthMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
 // Public routes — no auth required
-router.post('/', createShare);
-router.get('/:shareId', getShare);
+router.post('/', optionalAuthMiddleware, createShare);
+router.get('/:shareId', optionalAuthMiddleware, getShare);
 
 export default router;

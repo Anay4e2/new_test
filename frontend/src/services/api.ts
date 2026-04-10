@@ -1,7 +1,27 @@
 import axios from 'axios';
 import type { TripRequest, TripResult, City, Place, Package, Hotel, BudgetTier, Restaurant, SavedTrip, FavoritePlace, PackingList, TrainLiveStatus, Review, ParsedTripQuery, TripSuggestion, Festival, EmergencyInfo, BookingLink, Expense, ExpenseSummary, TripGroup, GroupChat, GroupPoll, GroupItineraryRequest, PublicTrip, TrendingDestination, UserPublicProfile, AppNotification, JournalEntry } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const rawApiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+
+const normalizeApiBaseUrl = (value?: string): string => {
+    if (!value) return '/api';
+
+    // Keep relative '/api' default for Vite proxy in local development.
+    if (value.startsWith('/')) {
+        return value.replace(/\/+$/, '') || '/api';
+    }
+
+    // If an absolute URL points to backend root, force '/api' suffix because backend mounts routes at '/api'.
+    if (/^https?:\/\//i.test(value)) {
+        const trimmed = value.replace(/\/+$/, '');
+        if (trimmed.endsWith('/api')) return trimmed;
+        return `${trimmed}/api`;
+    }
+
+    return value;
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(rawApiBaseUrl);
 
 const api = axios.create({
     baseURL: API_BASE_URL,

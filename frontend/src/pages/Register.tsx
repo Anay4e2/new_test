@@ -54,7 +54,7 @@ const getPasswordStrength = (password: string): { score: number; label: string; 
 
 export const Register: FC = () => {
     const navigate = useNavigate();
-    const { register, googleLogin, isLoading, error, clearError, pendingVerificationEmail } = useAuthStore();
+    const { register, googleLogin, isLoading, error, clearError } = useAuthStore();
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');

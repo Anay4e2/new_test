@@ -11,7 +11,15 @@ const createAdmin = async () => {
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 
-        const email = process.env.ADMIN_EMAIL || 'admin';
+        const configuredEmail = process.env.ADMIN_EMAIL?.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const email = configuredEmail && emailRegex.test(configuredEmail)
+            ? configuredEmail
+            : 'admin@example.com';
+
+        if (configuredEmail && !emailRegex.test(configuredEmail)) {
+            console.warn(`Invalid ADMIN_EMAIL "${configuredEmail}". Falling back to ${email}.`);
+        }
         const password = process.env.ADMIN_PASSWORD || 'Admin@1234';
         const name = process.env.ADMIN_NAME || 'Admin User';
 

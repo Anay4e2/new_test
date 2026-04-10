@@ -166,9 +166,11 @@ export const Navbar: FC = () => {
                         </Link>
                     ))}
                     {isAuthenticated() ? (
-                        <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
-                            <Link to="/profile" onClick={() => setMobileOpen(false)} className="text-sm text-slate-700 dark:text-slate-200 font-medium">{user?.name}</Link>
-                            <button onClick={() => { logout(); setMobileOpen(false); }} className="text-red-500 text-sm font-medium">Logout</button>
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-2 space-y-1">
+                            <Link to="/profile" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Profile</Link>
+                            <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Dashboard</Link>
+                            <Link to="/my-reviews" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">My Reviews</Link>
+                            <button onClick={() => { logout(); setMobileOpen(false); }} className="w-full text-left px-3 py-2.5 rounded-md text-red-500 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20">Logout</button>
                         </div>
                     ) : (
                         <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-blue-600 dark:text-blue-400 text-sm font-medium">Sign In</Link>

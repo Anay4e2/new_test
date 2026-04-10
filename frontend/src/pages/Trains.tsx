@@ -87,8 +87,6 @@ export const Trains: FC = () => {
 const TrainSearch: FC = () => {
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
-    const [fromCode, setFromCode] = useState('');
-    const [toCode, setToCode] = useState('');
     const [date, setDate] = useState('');
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<any>(null);
@@ -120,14 +118,12 @@ const TrainSearch: FC = () => {
 
     const selectFrom = (code: string, name: string) => {
         setFrom(`${name} (${code})`);
-        setFromCode(code);
         setShowFromDropdown(false);
         setFromSuggestions([]);
     };
 
     const selectTo = (code: string, name: string) => {
         setTo(`${name} (${code})`);
-        setToCode(code);
         setShowToDropdown(false);
         setToSuggestions([]);
     };
@@ -186,7 +182,7 @@ const TrainSearch: FC = () => {
                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">From</label>
                         <input
                             value={from}
-                            onChange={e => { setFrom(e.target.value); setFromCode(''); }}
+                            onChange={e => { setFrom(e.target.value); }}
                             onFocus={() => fromSuggestions.length > 0 && setShowFromDropdown(true)}
                             onBlur={() => setTimeout(() => setShowFromDropdown(false), 200)}
                             placeholder="Type city or station..."
@@ -210,7 +206,7 @@ const TrainSearch: FC = () => {
                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">To</label>
                         <input
                             value={to}
-                            onChange={e => { setTo(e.target.value); setToCode(''); }}
+                            onChange={e => { setTo(e.target.value); }}
                             onFocus={() => toSuggestions.length > 0 && setShowToDropdown(true)}
                             onBlur={() => setTimeout(() => setShowToDropdown(false), 200)}
                             placeholder="Type city or station..."
