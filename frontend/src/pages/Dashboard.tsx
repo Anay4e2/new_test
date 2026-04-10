@@ -213,7 +213,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => setActiveTab('trips')}
                         className={clsx(
-                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                                'px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'trips'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -224,7 +224,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => setActiveTab('favorites')}
                         className={clsx(
-                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                                'px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'favorites'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -235,7 +235,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => { setActiveTab('groups'); if (groups.length === 0) fetchGroups(); }}
                         className={clsx(
-                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                                'px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'groups'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -246,7 +246,7 @@ export const Dashboard: FC = () => {
                     <button
                         onClick={() => setActiveTab('packages')}
                         className={clsx(
-                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                                'px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                             activeTab === 'packages'
                                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -256,13 +256,13 @@ export const Dashboard: FC = () => {
                     </button>
                     <button
                         onClick={() => navigate('/my-reviews')}
-                        className="px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors"
+                        className="px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors whitespace-nowrap"
                     >
                         My Reviews
                     </button>
                     <button
                         onClick={() => navigate('/checklist')}
-                        className="px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors"
+                        className="px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors whitespace-nowrap"
                     >
                         📋 Checklist
                     </button>
@@ -277,7 +277,7 @@ export const Dashboard: FC = () => {
                     </div>
                 ) : activeTab === 'trips' ? (
                     trips.length === 0 ? (
-                        <div className="text-center py-20">
+                        <div className="text-center py-12 sm:py-20">
                             <MapPin size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
                             <h3 className="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-2">No saved trips yet</h3>
                             <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Plan your first trip and save it to see it here.</p>
@@ -286,7 +286,7 @@ export const Dashboard: FC = () => {
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
                             {trips.map(trip => (
                                 <div
                                     key={trip._id}
@@ -294,15 +294,15 @@ export const Dashboard: FC = () => {
                                 >
                                     {/* Gradient header */}
                                     <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
-                                    <div className="p-5">
-                                        <div className="flex items-start justify-between mb-3">
+                                    <div className="p-4 sm:p-5">
+                                        <div className="flex items-start justify-between gap-2 mb-3">
                                             <h3
                                                 onClick={() => navigate(`/plan?tripId=${trip._id}`)}
-                                                className="font-bold text-slate-800 dark:text-white text-base cursor-pointer hover:text-blue-600 transition-colors line-clamp-1"
+                                                className="font-bold text-slate-800 dark:text-white text-sm sm:text-base cursor-pointer hover:text-blue-600 transition-colors line-clamp-2 leading-snug"
                                             >
                                                 {trip.title}
                                             </h3>
-                                            <div className="flex items-center gap-1 shrink-0">
+                                            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                                                 <button
                                                     onClick={() => handleToggleFavorite(trip)}
                                                     className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -326,12 +326,12 @@ export const Dashboard: FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5 line-clamp-1">
+                                        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5 line-clamp-1">
                                             <MapPin size={13} className="shrink-0" />
                                             {getCities(trip)}
                                         </div>
 
-                                        <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-xs text-gray-400 dark:text-gray-500">
                                             <span className="flex items-center gap-1">
                                                 <Calendar size={12} />
                                                 {new Date(trip.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -353,7 +353,7 @@ export const Dashboard: FC = () => {
                                         {/* Mini budget indicator */}
                                         {budgetSummaries[trip._id] && budgetSummaries[trip._id].expenseCount > 0 && (
                                             <div className="mt-3">
-                                                <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+                                                <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 mb-1 gap-2">
                                                     <span>₹{budgetSummaries[trip._id].totalActual.toLocaleString()} / ₹{budgetSummaries[trip._id].totalEstimated.toLocaleString()}</span>
                                                     <span className={clsx(
                                                         'font-medium',
@@ -444,7 +444,7 @@ export const Dashboard: FC = () => {
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <div className="flex gap-2">
+                                                <div className="flex flex-col sm:flex-row gap-2">
                                                     <button
                                                         onClick={() => handlePublish(trip._id, !trip.isPublic)}
                                                         className={clsx(

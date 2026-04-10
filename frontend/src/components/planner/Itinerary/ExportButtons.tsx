@@ -148,7 +148,7 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                 <button
                     onClick={handleDownloadPDF}
                     disabled={isGeneratingPDF}
-                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors disabled:opacity-50"
+                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-700 dark:text-gray-300 transition-colors disabled:opacity-50"
                     title="Download PDF"
                 >
                     {isGeneratingPDF ? (
@@ -162,7 +162,7 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                 <button
                     onClick={handleWhatsAppShare}
                     disabled={isLoadingWhatsApp}
-                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors disabled:opacity-50"
+                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-700 dark:text-gray-300 transition-colors disabled:opacity-50"
                     title="Share via WhatsApp"
                 >
                     {isLoadingWhatsApp ? (
@@ -175,14 +175,14 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                 {/* Email Button */}
                 <button
                     onClick={() => setShowEmailModal(true)}
-                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors"
+                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-700 dark:text-gray-300 transition-colors"
                     title="Send via Email"
                 >
                     <Mail size={20} />
                 </button>
                 <button
                     onClick={() => setShowCalendarModal(true)}
-                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors"
+                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-700 dark:text-gray-300 transition-colors"
                     title="Add to Calendar"
                 >
                     <Calendar size={20} />
@@ -191,7 +191,7 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                 {/* Postcard Button */}
                 <button
                     onClick={() => setShowPostcardEditor(true)}
-                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors"
+                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-700 dark:text-gray-300 transition-colors"
                     title="Create Postcard"
                 >
                     <Palette size={20} />
@@ -200,7 +200,7 @@ export const ExportButtons: FC<ExportButtonsProps> = ({ result }) => {
                 {/* Print Button */}
                 <button
                     onClick={() => window.print()}
-                    className="p-2.5 hover:bg-white/10 rounded-full text-white transition-colors print:hidden"
+                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-700 dark:text-gray-300 transition-colors print:hidden"
                     title="Print Itinerary"
                 >
                     <Printer size={20} />
