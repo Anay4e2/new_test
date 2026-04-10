@@ -47,6 +47,8 @@ export const updateProfileSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255).optional(),
   avatar: z.string().max(500).trim().optional(),
   interests: z.array(z.string().max(50).trim()).max(20).optional(),
+}).refine((data) => Object.values(data).some((value) => value !== undefined), {
+  message: 'At least one field must be provided',
 });
 
 export const changePasswordSchema = z.object({

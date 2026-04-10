@@ -29,6 +29,13 @@ vi.mock('../../services/emailService', () => ({
   sendResetPasswordEmail: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('../../services/resendService', () => ({
+  sendOtpEmail: vi.fn().mockResolvedValue(true),
+  sendWelcomeEmail: vi.fn().mockResolvedValue(true),
+  sendPasswordResetEmail: vi.fn().mockResolvedValue(true),
+  isResendConfigured: vi.fn().mockReturnValue(false),
+}));
+
 vi.mock('../../lib/dbStatus', () => ({
   isDbConnected: vi.fn().mockReturnValue(true),
 }));
@@ -58,7 +65,9 @@ describe('Auth Controller', () => {
 
   describe('register', () => {
     it('should return 400 if user already exists', async () => {
-      (User.findOne as any).mockResolvedValue(mockUser);
+      (User.findOne as any).mockReturnValue({
+        select: vi.fn().mockResolvedValue({ ...mockUser, isVerified: true }),
+      });
       const req = mockReq({ name: 'Test', email: 'test@example.com', password: 'password123' });
       const res = mockRes();
 
@@ -70,21 +79,33 @@ describe('Auth Controller', () => {
       );
     });
 
-    it('should create user and return token on success', async () => {
-      (User.findOne as any).mockResolvedValue(null);
+    it('should create user and return verification response on success', async () => {
+      (User.findOne as any).mockReturnValue({
+        select: vi.fn().mockResolvedValue(null),
+      });
       (User.create as any).mockResolvedValue(mockUser);
       const req = mockReq({ name: 'Test User', email: 'test@example.com', password: 'password123' });
       const res = mockRes();
 
       await register(req as Request, res as Response);
 
-      expect(User.create).toHaveBeenCalledWith({ name: 'Test User', email: 'test@example.com', password: 'password123' });
+      expect(User.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Test User',
+          email: 'test@example.com',
+          password: 'password123',
+          isVerified: false,
+          otp: expect.any(String),
+          otpExpire: expect.any(Date),
+        })
+      );
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: true,
-          token: expect.any(String),
-          user: expect.objectContaining({ name: 'Test User', email: 'test@example.com' }),
+          requiresVerification: true,
+          email: 'test@example.com',
+          message: expect.any(String),
         })
       );
     });
